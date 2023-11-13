@@ -259,7 +259,6 @@ io.on("connection", (socket) => {
                 access_token: dataEx.access_token,
             });
 
-            console.log("Hello");
             socket.emit("authentication_success");
         } catch (e) {
             console.log(e);
