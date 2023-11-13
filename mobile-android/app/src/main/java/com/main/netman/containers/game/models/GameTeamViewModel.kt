@@ -47,4 +47,19 @@ class GameTeamViewModel(
     fun setCommandStatus(status: CommandStatusModel) = viewModelScope.launch {
         _commandStatus.value = status
     }
+
+    /* ------------ Секция для операций связанных с получением информации о командах ------------ */
+    // Информация о команде
+    private val _commands: MutableLiveData<Resource<Response<ResponseBody>>> =
+        MutableLiveData()
+    val commands: LiveData<Resource<Response<ResponseBody>>>
+        get() = _commands
+
+    /**
+     * Установка новой информации о статусе в команде
+     */
+    fun commandsList() = viewModelScope.launch {
+        _commands.value = Resource.Loading
+        _commands.value = repository.playerCommandsList()
+    }
 }

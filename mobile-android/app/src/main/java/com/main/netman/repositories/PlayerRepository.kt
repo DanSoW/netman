@@ -62,4 +62,11 @@ class PlayerRepository(
 
         api.playerCommandCreate(requestBody)
     }
+
+    /**
+     * Получение списка всех комманд
+     */
+    suspend fun playerCommandsList() = safeApiCall {
+        api.playerCommandsList()
+    }
 }

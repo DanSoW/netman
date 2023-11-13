@@ -46,4 +46,10 @@ interface PlayerApi {
      */
     @POST(PlayerApiConstants.PLAYER_COMMAND_CREATE)
     suspend fun playerCommandCreate(@Body requestBody: RequestBody): Response<ResponseBody>
+
+    /**
+     * Получение списка всех команд
+     */
+    @GET(PlayerApiConstants.PLAYER_COMMANDS_LIST)
+    suspend fun playerCommandsList(): Response<ResponseBody>
 }

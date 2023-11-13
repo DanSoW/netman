@@ -4,5 +4,5 @@ import com.google.gson.annotations.SerializedName
 
 data class CommandInfoModel (
     @SerializedName("name") var name: String? = null,
-    @SerializedName("score") var score: Int? = null,
+    @SerializedName("count_members") var countMembers: Int? = null,
 )

@@ -7,12 +7,13 @@ import android.view.View
 import android.view.ViewGroup
 import com.main.netman.containers.base.BaseAdapter
 import com.main.netman.databinding.AdapterCommandItemBinding
+import com.main.netman.databinding.AdapterCommandItemEasyBinding
 import com.main.netman.models.command.CommandInfoModel
 
 class CommandAdapter(
     private val context: Context,
     private var commands: ArrayList<CommandInfoModel>
-) : BaseAdapter<CommandInfoModel, AdapterCommandItemBinding>() {
+) : BaseAdapter<CommandInfoModel, AdapterCommandItemEasyBinding>() {
 
     @SuppressLint("NotifyDataSetChanged")
     fun setCommands(commandsInput: ArrayList<CommandInfoModel>){
@@ -21,20 +22,20 @@ class CommandAdapter(
         notifyDataSetChanged()
     }
 
-    override fun getAdapterBinding(parent: ViewGroup, viewType: Int): BaseViewHolder<AdapterCommandItemBinding> {
-        val binding = AdapterCommandItemBinding.inflate(LayoutInflater.from(context), parent, false)
+    override fun getAdapterBinding(parent: ViewGroup, viewType: Int): BaseViewHolder<AdapterCommandItemEasyBinding> {
+        val binding = AdapterCommandItemEasyBinding.inflate(LayoutInflater.from(context), parent, false)
 
         return BaseViewHolder(binding)
     }
 
     @SuppressLint("SetTextI18n")
-    override fun onBindViewHolder(holder: BaseViewHolder<AdapterCommandItemBinding>, @SuppressLint(
+    override fun onBindViewHolder(holder: BaseViewHolder<AdapterCommandItemEasyBinding>, @SuppressLint(
         "RecyclerView"
     ) position: Int) {
         val command = commands[position]
 
         holder.binding.teamName.text = command.name
-        holder.binding.teamScore.text = command.score.toString()
+        holder.binding.countMembers.text = command.countMembers.toString()
         holder.binding.pgBarItem.visibility = View.GONE
     }
 

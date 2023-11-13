@@ -1,6 +1,7 @@
 package com.main.netman.containers.game.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +15,7 @@ import com.main.netman.containers.game.adapters.CommandAdapter
 import com.main.netman.containers.game.models.GameTeamViewModel
 import com.main.netman.databinding.FragmentFindTeamBinding
 import com.main.netman.models.command.CommandInfoModel
+import com.main.netman.models.command.CommandItemResponse
 import com.main.netman.models.command.TeamCreateModel
 import com.main.netman.models.command.TeamCreateRequestModel
 import com.main.netman.models.error.ErrorModel
@@ -37,27 +39,27 @@ class FindTeamFragment : BaseFragment<GameTeamViewModel, FragmentFindTeamBinding
             commands = arrayListOf(
                 CommandInfoModel(
                     name = "cmd 1",
-                    score = 25
+                    countMembers = 25
                 ),
                 CommandInfoModel(
                     name = "cmd 2",
-                    score = 20
+                    countMembers = 20
                 ),
                 CommandInfoModel(
                     name = "cmd 3",
-                    score = 45
+                    countMembers = 45
                 ),
                 CommandInfoModel(
                     name = "cmd 4",
-                    score = 13
+                    countMembers = 13
                 ),
                 CommandInfoModel(
                     name = "cmd 5",
-                    score = 12
+                    countMembers = 12
                 ),
                 CommandInfoModel(
                     name = "cmd 6",
-                    score = 11
+                    countMembers = 11
                 )
             )
         )
@@ -118,6 +120,39 @@ class FindTeamFragment : BaseFragment<GameTeamViewModel, FragmentFindTeamBinding
                 else -> {}
             }
         }
+
+        commandsList()
+
+        viewModel.commands.observe(viewLifecycleOwner) {
+            binding.progressBar.visible(it is Resource.Loading)
+            hideKeyboard()
+
+            when (it) {
+                // Обработка успешного сетевого взаимодействия
+                is Resource.Success -> {
+                    if (it.value.isSuccessful) {
+                        val body = Gson().fromJson(it.value.body().toString(), Array<CommandItemResponse>::class.java)
+                        // handleSuccessMessage("Команды: \"${it.value.body().toString()}\"")
+                        Log.w("TEST", "Команды: \"${body.first().name}\"")
+                    } else {
+                        val error = Gson().fromJson(
+                            it.value.errorBody()?.string().toString(), ErrorModel::class.java
+                        )
+                        handleErrorMessage(
+                            if (error.errors != null && error.errors!!.isNotEmpty()) error.errors?.first()!!.msg
+                            else error.message!!
+                        )
+                    }
+                }
+
+                // Обработка ошибок связанные с сетью
+                is Resource.Failure -> {
+                    handleApiError(it) { }
+                }
+
+                else -> {}
+            }
+        }
     }
 
     /**
@@ -145,5 +180,9 @@ class FindTeamFragment : BaseFragment<GameTeamViewModel, FragmentFindTeamBinding
                 name = name
             )
         )
+    }
+
+    private fun commandsList() {
+        viewModel.commandsList()
     }
 }
