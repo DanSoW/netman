@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_game"
+    app:startDestination="@id/navigateTeamFragment">
+
+    <fragment
+        android:id="@+id/navigateTeamFragment"
+        android:name="com.main.netman.containers.game.fragments.NavigateTeamFragment"
+        android:label="fragment_navigate_team"
+        tools:layout="@layout/fragment_navigate_team" >
+        <action
+            android:id="@+id/action_navigateTeamFragment_to_findTeamFragment"
+            app:destination="@id/findTeamFragment" />
+        <action
+            android:id="@+id/action_navigateTeamFragment_to_leadTeamFragment"
+            app:destination="@id/leadTeamFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/findTeamFragment"
+        android:name="com.main.netman.containers.game.fragments.FindTeamFragment"
+        android:label="fragment_find_team"
+        tools:layout="@layout/fragment_find_team" />
+    <fragment
+        android:id="@+id/leadTeamFragment"
+        android:name="com.main.netman.containers.game.fragments.LeadTeamFragment"
+        android:label="fragment_lead_team"
+        tools:layout="@layout/fragment_lead_team" />
+</navigation>

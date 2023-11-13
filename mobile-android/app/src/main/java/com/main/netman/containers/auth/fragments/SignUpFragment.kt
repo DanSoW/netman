@@ -1,0 +1,228 @@
+package com.main.netman.containers.auth.fragments
+
+import android.annotation.SuppressLint
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.core.widget.addTextChangedListener
+import androidx.lifecycle.lifecycleScope
+import com.google.gson.Gson
+import com.google.gson.JsonParser
+import com.main.netman.MainActivity
+import com.main.netman.R
+import com.main.netman.containers.auth.models.AuthViewModel
+import com.main.netman.containers.base.BaseFragment
+import com.main.netman.databinding.FragmentSignUpBinding
+import com.main.netman.models.auth.AuthSignUpModel
+import com.main.netman.models.error.ErrorModel
+import com.main.netman.network.Resource
+import com.main.netman.network.apis.AuthApi
+import com.main.netman.repositories.AuthRepository
+import com.main.netman.utils.date.DatePickerHelper
+import com.main.netman.utils.enable
+import com.main.netman.utils.handleApiError
+import com.main.netman.utils.handleErrorMessage
+import com.main.netman.utils.hideKeyboard
+import com.main.netman.utils.navigation
+import com.main.netman.utils.startNewActivity
+import com.main.netman.utils.visible
+import kotlinx.coroutines.launch
+import java.util.Calendar
+
+class SignUpFragment : BaseFragment<AuthViewModel, FragmentSignUpBinding, AuthRepository>() {
+    lateinit var datePicker: DatePickerHelper
+
+    // Обработка одного из методов жизненного цикла фрагмента,
+    // который обозначает что содержащая его активность вызвала
+    // метод onCreate() и полностью создалась, таким образом
+    // предоставив возможность использовать данные активности
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+
+
+        // Первоначальная установка состояний компонентов
+        binding.progressBar.visible(false)
+        binding.btnAuth.enable(false)
+
+        /*binding.dateBirthday.addTextChangedListener {
+            object : TextWatcher {
+
+                var sb: StringBuilder = StringBuilder("")
+                var ignore = false
+                override fun afterTextChanged(s: Editable?) {}
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+
+                    if (ignore) {
+                        ignore = false
+                        return
+                    }
+
+                    sb.clear()
+                    sb.append(
+                        if (s!!.length > 10) {
+                            s.subSequence(0, 10)
+                        } else {
+                            s
+                        }
+                    )
+
+                    if (sb.lastIndex == 2) {
+                        if (sb[2] != '/') {
+                            sb.insert(2, "/")
+                        }
+                    } else if (sb.lastIndex == 5) {
+                        if (sb[5] != '/') {
+                            sb.insert(5, "/")
+                        }
+                    }
+
+                    ignore = true
+                    binding.dateBirthday.setText(sb.toString())
+                    binding.dateBirthday.setSelection(sb.length)
+                }
+            }
+        }*/
+
+        datePicker = DatePickerHelper(requireActivity())
+        binding.dateBirthday.isFocusable = false
+        binding.dateBirthday.isClickable = true
+
+        binding.dateBirthday.setOnClickListener {
+            showDatePickerDialog()
+        }
+
+        // Устанавливаем прослушивание на изменение данных loginResponse из viewModel
+        // абстрактного класса (который был сгенерирован на основе переданного AuthViewModel)
+        viewModel.signUpResponse.observe(viewLifecycleOwner) {
+            // Состояние компонента зависит от того, находится ли ресурс
+            // в состоянии загрузки или нет
+            binding.progressBar.visible(it is Resource.Loading)
+            hideKeyboard()
+
+            when (it) {
+                // Обработка успешного сетевого взаимодействия
+                is Resource.Success -> {
+                    if (it.value.isSuccessful) {
+                        // Запуск в контексте жизненного цикла
+                        lifecycleScope.launch {
+                            // Сохранение полученных данных в формате JSON-строки
+                            viewModel.saveAuth(
+                                Gson().toJson(
+                                    JsonParser.parseString(
+                                        it.value.body()?.string()
+                                    )
+                                )
+                            )
+
+                            requireActivity().startNewActivity(MainActivity::class.java)
+                        }
+                    } else {
+                        val error = Gson().fromJson(
+                            it.value.errorBody()?.string().toString(),
+                            ErrorModel::class.java
+                        )
+
+                        handleErrorMessage(
+                            if (error.errors != null && error.errors!!.isNotEmpty())
+                                error.errors?.first()!!.msg
+                            else
+                                error.message!!
+                        )
+                    }
+                }
+
+                // Обработка ошибок связанные с сетью
+                is Resource.Failure -> {
+                    handleApiError(it) { signUp() }
+                }
+
+                else -> {}
+            }
+        }
+
+        // Установка поведения на изменения текста в элементе управления
+        binding.password.addTextChangedListener {
+            val email = binding.password.text.toString().trim()
+            binding.btnAuth.enable(email.isNotEmpty() && it.toString().isNotEmpty())
+        }
+
+        binding.btnAuth.setOnClickListener {
+            signUp()
+        }
+
+        binding.txtSignUp.setOnClickListener {
+            navigation(R.id.action_signInFragment_to_signUpFragment)
+        }
+    }
+
+    /**
+     * Метод получения ViewModel текущего фрагмента
+     */
+    override fun getViewModel() = AuthViewModel::class.java
+
+    /**
+     * Метод получения экземпляра фрагмента
+     */
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ) = FragmentSignUpBinding.inflate(inflater, container, false)
+
+    /**
+     * Метод получения репозитория данного фрагмента
+     */
+    override fun getFragmentRepository() =
+        AuthRepository(remoteDataSource.buildApi(AuthApi::class.java, null, cookiePreferences, false), userPreferences)
+
+    /**
+     * Функционал элемента управления, который был выведен в отдельную функцию
+     */
+    private fun signUp() {
+        val phoneNum = binding.phoneNum.text.toString()
+            .replace(" ", "")
+            .replace("(", "")
+            .replace(")", "")
+            .replace("-", "")
+            .drop(2)
+
+        viewModel.signUp(
+            AuthSignUpModel(
+                name = binding.name.text.toString(),
+                surname = binding.surname.text.toString(),
+                nickname = binding.nickname.text.toString(),
+                phoneNum = phoneNum,
+                dateBirthday = binding.dateBirthday.text.toString(),
+                location = binding.location.text.toString(),
+                email = binding.email.text.toString(),
+                password = binding.password.text.toString()
+            )
+        )
+    }
+
+    /**
+     * Открытие панели выбора даты
+     */
+    private fun showDatePickerDialog() {
+        val cal = Calendar.getInstance()
+        val d = cal.get(Calendar.DAY_OF_MONTH)
+        val m = cal.get(Calendar.MONTH)
+        val y = cal.get(Calendar.YEAR)
+        datePicker.showDialog(d, m, y, object : DatePickerHelper.Callback {
+            @SuppressLint("SetTextI18n")
+            override fun onDateSelected(dayofMonth: Int, month: Int, year: Int) {
+                val dayStr = if (dayofMonth < 10) "0${dayofMonth}" else "$dayofMonth"
+                val mon = month + 1
+                val monthStr = if (mon < 10) "0${mon}" else "$mon"
+                binding.dateBirthday.setText("${year}${monthStr}${dayStr}")
+            }
+        })
+    }
+}
