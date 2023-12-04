@@ -213,6 +213,7 @@ class PlayerController {
             const body = new UsersIdDto(req.body);
             const data = await commandService.commandsList(body);
 
+            console.log(JSON.parse(JSON.stringify(data)));
             return res.status(200).json(data);
         }catch(e){
             next(e);
