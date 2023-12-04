@@ -41,7 +41,7 @@ class GameActivity : AppCompatActivity() {
         binding.bnvActivityGame.menu.findItem(R.id.itemGameMenu).isChecked = true
 
         // Установка badges
-        badgeSetup(R.id.itemMessengerMenu,100)
+        // badgeSetup(R.id.itemMessengerMenu,100)
     }
 
     @Deprecated("Deprecated in Java")
@@ -67,9 +67,11 @@ class GameActivity : AppCompatActivity() {
         binding.bnvActivityGame.menu.findItem(menuId).isChecked = true
 
         when(menuId){
+            /*
             R.id.itemMessengerMenu -> {
                 return MessengerActivity::class.java
             }
+             */
 
             R.id.itemGameMenu -> {
                 return null

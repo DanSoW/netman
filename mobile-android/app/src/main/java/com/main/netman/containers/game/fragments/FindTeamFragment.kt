@@ -28,7 +28,8 @@ import com.main.netman.utils.handleSuccessMessage
 import com.main.netman.utils.hideKeyboard
 import com.main.netman.utils.visible
 
-class FindTeamFragment : BaseFragment<GameTeamViewModel, FragmentFindTeamBinding, PlayerRepository>() {
+class FindTeamFragment :
+    BaseFragment<GameTeamViewModel, FragmentFindTeamBinding, PlayerRepository>() {
     private lateinit var commandAdapter: CommandAdapter
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -37,7 +38,7 @@ class FindTeamFragment : BaseFragment<GameTeamViewModel, FragmentFindTeamBinding
         commandAdapter = CommandAdapter(
             requireContext(),
             commands = arrayListOf(
-                CommandInfoModel(
+                /*CommandInfoModel(
                     name = "cmd 1",
                     countMembers = 25
                 ),
@@ -60,7 +61,7 @@ class FindTeamFragment : BaseFragment<GameTeamViewModel, FragmentFindTeamBinding
                 CommandInfoModel(
                     name = "cmd 6",
                     countMembers = 11
-                )
+                )*/
             )
         )
 
@@ -72,21 +73,23 @@ class FindTeamFragment : BaseFragment<GameTeamViewModel, FragmentFindTeamBinding
             dialogBuilder.setView(viewDialog)
             val dialog: androidx.appcompat.app.AlertDialog? = dialogBuilder.show()
 
-            viewDialog.findViewById<Button>(R.id.cancel_create_command).setOnClickListener(View.OnClickListener {
-                dialog?.dismiss()
-            })
+            viewDialog.findViewById<Button>(R.id.cancel_create_command)
+                .setOnClickListener(View.OnClickListener {
+                    dialog?.dismiss()
+                })
 
             val commandName = viewDialog.findViewById<EditText>(R.id.create_command_name)
-            viewDialog.findViewById<Button>(R.id.accept_create_command).setOnClickListener(View.OnClickListener {
-                if(commandName.text.toString().length < 3){
-                    handleErrorMessage("Название команды должно состоять из трёх и более символов")
-                    dialog?.dismiss()
-                    return@OnClickListener
-                }
+            viewDialog.findViewById<Button>(R.id.accept_create_command)
+                .setOnClickListener(View.OnClickListener {
+                    if (commandName.text.toString().length < 3) {
+                        handleErrorMessage("Название команды должно состоять из трёх и более символов")
+                        dialog?.dismiss()
+                        return@OnClickListener
+                    }
 
-                createTeam(commandName.text.toString())
-                dialog?.dismiss()
-            })
+                    createTeam(commandName.text.toString())
+                    dialog?.dismiss()
+                })
         }
 
         // Обработка результата запроса на создание новой команды
@@ -98,8 +101,10 @@ class FindTeamFragment : BaseFragment<GameTeamViewModel, FragmentFindTeamBinding
                 // Обработка успешного сетевого взаимодействия
                 is Resource.Success -> {
                     if (it.value.isSuccessful) {
-                        val body = Gson().fromJson(it.value.body().toString(), TeamCreateRequestModel::class.java)
-
+                        val body = Gson().fromJson(
+                            it.value.body().toString(),
+                            TeamCreateRequestModel::class.java
+                        )
                         handleSuccessMessage("Команда \"${body.name}\" успешно создана!")
                     } else {
                         val error = Gson().fromJson(
@@ -131,9 +136,19 @@ class FindTeamFragment : BaseFragment<GameTeamViewModel, FragmentFindTeamBinding
                 // Обработка успешного сетевого взаимодействия
                 is Resource.Success -> {
                     if (it.value.isSuccessful) {
-                        val body = Gson().fromJson(it.value.body().toString(), Array<CommandItemResponse>::class.java)
-                        // handleSuccessMessage("Команды: \"${it.value.body().toString()}\"")
-                        Log.w("TEST", "Команды: \"${body.first().name}\"")
+                        val body = Gson().fromJson(
+                            it.value.body()?.string(),
+                            Array<CommandItemResponse>::class.java
+                        )
+                        commandAdapter.setCommands(
+                            body.map { it ->
+                                return@map CommandInfoModel(
+                                    name = it.name,
+                                    countMembers = it.countPlayers
+                                )
+                            } as ArrayList<CommandInfoModel>
+                        )
+
                     } else {
                         val error = Gson().fromJson(
                             it.value.errorBody()?.string().toString(), ErrorModel::class.java
@@ -172,7 +187,13 @@ class FindTeamFragment : BaseFragment<GameTeamViewModel, FragmentFindTeamBinding
      * Метод получения репозитория данного фрагмента
      */
     override fun getFragmentRepository() =
-        PlayerRepository(remoteDataSource.buildApi(PlayerApi::class.java, userPreferences, cookiePreferences))
+        PlayerRepository(
+            remoteDataSource.buildApi(
+                PlayerApi::class.java,
+                userPreferences,
+                cookiePreferences
+            )
+        )
 
     private fun createTeam(name: String) {
         viewModel.createTeam(

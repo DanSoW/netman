@@ -52,7 +52,7 @@ class ProfileActivity : AppCompatActivity() {
         binding.bnvActivityProfile.menu.findItem(R.id.itemProfileMenu).isChecked = true
 
         // Установка badges
-        badgeSetup(R.id.itemMessengerMenu,100)
+        // badgeSetup(R.id.itemMessengerMenu,100)
 
         if ((checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED) || (checkSelfPermission(
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -90,9 +90,9 @@ class ProfileActivity : AppCompatActivity() {
         binding.bnvActivityProfile.menu.findItem(menuId).isChecked = true
 
         when(menuId){
-            R.id.itemMessengerMenu -> {
+            /*R.id.itemMessengerMenu -> {
                 return MessengerActivity::class.java
-            }
+            }*/
 
             R.id.itemGameMenu -> {
                 return GameActivity::class.java

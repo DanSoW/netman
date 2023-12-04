@@ -69,7 +69,7 @@ class HomeActivity : AppCompatActivity() {
         binding.bnvActivityHome.menu.findItem(R.id.itemMapMenu).isChecked = true
 
         // Установка badges
-        badgeSetup(R.id.itemMessengerMenu, 100)
+        // badgeSetup(R.id.itemMessengerMenu, 100)
 
         // Запрашивание разрешения для работы с файловым хранилищем
         // verifyStoragePermissions()
@@ -230,9 +230,11 @@ class HomeActivity : AppCompatActivity() {
         binding.bnvActivityHome.menu.findItem(menuId).isChecked = true
 
         when (menuId) {
+            /*
             R.id.itemMessengerMenu -> {
                 return MessengerActivity::class.java
             }
+             */
 
             /*R.id.itemCreatorMenu -> {
                 return CreatorActivity::class.java

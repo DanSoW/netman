@@ -77,7 +77,7 @@ class CreatorActivity : AppCompatActivity() {
         binding.bnvActivityCreator.menu.findItem(R.id.itemProfileMenu).isChecked = true
 
         // Установка badges
-        badgeSetup(R.id.itemMessengerMenu, 100)
+        // badgeSetup(R.id.itemMessengerMenu, 100)
 
         /*binding.pickImage.setOnClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -125,9 +125,11 @@ class CreatorActivity : AppCompatActivity() {
         binding.bnvActivityCreator.menu.findItem(menuId).isChecked = true
 
         when (menuId) {
+            /*
             R.id.itemMessengerMenu -> {
                 return MessengerActivity::class.java
             }
+             */
 
             R.id.itemGameMenu -> {
                 return GameActivity::class.java

@@ -39,11 +39,11 @@ class MessengerActivity : AppCompatActivity() {
             )
         }*/
 
-        idDeque.add(R.id.itemMessengerMenu)
-        binding.bnvActivityMessenger.menu.findItem(R.id.itemMessengerMenu).isChecked = true
+        /*idDeque.add(R.id.itemMessengerMenu)
+        binding.bnvActivityMessenger.menu.findItem(R.id.itemMessengerMenu).isChecked = true*/
 
         // Установка badges
-        badgeSetup(R.id.itemMessengerMenu,100)
+        //badgeSetup(R.id.itemMessengerMenu,100)
     }
 
     @Deprecated("Deprecated in Java")
@@ -69,9 +69,9 @@ class MessengerActivity : AppCompatActivity() {
         binding.bnvActivityMessenger.menu.findItem(menuId).isChecked = true
 
         when(menuId){
-            R.id.itemMessengerMenu -> {
+            /*R.id.itemMessengerMenu -> {
                 return null
-            }
+            }*/
 
             R.id.itemGameMenu -> {
                 return GameActivity::class.java
