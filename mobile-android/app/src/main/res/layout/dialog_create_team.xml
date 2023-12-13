@@ -38,7 +38,7 @@
         app:layout_constraintBottom_toTopOf="@+id/cancel_create_command"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView49"
+        app:layout_constraintTop_toBottomOf="@+id/tvDialogDescription"
         tools:ignore="TouchTargetSizeCheck" />
 
 
@@ -75,7 +75,7 @@
         app:layout_constraintTop_toTopOf="@+id/cancel_create_command" />
 
     <TextView
-        android:id="@+id/textView49"
+        android:id="@+id/tvDialogDescription"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"

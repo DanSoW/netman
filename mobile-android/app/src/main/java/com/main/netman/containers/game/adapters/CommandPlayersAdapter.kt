@@ -33,7 +33,7 @@ class CommandPlayersAdapter(
         "RecyclerView"
     ) position: Int) {
         val player = players[position]
-        holder.binding.tvNickname.text = "${player.name}"
+        holder.binding.tvNickname.text = "${player.nickname}"
         holder.binding.tvFullname.text = "${player.surname} ${player.name}"
         if(player.creator == true) {
             holder.binding.tvPlayerStatus.text = "Создатель"
@@ -44,7 +44,6 @@ class CommandPlayersAdapter(
         holder.binding.tvRating.text = "${player.rating}"
         player.refImage?.let {
             if(it.isNotEmpty()) {
-                Log.w("HELLO", "IMG: ${it}")
                 Picasso.get().load(it).into(holder.binding.avatarPlayerItem)
             }
         }

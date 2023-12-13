@@ -7,6 +7,7 @@ import com.main.netman.containers.base.BaseViewModel
 import com.main.netman.models.command.CommandStatusModel
 import com.main.netman.models.command.CommandsIdModel
 import com.main.netman.models.command.TeamCreateModel
+import com.main.netman.models.game.GameIdModel
 import com.main.netman.network.Resource
 import com.main.netman.repositories.PlayerRepository
 import kotlinx.coroutines.launch
@@ -118,5 +119,47 @@ class GameTeamViewModel(
     fun commandPlayers(commandsIdModel: CommandsIdModel) = viewModelScope.launch {
         _commandPlayers.value = Resource.Loading
         _commandPlayers.value = repository.playerCommandPlayers(commandsIdModel)
+    }
+
+    private val _availableGames: MutableLiveData<Resource<Response<ResponseBody>>> =
+        MutableLiveData()
+    val availableGames: LiveData<Resource<Response<ResponseBody>>>
+        get() = _availableGames
+
+
+    /**
+     * Получение информации о игроках в команде
+     */
+    fun commandAvailableGames() = viewModelScope.launch {
+        _availableGames.value = Resource.Loading
+        _availableGames.value = repository.playerCommandAvailableGames()
+    }
+
+    private val _registerGame: MutableLiveData<Resource<Response<ResponseBody>>> =
+        MutableLiveData()
+    val registerGame: LiveData<Resource<Response<ResponseBody>>>
+        get() = _registerGame
+
+
+    /**
+     * Получение информации о игроках в команде
+     */
+    fun playerCommandRegisterGame(infoGamesId: GameIdModel) = viewModelScope.launch {
+        _registerGame.value = Resource.Loading
+        _registerGame.value = repository.playerCommandRegisterGame(infoGamesId)
+    }
+
+    private val _currentGame: MutableLiveData<Resource<Response<ResponseBody>>> =
+        MutableLiveData()
+    val currentGame: LiveData<Resource<Response<ResponseBody>>>
+        get() = _currentGame
+
+
+    /**
+     * Получение информации о игроках в команде
+     */
+    fun playerCommandCurrentGame(commandsId: CommandsIdModel) = viewModelScope.launch {
+        _currentGame.value = Resource.Loading
+        _currentGame.value = repository.playerCommandCurrentGame(commandsId)
     }
 }

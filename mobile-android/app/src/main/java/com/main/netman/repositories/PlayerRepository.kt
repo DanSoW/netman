@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.main.netman.models.command.CommandInfoModel
 import com.main.netman.models.command.CommandsIdModel
 import com.main.netman.models.command.TeamCreateModel
+import com.main.netman.models.game.GameIdModel
 import com.main.netman.models.user.UserInfoUpdateModel
 import com.main.netman.network.apis.PlayerApi
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -106,5 +107,30 @@ class PlayerRepository(
         val requestBody = Gson().toJson(body).toRequestBody("application/json".toMediaTypeOrNull())
 
         api.playerCommandPlayers(requestBody)
+    }
+
+    /**
+     * Получение списка доступных игр
+     */
+    suspend fun playerCommandAvailableGames() = safeApiCall {
+        api.playerCommandAvailableGames()
+    }
+
+    /**
+     * Регистрация команды на игру
+     */
+    suspend fun playerCommandRegisterGame(body: GameIdModel) = safeApiCall {
+        val requestBody = Gson().toJson(body).toRequestBody("application/json".toMediaTypeOrNull())
+
+        api.playerCommandRegisterGame(requestBody)
+    }
+
+    /**
+     * Получение информации о текущей игре
+     */
+    suspend fun playerCommandCurrentGame(body: CommandsIdModel) = safeApiCall {
+        val requestBody = Gson().toJson(body).toRequestBody("application/json".toMediaTypeOrNull())
+
+        api.playerCommandCurrentGame(requestBody)
     }
 }

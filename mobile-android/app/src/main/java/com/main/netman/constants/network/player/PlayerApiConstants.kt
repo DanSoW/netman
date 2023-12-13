@@ -12,4 +12,7 @@ object PlayerApiConstants {
     const val PLAYER_COMMAND_JOIN = "${BASE}/command/join"
     const val PLAYER_COMMAND_DETACH = "${BASE}/command/detach"
     const val PLAYER_COMMANDS_LIST = "${BASE}/commands/list"
+    const val PLAYER_COMMAND_AVAILABLE_GAMES = "${BASE}/command/available/games"
+    const val PLAYER_COMMAND_REGISTER_GAME = "${BASE}/command/register/game"
+    const val PLAYER_COMMAND_CURRENT_GAME = "${BASE}/command/current/game"
 }

@@ -45,7 +45,7 @@ class LeadTeamFragment :
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        // Получение идентификатора команды
+        // Получение информации о команде
         val args = arguments
         val commandsId = args?.getInt("commands_id")
         val status = args?.getInt("status")

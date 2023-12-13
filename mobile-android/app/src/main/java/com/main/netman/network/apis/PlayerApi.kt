@@ -76,4 +76,22 @@ interface PlayerApi {
      */
     @POST(PlayerApiConstants.PLAYER_COMMAND_PLAYERS)
     suspend fun playerCommandPlayers(@Body requestBody: RequestBody): Response<ResponseBody>
+
+    /**
+     * Получение информации о доступных играх для командного участия
+     */
+    @GET(PlayerApiConstants.PLAYER_COMMAND_AVAILABLE_GAMES)
+    suspend fun playerCommandAvailableGames(): Response<ResponseBody>
+
+    /**
+     * Регистрация команды на игру
+     */
+    @POST(PlayerApiConstants.PLAYER_COMMAND_REGISTER_GAME)
+    suspend fun playerCommandRegisterGame(@Body requestBody: RequestBody): Response<ResponseBody>
+
+    /**
+     * Получение информации о текущей игре
+     */
+    @POST(PlayerApiConstants.PLAYER_COMMAND_CURRENT_GAME)
+    suspend fun playerCommandCurrentGame(@Body requestBody: RequestBody): Response<ResponseBody>
 }

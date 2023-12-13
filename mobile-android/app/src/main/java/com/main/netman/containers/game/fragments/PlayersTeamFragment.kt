@@ -33,15 +33,7 @@ class PlayersTeamFragment(
 
         commandPlayersAdapter = CommandPlayersAdapter(
             requireContext(),
-            players = arrayListOf(
-                CommandPlayerModel(
-                    id = 1,
-                    name = "a",
-                    surname = "aaa",
-                    rating = 23,
-                    nickname = "kevin"
-                )
-            )
+            players = arrayListOf()
         )
 
         binding.rvPlayers.adapter = commandPlayersAdapter

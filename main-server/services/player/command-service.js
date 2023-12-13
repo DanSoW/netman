@@ -139,7 +139,7 @@ class CommandService {
 
             // Отсутствие у команды текущих игр
             if (dataRegisterGames.length <= 0) {
-                return {};
+                return null;
             }
 
             const currentGame = await db.InfoGames.findOne({

@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="15dp"
         android:gravity="center_horizontal"
-        android:text="Вступление в команду"
+        android:text="Регистрация на игру"
         android:textAlignment="center"
         android:textColor="#FFFFFF"
         android:textSize="18dp"
@@ -24,7 +24,7 @@
 
 
     <Button
-        android:id="@+id/cancel_join_command"
+        android:id="@+id/cancel_join_game_command"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
@@ -36,14 +36,14 @@
         android:textColor="@color/white"
         app:backgroundTint="@null"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/accept_join_command"
+        app:layout_constraintEnd_toStartOf="@+id/accept_join_game_command"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tvDialogDescription"
         app:layout_constraintVertical_bias="1.0" />
 
     <Button
-        android:id="@+id/accept_join_command"
+        android:id="@+id/accept_join_game_command"
         android:layout_width="100dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="24dp"
@@ -51,18 +51,19 @@
         android:text="Да"
         android:textColor="@color/white"
         app:backgroundTint="@null"
-        app:layout_constraintBottom_toBottomOf="@+id/cancel_join_command"
+        app:layout_constraintBottom_toBottomOf="@+id/cancel_join_game_command"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/cancel_join_command" />
+        app:layout_constraintTop_toTopOf="@+id/cancel_join_game_command" />
 
     <TextView
         android:id="@+id/tvDialogDescription"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="24dp"
-        android:text="Вы хотите вступить в команду?"
+        android:text="Вы хотите зарегистрироваться на игру ?"
+        android:textAlignment="center"
         android:textColor="#FFFFFF"
         android:textSize="18sp"
         app:layout_constraintEnd_toEndOf="parent"
