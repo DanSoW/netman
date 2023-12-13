@@ -553,7 +553,6 @@ io.on("connection", (socket) => {
             // Поиск пользователя из списка подключенных
             let index = duExistsValueIndex(dataUsers, socket.id);
 
-            console.log("INDEX: ", index);
             if (index < 0) {
                 return;
             }

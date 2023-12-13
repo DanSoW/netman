@@ -50,13 +50,15 @@ router.post(address_config.m_download_stats_instructions, async function (req, r
         const statsMediaInstructions = [];
 
         for (let i = 0; i < allMediaInstructions.length; i++) {
-            const stats = fs.statSync(allMediaInstructions[i].dataValues.local_path);
-            statsMediaInstructions.push({
-                name_file: allMediaInstructions[i].dataValues.name_file,
-                date_created: allMediaInstructions[i].dataValues.date_created,
-                size_mb: Math.round(stats["size"] / (1024 * 1024)),
-                local_path: allMediaInstructions[i].dataValues.local_path
-            });
+            if (fs.existsSync(allMediaInstructions[i].dataValues.local_path)) {
+                const stats = fs.statSync(allMediaInstructions[i].dataValues.local_path);
+                statsMediaInstructions.push({
+                    name_file: allMediaInstructions[i].dataValues.name_file,
+                    date_created: allMediaInstructions[i].dataValues.date_created,
+                    size_mb: Math.round(stats["size"] / (1024 * 1024)),
+                    local_path: allMediaInstructions[i].dataValues.local_path
+                });
+            }
         }
 
         return res.status(201).json({
@@ -271,7 +273,7 @@ router.post(address_config.f_download, async function (req, res) {
         });
 
         // Проверка загружен файл или нет
-        if(!mediaFile){
+        if (!mediaFile) {
             return res.status(201).json({
                 message: "Файл не загружен!"
             });

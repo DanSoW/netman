@@ -84,15 +84,23 @@ class CreatorService {
             }
 
             // Добавление игры в очередь проверки модераторами
-            await db.QueueGames.create({
+            /*await db.QueueGames.create({
                 info_games_id: game.id,
                 date: new Date()
+            }, { transaction: t });*/
+
+            // Добавление игры в проверку (пропуск механизма модерации)
+            await db.CheckedGames.create({
+                info_games_id: game.id,
+                accepted: true,
+                users_id: null
             }, { transaction: t });
 
             await t.commit();
 
             return data;
         } catch (e) {
+            console.log(e);
             await t.rollback();
             throw ApiError.BadRequest(e.message);
         }

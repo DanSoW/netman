@@ -59,10 +59,10 @@ class SecurityService {
 
             // Проверка прав доступа на определённый модуль
             if (resultModules[data.name_module] === false) {
-                return new FlagDto(false);
+                return (new FlagDto(false));
             }
 
-            return new FlagDto(true);
+            return (new FlagDto(true));
         } catch (e) {
             await t.rollback();
             throw ApiError.BadRequest(e.message);

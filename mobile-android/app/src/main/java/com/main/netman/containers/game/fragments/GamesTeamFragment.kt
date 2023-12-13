@@ -6,12 +6,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.main.netman.R
+import com.main.netman.constants.data.value.CommandStatus
 import com.main.netman.containers.base.BaseFragment
 import com.main.netman.containers.game.models.GameTeamViewModel
 import com.main.netman.databinding.FragmentGamesTeamBinding
 import com.main.netman.databinding.FragmentLeadTeamBinding
 import com.main.netman.network.apis.PlayerApi
 import com.main.netman.repositories.PlayerRepository
+import com.main.netman.utils.navigation
 
 
 class GamesTeamFragment(
@@ -21,6 +23,14 @@ class GamesTeamFragment(
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+
+        if(commandStatus == CommandStatus.TEAM_CREATOR) {
+            binding.constraintJoinGame.visibility = View.VISIBLE
+
+            binding.btnJoinGame.setOnClickListener {
+                navigation(R.id.action_le)
+            }
+        }
     }
 
     /**

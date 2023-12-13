@@ -11,12 +11,12 @@ const CheckedGames = (sequelize, DataTypes) => {
         accepted: {
             type: DataTypes.BOOLEAN,
             allowNull: false
-        }
+        },
     });
 
     model.associate = (models) => {
         // Создание внешнего ключа из таблицы checked_games, на таблицу users
-        model.belongsTo(models.Users, genForeignKey('users_id'));
+        model.belongsTo(models.Users, genForeignKey('users_id', true));
 
         // Создание внешнего ключа из таблицы checked_games, на таблицу info_games
         model.belongsTo(models.InfoGames, genForeignKey('info_games_id'));

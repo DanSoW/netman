@@ -45,12 +45,17 @@ class LeadTeamFragment :
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
+        // Получение идентификатора команды
+        val args = arguments
+        val commandsId = args?.getInt("commands_id")
+        val status = args?.getInt("status")
+
         // Определение адаптера для View Pager
         _viewPagerAdapter = TeamViewPagerAdapter(
             childFragmentManager,
-            0,
+            commandsId,
             "",
-            viewModel.commandStatus.value?.status,
+            status,
             if (viewModel.commandStatus.value?.commandsId != null) viewModel.commandStatus.value!!.commandsId else 0
         )
 

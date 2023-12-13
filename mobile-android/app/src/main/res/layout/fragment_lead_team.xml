@@ -176,7 +176,6 @@
                 android:id="@+id/fltViewPager"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
-                android:layout_marginBottom="128dp"
                 android:contentDescription="@string/app_name"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -187,19 +186,6 @@
 
             </androidx.viewpager.widget.ViewPager>
         </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <View
-            android:id="@+id/vPlusTeamBoss"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginBottom="200dp"
-            android:background="@drawable/ic_plus_team"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout4_teamBoss" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

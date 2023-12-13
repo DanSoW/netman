@@ -1,2 +1,2 @@
 run:
-	npm star
+	npm start

@@ -1,14 +1,10 @@
-// *********************************************************
-// Маршрутизация для управления базой данных медиа файлов
-// *********************************************************
-
 const { Router } = require('express');
-const router = Router();                    //маршрутизация
-const logger = require('../logger/logger'); //логгер
+const router = Router();                    
+const logger = require('../logger/logger');
 const fetch = require('node-fetch');
-const config = require("config");           //подключение конфига
+const config = require("config");           
 const { address_config }
-    = require('../config/address.config');  //константы маршрутов
+    = require('../config/address.config');  
 const multer = require("multer");
 const upload = multer({ dest: "uploads" });
 const {
@@ -23,15 +19,15 @@ router.post(address_config.m_upload, upload.single("file"), async function (req,
             games_id,
             ref_media_instructions,
             access_token
-        } = JSON.parse(req.body.video_data); // Данные о видео
+        } = JSON.parse(req.body.video_data); // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ
 
-        // Проверка токена ...
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ ...
 
         let filedata = req.file;
 
         if (!filedata) {
             return res.status(201).json({
-                message: "Видео не загружено!"
+                message: "пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!"
             });
         }
         else {
@@ -68,7 +64,7 @@ router.post(address_config.m_download, async function (req, res) {
             access_token
         } = req.body;
 
-        // Проверка токена ...
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ ...
 
         const mediaFile = await MediaResults.findOne({
             where: {
@@ -79,7 +75,7 @@ router.post(address_config.m_download, async function (req, res) {
         if (!mediaFile) {
             return res.status(404).json({
                 errors: null,
-                message: "Файла не найдено!"
+                message: "пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ!"
             });
         }
 
@@ -100,7 +96,7 @@ router.post(address_config.m_instructions_download, async function (req, res) {
             access_token
         } = req.body;
 
-        // Проверка токена ...
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ ...
 
         const mediaFile = await MediaInstructions.findOne({
             where: {
@@ -111,7 +107,7 @@ router.post(address_config.m_instructions_download, async function (req, res) {
         if (!mediaFile) {
             return res.status(404).json({
                 errors: null,
-                message: "Файла не найдено!"
+                message: "пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ!"
             });
         }
 

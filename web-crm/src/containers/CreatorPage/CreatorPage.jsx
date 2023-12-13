@@ -163,18 +163,15 @@ const CreatorPage = () => {
         //чтение свободных меток для создания квестов
         try {
             // UsersId и AccessToken авторизованного пользователя взяты из локального хранилища
-            const usersId = JSON.parse(
+            /*const usersId = JSON.parse(
                 localStorage.getItem(default_config.storageName)
             ).users_id;
             const accessToken = JSON.parse(
                 localStorage.getItem(default_config.storageName)
-            ).access_token;
+            ).access_token;*/
 
             //получение свободных меток для создания квестов
-            const values = await request(address_config.map_marks_free, "POST", {
-                users_id: usersId,
-                access_token: accessToken,
-            });
+            const values = await request(address_config.map_marks_free, "GET");
 
             //обработка ошибок
             if (values.message) {
@@ -190,7 +187,7 @@ const CreatorPage = () => {
             }
 
             //добавление дополнительных свойств каждой полученной метке
-            values.data.forEach((item) => {
+            values.forEach((item) => {
                 item.radius_quest = 1;
             });
 
@@ -203,7 +200,7 @@ const CreatorPage = () => {
              }*/
 
             // Обновление базы меток
-            await setDataMarks(values.data);
+            await setDataMarks(values);
             message("Свободные метки были загружены!", "success");
         } catch (e) {
             console.log(e);

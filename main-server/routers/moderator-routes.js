@@ -26,7 +26,7 @@ const router = new Router();
  * @returns {ApiError.model} default - Ошибка запроса
  * @security JWT
  */
-router.get(
+router.post(
     ModeratorRoute.queueGames,
     [
         authMiddleware,
@@ -104,7 +104,7 @@ router.post(
  * @returns {ApiError.model} default - Ошибка запроса
  * @security JWT
  */
-router.get(
+router.post(
     ModeratorRoute.gamesChecked,
     [
         authMiddleware,
@@ -122,7 +122,7 @@ router.get(
  * @returns {ApiError.model} default - Ошибка запроса
  * @security JWT
  */
-router.get(
+router.post(
     ModeratorRoute.creatorsList,
     [
         authMiddleware,

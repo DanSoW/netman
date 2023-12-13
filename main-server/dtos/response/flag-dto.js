@@ -6,7 +6,7 @@ class FlagDto {
     flag;
 
     constructor(value){
-        flag = value;
+        this.flag = value;
     }
 }
 

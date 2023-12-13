@@ -1,4 +1,4 @@
-export const sequrity_api_default = "/sequrity";
+export const sequrity_api_default = "/security";
 
 const SequrityApiConstants = {
     access: `${sequrity_api_default}/access`,

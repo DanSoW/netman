@@ -40,6 +40,9 @@
         <action
             android:id="@+id/action_leadTeamFragment_to_navigateTeamFragment"
             app:destination="@id/navigateTeamFragment" />
+        <action
+            android:id="@+id/action_leadTeamFragment_to_gameJoinFragment"
+            app:destination="@id/gameJoinFragment" />
     </fragment>
     <fragment
         android:id="@+id/viewTeamFragment"
@@ -60,5 +63,13 @@
         <action
             android:id="@+id/action_memberTeamFragment_to_navigateTeamFragment"
             app:destination="@id/navigateTeamFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/gameJoinFragment"
+        android:name="com.main.netman.containers.game.fragments.GameJoinFragment"
+        android:label="GameJoinFragment" >
+        <action
+            android:id="@+id/action_gameJoinFragment_to_leadTeamFragment"
+            app:destination="@id/leadTeamFragment" />
     </fragment>
 </navigation>

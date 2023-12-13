@@ -33,7 +33,7 @@ const Users = (sequelize, DataTypes) => {
         model.hasMany(models.FixJudges, genForeignKey('users_id'));
 
         // Создание отношения одного (users) ко многим (checked_games)
-        model.hasMany(models.CheckedGames, genForeignKey('users_id'));
+        model.hasMany(models.CheckedGames, genForeignKey('users_id', true));
 
         // Создание отношения одного (users) ко многим (data_users)
         model.hasMany(models.DataUsers, genForeignKey('users_id'));

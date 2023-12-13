@@ -93,11 +93,15 @@ class NavigateTeamFragment :
                 // Если пользователь создатель команды, то отправляем его на страницу создателя команы
                 val args = Bundle()
                 args.putInt("commands_id", it.commandsId)
+                args.putInt("status", it.status)
+
                 navigation(R.id.action_navigateTeamFragment_to_leadTeamFragment, args)
             } else if (it.status == CommandStatus.TEAM_MEMBER) {
                 // Если у пользователя есть команда, то отправляем его на страницу его команды
                 val args = Bundle()
                 args.putInt("commands_id", it.commandsId)
+                args.putInt("status", it.status)
+
                 navigation(R.id.action_navigateTeamFragment_to_memberTeamFragment, args)
             }
         }

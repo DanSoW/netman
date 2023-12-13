@@ -14,7 +14,7 @@ import AuthStoragesConstants from '../constants/values/storages/auth.storages.co
 import AuthApiConstants from '../constants/addresses/api/auth.api.constants';
 import MainApiConstants from '../constants/addresses/api/main.api.constants';
 
-export const useHttp = () => {
+export const useHttp = (baseRoute = MainApiConstants.main_server) => {
     const auth = useContext(AuthContext);
 
     // Установка состояний ошибки и загрузки
@@ -24,7 +24,7 @@ export const useHttp = () => {
     const originalRequest = useCallback(async (url, method = 'GET', body = null, headers = {}) => {
         setLoading(true);
         try {
-            const response = await fetch(url, { method, body, headers });
+            const response = await fetch(`${baseRoute}${url}`, { method, body, headers });
             const data = await response.json();
 
             setLoading(false);
@@ -77,7 +77,7 @@ export const useHttp = () => {
             let localData = JSON.parse(localStorage.getItem(AuthStoragesConstants.main));
 
             if(localData){
-                headers['Authorization'] = `Bearer ${localData?.type_auth} ${localData?.access_token}`;
+                headers['Authorization'] = `Bearer ${localData?.access_token}`;
             }
 
             let { response, data } = await originalRequest(url, method, body, headers);
@@ -85,7 +85,7 @@ export const useHttp = () => {
             if(response.status === 401){
                 localData = await refreshToken(localData.refresh_token, localData.type_auth);
 
-                headers['Authorization'] = `Bearer ${localData?.type_auth} ${localData?.access_token}`;
+                headers['Authorization'] = `Bearer ${localData?.access_token}`;
 
                 const updateResponse = await originalRequest(url, method, body, headers);
 

@@ -10,12 +10,13 @@ import address_config from '../../../config/address/address.config';
 import styles from './TableVideo.module.css';
 
 import white_cross from '../../../resources/icons/white_cross.svg';
+import MainApiConstants from '../../../constants/addresses/api/main.api.constants';
 
 const TableVideo = (props) => {
     const [video, setVideo] = useState(false);
     const [urlVideo, setUrlVideo] = useState(null);
     const [statsVideo, setStatsVideo] = useState(null);
-    const { loading, request, error, clearError } = useHttp();
+    const { loading, request, error, clearError } = useHttp(MainApiConstants.media_server);
     const message = useMessage();
 
     const getStatsVideo = async () => {
@@ -24,7 +25,7 @@ const TableVideo = (props) => {
             const usersId = (JSON.parse(localStorage.getItem(default_config.storageName))).users_id;
             const accessToken = (JSON.parse(localStorage.getItem(default_config.storageName))).access_token;
 
-            const data = await request((default_config.ngrok_serverMediaAddress + address_config.get_stats_instructions), 'POST', {
+            const data = await request((address_config.get_stats_instructions), 'POST', {
                 users_id: usersId, access_token: accessToken
             });
 
@@ -86,10 +87,10 @@ const TableVideo = (props) => {
                                             <ReactPlayer
                                                 className={styles["cvttcri-img-video"]}
                                                 //url="https://67dc-195-206-47-120.ngrok.io/media/download/1212"
-                                                url={(default_config.ngrok_serverMediaAddress + address_config.instructions_download + item.name_file)}
+                                                url={`${MainApiConstants.media_server}${address_config.instructions_download + item.name_file}`}
                                                 controls={false}
                                                 onClick={(e) => {
-                                                    setUrlVideo((default_config.ngrok_serverMediaAddress + address_config.instructions_download + item.name_file));
+                                                    setUrlVideo(`${MainApiConstants.media_server}${address_config.instructions_download + item.name_file}`);
                                                     setVideo(true);
                                                 }}
                                             />

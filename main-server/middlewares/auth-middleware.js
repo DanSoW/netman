@@ -60,7 +60,7 @@ const authMiddleware = async function (req, res, next) {
         const refreshToken = req.cookies[CookieKeys.refreshToken];
 
         if (!refreshToken) {
-            return next(ApiError.UnathorizedError());
+            // return next(ApiError.UnathorizedError());
         }
 
         const user = await db.Users.findOne({ where: { id: userData.users_id } });
@@ -72,7 +72,7 @@ const authMiddleware = async function (req, res, next) {
         // Встраивание дополнительных полей в тело запроса
         req.body.users_id = userData.users_id;
         req.body.type_auth = userData.type_auth;
-        req.body.refresh_token = refreshToken;
+        req.body.refresh_token = findToken.refresh_token;
         
         next();
     } catch (e) {
