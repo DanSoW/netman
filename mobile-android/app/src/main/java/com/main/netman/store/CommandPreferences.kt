@@ -19,11 +19,11 @@ import kotlinx.atomicfu.locks.SynchronizedObject
 private lateinit var localDataStore: DataStore<Preferences>
 private val lock = SynchronizedObject()
 
-fun getCoordsDataStore(context: Context): DataStore<Preferences> = getCoordsDataStore(
-    producePath = { context.filesDir.resolve(coordsDataStoreFileName).absolutePath }
+fun getCommandDataStore(context: Context): DataStore<Preferences> = getCommandDataStore(
+    producePath = { context.filesDir.resolve(commandDataStoreFileName).absolutePath }
 )
 
-fun getCoordsDataStore(producePath: () -> String): DataStore<Preferences> =
+fun getCommandDataStore(producePath: () -> String): DataStore<Preferences> =
     kotlinx.atomicfu.locks.synchronized(lock) {
         if (::localDataStore.isInitialized) {
             localDataStore
@@ -38,23 +38,23 @@ fun getCoordsDataStore(producePath: () -> String): DataStore<Preferences> =
 /*
 * Класс для взаимодействия с локальными пользовательскими данными
 * */
-class CoordsPreferences(
+class CommandPreferences(
     private val dataStore: DataStore<Preferences>
 ) {
     private val scope = CoroutineScope(Dispatchers.Default)
 
     // Сохранение данных в виде асинхронного потока
-    val coords : Flow<String?>
+    val command : Flow<String?>
         get() = dataStore.data.map { preferences ->
-            preferences[KEY_COORDS]
+            preferences[KEY_COMMAND]
         }
 
     // Асинхронная функция сохранения авторизационных данных
-    suspend fun saveCoords(data: String){
+    suspend fun saveCommand(data: String){
         scope.launch {
             // Сохранение данных
             dataStore.edit { preferences ->
-                preferences[KEY_COORDS] = data
+                preferences[KEY_COMMAND] = data
             }
         }
     }
@@ -68,8 +68,8 @@ class CoordsPreferences(
 
     // Ключи хранилища
     companion object {
-        private val KEY_COORDS = stringPreferencesKey(UserKeyConstants.USER_COORDS)
+        private val KEY_COMMAND = stringPreferencesKey(UserKeyConstants.USER_COMMAND)
     }
 }
 
-internal const val coordsDataStoreFileName = "coords.preferences_pb"
+internal const val commandDataStoreFileName = "command.preferences_pb"

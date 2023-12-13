@@ -142,7 +142,7 @@ class PlayerController {
                 return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
             }
 
-            const body = new UsersIdDto(req.body);
+            const body = new CommandsIdDto(req.body);
             const data = await commandService.command(body);
 
             return res.status(200).json(data);
@@ -213,7 +213,6 @@ class PlayerController {
             const body = new UsersIdDto(req.body);
             const data = await commandService.commandsList(body);
 
-            console.log(JSON.parse(JSON.stringify(data)));
             return res.status(200).json(data);
         }catch(e){
             next(e);

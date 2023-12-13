@@ -91,94 +91,40 @@ class HomeActivity : AppCompatActivity() {
                 return@observe
             }
 
-            if (!SCSocketHandler.getAuth()) {
-                it.emit(SocketHandlerConstants.AUTH, Gson().toJson(data))
+            if (it.hasListeners(SocketHandlerConstants.AUTH_SUCCESS)) {
+                it.off(SocketHandlerConstants.AUTH_SUCCESS)
             }
 
-            if (!it.hasListeners(SocketHandlerConstants.STATUS_ON)) {
-                it.on(SocketHandlerConstants.STATUS_ON) { itLocal ->
-                    if (itLocal.isEmpty()) {
-                        return@on
-                    }
+            if (it.hasListeners(SocketHandlerConstants.STATUS_ON)) {
+                it.off(SocketHandlerConstants.STATUS_ON)
+            }
 
-                    val status =
-                        Gson().fromJson(itLocal.first() as String, GameStatusModel::class.java)
-                    if (status.judge) {
-                        Log.w("SOCKET", "STATUS IS JUDGE")
-                    } else if (status.player) {
-                        Log.w("SOCKET", "STATUS IS PLAYER")
-                    } else {
-                        Log.w("SOCKET", "STATUS IS OTHER USER")
-                    }
+            it.on(SocketHandlerConstants.STATUS_ON) { itLocal ->
+                if (itLocal.isEmpty()) {
+                    return@on
+                }
 
-                    /*if(args[0] != null){
-                        val data = args[0] as String
-                        val gson = Gson()
-                        val gstat = gson.fromJson(data, GameStatusModel::class.java)
-                        if(gstat.judge){
-                            if(!_beginJudgeState){
-                                _gameStatusPlayer = ConfigStatusPlayer.JUDGE
+                val status =
+                    Gson().fromJson(itLocal.first() as String, GameStatusModel::class.java)
+                if (status.judge) {
+                    Log.w("SOCKET", "STATUS IS JUDGE")
+                } else if (status.player) {
+                    Log.w("SOCKET", "STATUS IS PLAYER")
+                } else {
+                    Log.w("SOCKET", "STATUS IS OTHER USER")
+                }
 
-                                CoroutineScope(Dispatchers.Main).launch {
-                                    _bottomNavigationView?.menu?.findItem(R.id.Team)?.setIcon(R.drawable.ic_star_ruler)
+                /*if(args[0] != null){
+                    val data = args[0] as String
+                    val gson = Gson()
+                    val gstat = gson.fromJson(data, GameStatusModel::class.java)
+                    if(gstat.judge){
+                        if(!_beginJudgeState){
+                            _gameStatusPlayer = ConfigStatusPlayer.JUDGE
 
-                                    _tbMain?.visibility = View.GONE
-                                    _tbHintContainer?.visibility = View.GONE
-
-                                    _hintTextView?.text = ""
-                                    _tbTextView?.text = ""
-                                    _tbTextViewCentral?.text = ""
-                                }
-                            }
-                            _beginJudgeState = true
-
-                            if(args[1] != null){
-                                val dataStatus = args[1] as String
-                                _judgeData = gson.fromJson(dataStatus, JudgeInfoModel::class.java)
-                            }
-                        }else if(gstat.player){
-                            _gameStatusPlayer = ConfigStatusPlayer.PLAYER_ACTIVE
-
-                            if(_beginJudgeState){
-                                _bottomNavigationView?.menu?.findItem(R.id.Team)?.setIcon(R.drawable.ic_team)
-                            }
-                            _beginJudgeState = false
-                            if(args[1] != null){
-                                val data = gson.fromJson((args[1] as String), GameCurrentQuestModel::class.java)
-                                _currentQuestData = data
-                                CoroutineScope(Dispatchers.Main).launch {
-                                    if(gstat.playerStatus.toByte() == ConfigStatusPlayer.PLAYER_ACTIVE_VIDEO){
-                                        // Данный игрок может вести съёмку видео (снимает пока не закончит съёмку)
-                                        if(_refMediaInstructions != null){
-                                            var intent = Intent(this@MainActivity, VideoActivity::class.java)
-                                            intent.putExtra("player_status", ConfigStatusPlayer.PLAYER_ACTIVE_VIDEO)
-                                            intent.putExtra("game_info", gson.toJson(_currentQuestData))
-                                            intent.putExtra("user_data", _shared?.getString(ConfigStorage.USERS_DATA, null))
-                                            intent.putExtra("ref_media", gson.toJson(_refMediaInstructions))
-                                            _socket?.off("status_on")
-                                            startActivity(intent)
-                                        }
-                                    }else{
-                                        _tbMain?.visibility = View.VISIBLE
-                                        _tbHintContainer?.visibility = View.VISIBLE
-
-                                        _hintTextView?.text = data.hint
-                                        _tbTextView?.text = data.task
-                                        _tbTextViewCentral?.text = "№" + data.number
-                                    }
-                                }
-                            }
-                        }else{
-                            _gameStatusPlayer = ConfigStatusPlayer.PLAYER_DEFAULT
-
-                            if(_beginJudgeState){
-                                CoroutineScope(Dispatchers.Main).launch {
-                                    _bottomNavigationView?.menu?.findItem(R.id.Team)?.setIcon(R.drawable.ic_team)
-                                }
-                            }
-
-                            _beginJudgeState = false
                             CoroutineScope(Dispatchers.Main).launch {
+                                _bottomNavigationView?.menu?.findItem(R.id.Team)?.setIcon(R.drawable.ic_star_ruler)
+
                                 _tbMain?.visibility = View.GONE
                                 _tbHintContainer?.visibility = View.GONE
 
@@ -187,21 +133,79 @@ class HomeActivity : AppCompatActivity() {
                                 _tbTextViewCentral?.text = ""
                             }
                         }
+                        _beginJudgeState = true
+
+                        if(args[1] != null){
+                            val dataStatus = args[1] as String
+                            _judgeData = gson.fromJson(dataStatus, JudgeInfoModel::class.java)
+                        }
+                    }else if(gstat.player){
+                        _gameStatusPlayer = ConfigStatusPlayer.PLAYER_ACTIVE
+
+                        if(_beginJudgeState){
+                            _bottomNavigationView?.menu?.findItem(R.id.Team)?.setIcon(R.drawable.ic_team)
+                        }
+                        _beginJudgeState = false
+                        if(args[1] != null){
+                            val data = gson.fromJson((args[1] as String), GameCurrentQuestModel::class.java)
+                            _currentQuestData = data
+                            CoroutineScope(Dispatchers.Main).launch {
+                                if(gstat.playerStatus.toByte() == ConfigStatusPlayer.PLAYER_ACTIVE_VIDEO){
+                                    // Данный игрок может вести съёмку видео (снимает пока не закончит съёмку)
+                                    if(_refMediaInstructions != null){
+                                        var intent = Intent(this@MainActivity, VideoActivity::class.java)
+                                        intent.putExtra("player_status", ConfigStatusPlayer.PLAYER_ACTIVE_VIDEO)
+                                        intent.putExtra("game_info", gson.toJson(_currentQuestData))
+                                        intent.putExtra("user_data", _shared?.getString(ConfigStorage.USERS_DATA, null))
+                                        intent.putExtra("ref_media", gson.toJson(_refMediaInstructions))
+                                        _socket?.off("status_on")
+                                        startActivity(intent)
+                                    }
+                                }else{
+                                    _tbMain?.visibility = View.VISIBLE
+                                    _tbHintContainer?.visibility = View.VISIBLE
+
+                                    _hintTextView?.text = data.hint
+                                    _tbTextView?.text = data.task
+                                    _tbTextViewCentral?.text = "№" + data.number
+                                }
+                            }
+                        }
                     }else{
-                        _tbMain?.visibility = View.GONE
-                        _tbHintContainer?.visibility = View.GONE
-                    }*/
-                }
+                        _gameStatusPlayer = ConfigStatusPlayer.PLAYER_DEFAULT
+
+                        if(_beginJudgeState){
+                            CoroutineScope(Dispatchers.Main).launch {
+                                _bottomNavigationView?.menu?.findItem(R.id.Team)?.setIcon(R.drawable.ic_team)
+                            }
+                        }
+
+                        _beginJudgeState = false
+                        CoroutineScope(Dispatchers.Main).launch {
+                            _tbMain?.visibility = View.GONE
+                            _tbHintContainer?.visibility = View.GONE
+
+                            _hintTextView?.text = ""
+                            _tbTextView?.text = ""
+                            _tbTextViewCentral?.text = ""
+                        }
+                    }
+                }else{
+                    _tbMain?.visibility = View.GONE
+                    _tbHintContainer?.visibility = View.GONE
+                }*/
             }
 
-            if(!it.hasListeners(SocketHandlerConstants.AUTH_SUCCESS)){
-                it.on(SocketHandlerConstants.AUTH_SUCCESS) { _ ->
-                    SCSocketHandler.setAuth(true)
-                    it.emit(SocketHandlerConstants.STATUS)
-                }
+            it.on(SocketHandlerConstants.AUTH_SUCCESS) { _ ->
+                SCSocketHandler.setAuth(true)
+                it.emit(SocketHandlerConstants.STATUS)
             }
 
-            if(SCSocketHandler.getAuth()){
+            if (!SCSocketHandler.getAuth()) {
+                it.emit(SocketHandlerConstants.AUTH, Gson().toJson(data))
+            }
+
+            if (SCSocketHandler.getAuth()) {
                 it.emit(SocketHandlerConstants.STATUS)
             }
         }

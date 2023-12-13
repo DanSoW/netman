@@ -9,21 +9,23 @@ import com.main.netman.containers.game.fragments.PlayersTeamFragment
 
 class TeamViewPagerAdapter(
     fm: FragmentManager,
+    private var commandsId: Int? = null,
     private var listType: String,
     private var commandStatus: Int? = null,
-    private var commandsId: Int? = null,
     private var playerStatus: Int = PlayerStatus.PLAYER_DEFAULT
 ) : FragmentStatePagerAdapter(fm) {
 
     // Возвращает определённый элемент в зависимости от позиции, на которой он находится
     override fun getItem(position: Int): Fragment {
         if (position == 1) {
+            // Список игр команды (пройденных, зарегистрированных и текущих)
             return GamesTeamFragment(commandStatus, commandsId)
         }
 
+        // Список игроков в команде
         return PlayersTeamFragment(
-            listType,
             commandsId,
+            listType,
             playerStatus
         )
     }

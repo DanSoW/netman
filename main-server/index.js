@@ -211,6 +211,8 @@ const io = socket(server);
 // Обработка глобального события - "Подключение нового пользователя к серверу"
 io.on("connection", (socket) => {
 
+    console.log("connection socket id: ", socket.id);
+
     // Обработка события - "Авторизация пользователя"
     socket.on("authentication", async (data) => {
         try {
@@ -550,6 +552,8 @@ io.on("connection", (socket) => {
         try {
             // Поиск пользователя из списка подключенных
             let index = duExistsValueIndex(dataUsers, socket.id);
+
+            console.log("INDEX: ", index);
             if (index < 0) {
                 return;
             }
@@ -727,6 +731,8 @@ io.on("connection", (socket) => {
 
     // Обработка события - "Отключения пользователя от текущего подключения"
     socket.on('disconnect', async () => {
+        console.log("disconnection socket id: ", socket.id);
+
         try {
             const index = duExistsValueIndex(dataUsers, socket.id);
             if (index >= 0) {

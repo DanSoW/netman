@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_color"
-    tools:context=".containers.game.fragments.LeadTeamFragment">
+    tools:context=".containers.game.fragments.ViewTeamFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -65,7 +65,7 @@
         </LinearLayout>
 
         <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar4_teamBoss"
+            android:id="@+id/toolbarViewTeam"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -75,6 +75,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
+            app:navigationIcon="@drawable/ic_arrow_back"
             app:titleTextColor="#FFFFFF">
 
 
@@ -86,11 +87,11 @@
                 tools:layout_editor_absoluteY="3dp">
 
                 <TextView
-                    android:id="@+id/tvLeaveTeam"
+                    android:id="@+id/tvViewTeam"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="end"
-                    android:text="Выйти"
+                    android:text="Вступить"
                     android:textColor="#FFFFFF"
                     android:textSize="20sp"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -107,7 +108,7 @@
             android:layout_width="wrap_content"
             android:layout_height="20dp"
             android:fontFamily="@font/century_gothic"
-            android:text="Участников:"
+            android:text="участников"
             android:textColor="#FFFFFF"
             android:textSize="13sp"
             app:layout_constraintEnd_toEndOf="@+id/tvTeamName"
@@ -128,7 +129,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/toolbar4_teamBoss" />
+            app:layout_constraintTop_toBottomOf="@+id/toolbarViewTeam" />
 
 
         <TextView
@@ -153,11 +154,13 @@
             android:layout_marginBottom="100dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout133_teamBoss">
+            app:layout_constraintTop_toBottomOf="@+id/linearLayout133_teamBoss"
+            app:layout_constraintVertical_bias="1.0">
 
             <com.google.android.material.tabs.TabLayout
-                android:id="@+id/fmtTabLayout"
+                android:id="@+id/fvtTabLayout"
                 android:layout_width="0dp"
                 android:layout_height="40dp"
                 android:background="@null"
@@ -173,7 +176,7 @@
                 app:tabTextColor="#FFFFFF" />
 
             <androidx.viewpager.widget.ViewPager
-                android:id="@+id/fmtViewPager"
+                android:id="@+id/fvtViewPager"
                 android:layout_width="0dp"
                 android:layout_height="0dp"
                 android:contentDescription="@string/app_name"
@@ -181,12 +184,10 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="1.0"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/fmtTabLayout"
+                app:layout_constraintTop_toBottomOf="@+id/fvtTabLayout"
                 app:layout_constraintVertical_bias="0.0">
 
             </androidx.viewpager.widget.ViewPager>
         </androidx.constraintlayout.widget.ConstraintLayout>
-
     </androidx.constraintlayout.widget.ConstraintLayout>
-
 </RelativeLayout>

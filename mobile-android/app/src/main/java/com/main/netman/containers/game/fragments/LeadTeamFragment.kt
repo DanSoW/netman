@@ -1,6 +1,7 @@
 package com.main.netman.containers.game.fragments
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -16,7 +17,11 @@ import com.main.netman.containers.game.adapters.TeamViewPagerAdapter
 import com.main.netman.containers.game.models.GameTeamViewModel
 import com.main.netman.databinding.FragmentFindTeamBinding
 import com.main.netman.databinding.FragmentLeadTeamBinding
+import com.main.netman.models.auth.AuthModel
 import com.main.netman.models.command.CommandInfoModel
+import com.main.netman.models.command.CommandItemResponse
+import com.main.netman.models.command.CommandStatusModel
+import com.main.netman.models.command.CommandsIdModel
 import com.main.netman.models.command.TeamCreateModel
 import com.main.netman.models.command.TeamCreateRequestModel
 import com.main.netman.models.error.ErrorModel
@@ -27,7 +32,10 @@ import com.main.netman.utils.handleApiError
 import com.main.netman.utils.handleErrorMessage
 import com.main.netman.utils.handleSuccessMessage
 import com.main.netman.utils.hideKeyboard
+import com.main.netman.utils.navigation
 import com.main.netman.utils.visible
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 
 class LeadTeamFragment :
@@ -40,12 +48,62 @@ class LeadTeamFragment :
         // Определение адаптера для View Pager
         _viewPagerAdapter = TeamViewPagerAdapter(
             childFragmentManager,
+            0,
             "",
-            viewModel.commandStatus.value?.status,      // Статус игрока в команде
-            viewModel.commandStatus.value?.commandsId   // Идентификатор команды
+            viewModel.commandStatus.value?.status,
+            if (viewModel.commandStatus.value?.commandsId != null) viewModel.commandStatus.value!!.commandsId else 0
         )
+
         binding.fltViewPager.adapter = _viewPagerAdapter
         binding.fltTabLayout.setupWithViewPager(binding.fltViewPager)
+
+
+        // Обработка нажатия на кнопку создания команды
+        binding.tvLeaveTeam.setOnClickListener {
+            // Создание диалогового окна
+            val dialogBuilder = MaterialAlertDialogBuilder(requireContext())
+            val viewDialog = layoutInflater.inflate(R.layout.dialog_leave_team, null)
+            // Добавление view диалоговому окну
+            dialogBuilder.setView(viewDialog)
+            // Открытие диалогового окна
+            val dialog: androidx.appcompat.app.AlertDialog? = dialogBuilder.show()
+
+            // Обработка отмены создания команды
+            viewDialog.findViewById<Button>(R.id.cancel_leave_command)
+                .setOnClickListener(View.OnClickListener {
+                    dialog?.dismiss()
+                })
+
+            // Создание команды
+            viewDialog.findViewById<Button>(R.id.accept_leave_command)
+                .setOnClickListener(View.OnClickListener {
+
+                    val data = Gson().fromJson(runBlocking {
+                        commandPreferences.command.first()
+                    }, CommandStatusModel::class.java)
+
+                    if (data != null) {
+                        leaveTeam(data.commandsId)
+                    }
+                    dialog?.dismiss()
+                })
+        }
+
+        viewModel.commandDetach.observe(viewLifecycleOwner) {
+            when (it) {
+                // Обработка успешного сетевого взаимодействия
+                is Resource.Success -> {
+                    navigation(R.id.action_leadTeamFragment_to_navigateTeamFragment)
+                }
+
+                // Обработка ошибок связанные с сетью
+                is Resource.Failure -> {
+                    handleApiError(it) { }
+                }
+
+                else -> {}
+            }
+        }
     }
 
     /**
@@ -73,4 +131,14 @@ class LeadTeamFragment :
             )
         )
 
+    /**
+     * Выход игрока из команды
+     */
+    private fun leaveTeam(commandsId: Int) {
+        viewModel.commandDetach(
+            CommandsIdModel(
+                commandsId = commandsId
+            )
+        )
+    }
 }

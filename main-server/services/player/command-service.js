@@ -1,27 +1,29 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: `.${process.env.NODE_ENV}.env` });
+import config from 'config';
 import ApiError from '../../exceptions/api-error.js';
 import db from '../../db/index.js';
 import FlagDto from '../../dtos/response/flag-dto.js';
 import "../../utils/array.js";
+import fs from 'fs';
 
 /* Сервис управления командами */
 class CommandService {
     /**
      * Получение информации о команде пользователя
      * @param {*} data Информация о пользователе
-     * @returns Информация о команде пользователе
+     * @returns Информация о команде пользователя
      */
     async command(data) {
         try {
-            const { users_id } = data;
-            const dataPlayer = await db.DataPlayers.findOne({ where: { users_id: users_id } });
+            const { users_id, commands_id } = data;
 
-            if (!dataPlayer.commands_id) {
-                throw ApiError.BadRequest("Данный пользователь не имеет команды");
+            const dataCommand = await db.Commands.findOne({ where: { id: commands_id } });
+
+            if (!dataCommand) {
+                throw ApiError.BadRequest(`Команды с идентификатором ${commands_id} не существует`);
             }
 
-            const dataCommand = await db.Commands.findOne({ where: { id: dataPlayer.commands_id } });
             const countPlayers = (await db.DataPlayers.findAll({
                 where: {
                     commands_id: dataCommand.id
@@ -52,20 +54,9 @@ class CommandService {
     async commandPlayers(data) {
         try {
             const { users_id, commands_id } = data;
-            let commandsId = commands_id;
 
-            if (!commands_id) {
-                const dataPlayer = await db.DataPlayers.findOne({ where: { users_id: users_id } });
-
-                if (!dataPlayer.commands_id) {
-                    throw ApiError.BadRequest("Данный пользователь не имеет команды");
-                }
-
-                commandsId = dataPlayer.commands_id;
-            }
-
-            const dataCommand = await db.Commands.findOne({ where: { id: commandsId } });
-            if(!dataCommand){
+            const dataCommand = await db.Commands.findOne({ where: { id: commands_id } });
+            if (!dataCommand) {
                 throw ApiError.NotFound("Команды с данным идентификатором не существует");
             }
 
@@ -82,10 +73,16 @@ class CommandService {
             const usersDataCommand = [];
             for (let i = 0; i < usersCommand.length; i++) {
                 const value = await db.DataUsers.findOne({ where: { users_id: usersCommand[i].users_id } });
+                let refImage = value.dataValues.ref_image;
+                if (!refImage || !fs.existsSync(refImage)) {
+                    refImage = null;
+                }
+
                 usersDataCommand.push({
                     ...value.dataValues,
                     rating: usersCommand[i].rating,
-                    creator: (value.users_id === dataCommand.users_id)
+                    creator: (value.users_id === dataCommand.users_id),
+                    ref_image: (refImage) ? `${config.get("url.api")}/${refImage}` : ''
                 });
             }
 
@@ -103,19 +100,8 @@ class CommandService {
     async commandCurrentGame(data) {
         try {
             const { users_id, commands_id } = data;
-            let commandsId = commands_id;
 
-            if (!commands_id) {
-                const dataPlayer = await db.DataPlayers.findOne({ where: { users_id: users_id } });
-
-                if (!dataPlayer.commands_id) {
-                    throw ApiError.BadRequest("Данный пользователь не имеет команды");
-                }
-
-                commandsId = dataPlayer.commands_id;
-            }
-
-            const dataCommand = await db.Commands.findOne({ where: { id: commandsId } });
+            const dataCommand = await db.Commands.findOne({ where: { id: commands_id } });
 
             if (!dataCommand) {
                 throw ApiError.NotFound("Команды с данным идентификатором не существует в базе данных");
@@ -185,18 +171,7 @@ class CommandService {
         try {
             const { users_id, commands_id } = data;
 
-            let commandsId = commands_id;
-            if (!commands_id) {
-                const dataPlayer = await db.DataPlayers.findOne({ where: { users_id: users_id } });
-
-                if (!dataPlayer.commands_id) {
-                    throw ApiError.BadRequest("Данный пользователь не имеет команды");
-                }
-
-                commandsId = dataPlayer.commands_id;
-            }
-
-            const dataCommand = await db.Commands.findOne({ where: { id: commandsId } });
+            const dataCommand = await db.Commands.findOne({ where: { id: commands_id } });
             const completeGames = await db.CompleteGames.findAll({
                 where: {
                     commands_id: dataCommand.id,
@@ -400,7 +375,7 @@ class CommandService {
                     });
 
                     // то, передаём права создателя последнему игроку
-                    if (lastPlayer) {
+                    if (lastPlayer && lastPlayer.users_id !== users_id) {
                         await command.update({
                             users_id: lastPlayer.users_id
                         }, { transaction: t });
@@ -412,6 +387,11 @@ class CommandService {
                             }
                         }, { transaction: t });
                     }
+                } else {
+                    // Если текущий пользователь не создатель команды (удаляем игрока из команды)
+                    await dataPlayers.update({
+                        commands_id: null
+                    }, { transaction: t });
                 }
             }
 
@@ -572,7 +552,7 @@ class CommandService {
                 throw ApiError.BadRequest("Команда уже зарегистрирована на игру");
             }
 
-            if (isCompletedGames){
+            if (isCompletedGames) {
                 throw ApiError.BadRequest("Команда уже проходила данную игру");
             }
 
@@ -729,7 +709,7 @@ class CommandService {
                     users_id: users_id
                 }
             });
-            
+
             if (!command) {
                 throw ApiError.Forbidden("Только создатель команды может добавить игрока в команду");
             }

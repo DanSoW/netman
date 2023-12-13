@@ -27,6 +27,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 /**
@@ -42,43 +43,64 @@ class NavigateTeamFragment :
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
+        if (socket.value == null) {
+            // Подключение к основному серверу
+            socketConnection()
+        }
+
         _socket.observe(viewLifecycleOwner) {
             if (it == null) {
                 return@observe
             }
 
-            if (!it.hasListeners(SocketHandlerConstants.COMMAND_STATUS_ON)) {
+            // Добавляем обработчик получения статуса о команде, если его нет
+            if (it.hasListeners(SocketHandlerConstants.COMMAND_STATUS_ON)) {
                 it.off(SocketHandlerConstants.COMMAND_STATUS_ON)
             }
 
             // Создание обработчика, который отработает при получении информации о команде
             it.on(SocketHandlerConstants.COMMAND_STATUS_ON) { itLocal ->
-
                 if ((itLocal != null) && (itLocal.isNotEmpty()) && (itLocal.first() != null)) {
                     val data = itLocal.first() as String
                     val result = Gson().fromJson(data, CommandStatusModel::class.java)
-                    val status = result.status
-
-                    // Сохранение текущих координат пользователя
                     viewModel.setCommandStatus(result)
                 }
             }
 
+            viewModel.setCommandStatus(null)
             // Отправка запроса на получение статуса команды
             it.emit(SocketHandlerConstants.COMMAND_STATUS)
         }
 
-        viewModel.commandStatus.observe(viewLifecycleOwner){
+        viewModel.commandStatus.observe(viewLifecycleOwner) {
+            if (it == null) {
+                runBlocking {
+                    commandPreferences.saveCommand("")
+                }
+                return@observe
+            }
+
+            // Сохранение статуса о команде пользователя в локальное хранилище
+            val status = Gson().toJson(it)
+            runBlocking {
+                commandPreferences.saveCommand(status)
+            }
+
             if (it.status == CommandStatus.WITHOUT_TEAM) {
                 // Если у пользователя нет команды, то отправляем его её искать или создавать новую
                 navigation(R.id.action_navigateTeamFragment_to_findTeamFragment)
             } else if (it.status == CommandStatus.TEAM_CREATOR) {
                 // Если пользователь создатель команды, то отправляем его на страницу создателя команы
-                navigation(R.id.action_navigateTeamFragment_to_leadTeamFragment)
+                val args = Bundle()
+                args.putInt("commands_id", it.commandsId)
+                navigation(R.id.action_navigateTeamFragment_to_leadTeamFragment, args)
+            } else if (it.status == CommandStatus.TEAM_MEMBER) {
+                // Если у пользователя есть команда, то отправляем его на страницу его команды
+                val args = Bundle()
+                args.putInt("commands_id", it.commandsId)
+                navigation(R.id.action_navigateTeamFragment_to_memberTeamFragment, args)
             }
         }
-
-        socketConnection()
     }
 
     /**
@@ -108,13 +130,14 @@ class NavigateTeamFragment :
 
     private fun socketConnection() {
         CoroutineScope(Dispatchers.IO).launch {
-            while (SCSocketHandler.getSocket() == null ||
-                (!(SCSocketHandler.getSocket()?.connected()!!))
-            ) {
-                withContext(Dispatchers.Main) {
-                    _socket.value = SCSocketHandler.getSocket()
-                }
-                delay(5000)
+            withContext(Dispatchers.Main) {
+                _socket.value = null
+            }
+            SCSocketHandler.setSocket()
+            SCSocketHandler.connection()
+
+            withContext(Dispatchers.Main) {
+                _socket.value = SCSocketHandler.getSocket()
             }
         }
     }

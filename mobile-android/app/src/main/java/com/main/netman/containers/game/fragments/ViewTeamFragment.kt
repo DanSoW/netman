@@ -1,6 +1,7 @@
 package com.main.netman.containers.game.fragments
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -13,24 +14,26 @@ import com.main.netman.containers.base.BaseFragment
 import com.main.netman.containers.game.adapters.TeamViewPagerAdapter
 import com.main.netman.containers.game.models.GameTeamViewModel
 import com.main.netman.databinding.FragmentLeadTeamBinding
-import com.main.netman.databinding.FragmentMemberTeamBinding
 import com.main.netman.databinding.FragmentViewTeamBinding
 import com.main.netman.models.command.CommandItemResponse
 import com.main.netman.models.command.CommandStatusModel
 import com.main.netman.models.command.CommandsIdModel
+import com.main.netman.models.command.TeamCreateRequestModel
 import com.main.netman.models.error.ErrorModel
 import com.main.netman.network.Resource
 import com.main.netman.network.apis.PlayerApi
 import com.main.netman.repositories.PlayerRepository
 import com.main.netman.utils.handleApiError
 import com.main.netman.utils.handleErrorMessage
+import com.main.netman.utils.hideKeyboard
 import com.main.netman.utils.navigation
+import com.main.netman.utils.visible
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
 
-class MemberTeamFragment :
-    BaseFragment<GameTeamViewModel, FragmentMemberTeamBinding, PlayerRepository>() {
+class ViewTeamFragment :
+    BaseFragment<GameTeamViewModel, FragmentViewTeamBinding, PlayerRepository>() {
     private var _viewPagerAdapter: TeamViewPagerAdapter? = null
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -48,45 +51,48 @@ class MemberTeamFragment :
             viewModel.commandStatus.value?.status,
             if (viewModel.commandStatus.value?.commandsId != null) viewModel.commandStatus.value!!.commandsId else 0
         )
-        binding.fmtViewPager.adapter = _viewPagerAdapter
-        binding.fmtTabLayout.setupWithViewPager(binding.fmtViewPager)
+        binding.fvtViewPager.adapter = _viewPagerAdapter
+        binding.fvtTabLayout.setupWithViewPager(binding.fvtViewPager)
 
-        // Обработка нажатия на кнопку создания команды
-        binding.tvLeaveTeam.setOnClickListener {
+        binding.toolbarViewTeam.setNavigationOnClickListener {
+            navigation(R.id.action_viewTeamFragment_to_findTeamFragment)
+        }
+
+        binding.tvViewTeam.setOnClickListener {
             // Создание диалогового окна
             val dialogBuilder = MaterialAlertDialogBuilder(requireContext())
-            val viewDialog = layoutInflater.inflate(R.layout.dialog_leave_team, null)
+            val viewDialog = layoutInflater.inflate(R.layout.dialog_join_team, null)
             // Добавление view диалоговому окну
             dialogBuilder.setView(viewDialog)
             // Открытие диалогового окна
             val dialog: androidx.appcompat.app.AlertDialog? = dialogBuilder.show()
 
             // Обработка отмены создания команды
-            viewDialog.findViewById<Button>(R.id.cancel_leave_command)
+            viewDialog.findViewById<Button>(R.id.cancel_join_command)
                 .setOnClickListener(View.OnClickListener {
                     dialog?.dismiss()
                 })
 
             // Создание команды
-            viewDialog.findViewById<Button>(R.id.accept_leave_command)
+            viewDialog.findViewById<Button>(R.id.accept_join_command)
                 .setOnClickListener(View.OnClickListener {
 
                     val data = Gson().fromJson(runBlocking {
                         commandPreferences.command.first()
                     }, CommandStatusModel::class.java)
 
-                    if (data != null) {
-                        leaveTeam(data.commandsId)
+                    if (data != null && commandsId != null) {
+                        joinTeam(commandsId)
                     }
                     dialog?.dismiss()
                 })
         }
 
-        viewModel.commandDetach.observe(viewLifecycleOwner) {
+        viewModel.commandJoin.observe(viewLifecycleOwner) {
             when (it) {
                 // Обработка успешного сетевого взаимодействия
                 is Resource.Success -> {
-                    navigation(R.id.action_memberTeamFragment_to_navigateTeamFragment)
+                    navigation(R.id.action_viewTeamFragment_to_navigateTeamFragment)
                 }
 
                 // Обработка ошибок связанные с сетью
@@ -147,7 +153,7 @@ class MemberTeamFragment :
     override fun getFragmentBinding(
         inflater: LayoutInflater,
         container: ViewGroup?
-    ) = FragmentMemberTeamBinding.inflate(inflater, container, false)
+    ) = FragmentViewTeamBinding.inflate(inflater, container, false)
 
     /**
      * Метод получения репозитория данного фрагмента
@@ -173,10 +179,10 @@ class MemberTeamFragment :
     }
 
     /**
-     * Выход игрока из команды
+     * Вступление игрока в команду
      */
-    private fun leaveTeam(commandsId: Int) {
-        viewModel.commandDetach(
+    private fun joinTeam(commandsId: Int) {
+        viewModel.commandJoin(
             CommandsIdModel(
                 commandsId = commandsId
             )

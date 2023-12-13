@@ -116,15 +116,17 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
             }
 
             // Обработка события "передача своих координат другим членам команды (only online)"
-            if(!it.hasListeners(SocketHandlerConstants.GET_PLAYER_COORDINATES)){
-                it.on(SocketHandlerConstants.GET_PLAYER_COORDINATES){ _ ->
-                   it.emit(SocketHandlerConstants.SET_PLAYER_COORDINATES, Gson().toJson(
-                        UserCoordsModel(
-                            lat = viewModel.coords.value?.first,
-                            lng = viewModel.coords.value?.second
-                        )
-                    ))
-                }
+            if(it.hasListeners(SocketHandlerConstants.GET_PLAYER_COORDINATES)){
+                it.off(SocketHandlerConstants.GET_PLAYER_COORDINATES)
+            }
+
+            it.on(SocketHandlerConstants.GET_PLAYER_COORDINATES){ _ ->
+                it.emit(SocketHandlerConstants.SET_PLAYER_COORDINATES, Gson().toJson(
+                    UserCoordsModel(
+                        lat = viewModel.coords.value?.first,
+                        lng = viewModel.coords.value?.second
+                    )
+                ))
             }
         }
 

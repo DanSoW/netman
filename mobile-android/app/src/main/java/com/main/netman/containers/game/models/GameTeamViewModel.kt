@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.main.netman.containers.base.BaseViewModel
 import com.main.netman.models.command.CommandStatusModel
+import com.main.netman.models.command.CommandsIdModel
 import com.main.netman.models.command.TeamCreateModel
 import com.main.netman.network.Resource
 import com.main.netman.repositories.PlayerRepository
@@ -37,14 +38,14 @@ class GameTeamViewModel(
 
     /* ------------ Секция для операций связанных с созданием / редактированием команды ------------ */
     // Информация о команде
-    private val _commandStatus: MutableLiveData<CommandStatusModel> = MutableLiveData()
-    val commandStatus: LiveData<CommandStatusModel>
+    private val _commandStatus: MutableLiveData<CommandStatusModel?> = MutableLiveData()
+    val commandStatus: LiveData<CommandStatusModel?>
         get() = _commandStatus
 
     /**
      * Установка новой информации о статусе в команде
      */
-    fun setCommandStatus(status: CommandStatusModel) = viewModelScope.launch {
+    fun setCommandStatus(status: CommandStatusModel?) = viewModelScope.launch {
         _commandStatus.value = status
     }
 
@@ -61,5 +62,61 @@ class GameTeamViewModel(
     fun commandsList() = viewModelScope.launch {
         _commands.value = Resource.Loading
         _commands.value = repository.playerCommandsList()
+    }
+
+    private val _commandDetach: MutableLiveData<Resource<Response<ResponseBody>>> =
+        MutableLiveData()
+    val commandDetach: LiveData<Resource<Response<ResponseBody>>>
+        get() = _commandDetach
+
+
+    /**
+     * Выход игрока из команды
+     */
+    fun commandDetach(commandsIdModel: CommandsIdModel) = viewModelScope.launch {
+        _commandDetach.value = Resource.Loading
+        _commandDetach.value = repository.playerCommandDetach(commandsIdModel)
+    }
+
+    private val _commandJoin: MutableLiveData<Resource<Response<ResponseBody>>> =
+        MutableLiveData()
+    val commandJoin: LiveData<Resource<Response<ResponseBody>>>
+        get() = _commandJoin
+
+
+    /**
+     * Выход игрока из команды
+     */
+    fun commandJoin(commandsIdModel: CommandsIdModel) = viewModelScope.launch {
+        _commandJoin.value = Resource.Loading
+        _commandJoin.value = repository.playerCommandJoin(commandsIdModel)
+    }
+
+    private val _commandInfo: MutableLiveData<Resource<Response<ResponseBody>>> =
+        MutableLiveData()
+    val commandInfo: LiveData<Resource<Response<ResponseBody>>>
+        get() = _commandInfo
+
+
+    /**
+     * Получение информации о команде
+     */
+    fun commandInfo(commandsIdModel: CommandsIdModel) = viewModelScope.launch {
+        _commandInfo.value = Resource.Loading
+        _commandInfo.value = repository.playerCommand(commandsIdModel)
+    }
+
+    private val _commandPlayers: MutableLiveData<Resource<Response<ResponseBody>>> =
+        MutableLiveData()
+    val commandPlayers: LiveData<Resource<Response<ResponseBody>>>
+        get() = _commandPlayers
+
+
+    /**
+     * Получение информации о игроках в команде
+     */
+    fun commandPlayers(commandsIdModel: CommandsIdModel) = viewModelScope.launch {
+        _commandPlayers.value = Resource.Loading
+        _commandPlayers.value = repository.playerCommandPlayers(commandsIdModel)
     }
 }

@@ -26,6 +26,7 @@ import com.main.netman.utils.handleApiError
 import com.main.netman.utils.handleErrorMessage
 import com.main.netman.utils.handleSuccessMessage
 import com.main.netman.utils.hideKeyboard
+import com.main.netman.utils.navigation
 import com.main.netman.utils.visible
 
 class FindTeamFragment :
@@ -35,58 +36,51 @@ class FindTeamFragment :
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
+        val nav: (id: Int) -> Unit = {
+            val args = Bundle()
+            args.putInt("commands_id", it)
+
+            navigation(R.id.action_findTeamFragment_to_viewTeamFragment, args)
+        }
+
         commandAdapter = CommandAdapter(
             requireContext(),
-            commands = arrayListOf(
-                /*CommandInfoModel(
-                    name = "cmd 1",
-                    countMembers = 25
-                ),
-                CommandInfoModel(
-                    name = "cmd 2",
-                    countMembers = 20
-                ),
-                CommandInfoModel(
-                    name = "cmd 3",
-                    countMembers = 45
-                ),
-                CommandInfoModel(
-                    name = "cmd 4",
-                    countMembers = 13
-                ),
-                CommandInfoModel(
-                    name = "cmd 5",
-                    countMembers = 12
-                ),
-                CommandInfoModel(
-                    name = "cmd 6",
-                    countMembers = 11
-                )*/
-            )
+            commands = arrayListOf(),
+            nav = nav
         )
 
         binding.rvFindCommand.adapter = commandAdapter
 
+        // Обработка нажатия на кнопку создания команды
         binding.btnCreateTeam.setOnClickListener {
+            // Создание диалогового окна
             val dialogBuilder = MaterialAlertDialogBuilder(requireContext())
             val viewDialog = layoutInflater.inflate(R.layout.dialog_create_team, null)
+            // Добавление view диалоговому окну
             dialogBuilder.setView(viewDialog)
+            // Открытие диалогового окна
             val dialog: androidx.appcompat.app.AlertDialog? = dialogBuilder.show()
 
+            // Обработка отмены создания команды
             viewDialog.findViewById<Button>(R.id.cancel_create_command)
                 .setOnClickListener(View.OnClickListener {
                     dialog?.dismiss()
                 })
 
+            // Название команды
             val commandName = viewDialog.findViewById<EditText>(R.id.create_command_name)
+
+            // Создание команды
             viewDialog.findViewById<Button>(R.id.accept_create_command)
                 .setOnClickListener(View.OnClickListener {
+                    // Валидация
                     if (commandName.text.toString().length < 3) {
                         handleErrorMessage("Название команды должно состоять из трёх и более символов")
                         dialog?.dismiss()
                         return@OnClickListener
                     }
 
+                    // Вызов функции для создания нового окна
                     createTeam(commandName.text.toString())
                     dialog?.dismiss()
                 })
@@ -102,10 +96,10 @@ class FindTeamFragment :
                 is Resource.Success -> {
                     if (it.value.isSuccessful) {
                         val body = Gson().fromJson(
-                            it.value.body().toString(),
+                            it.value.body()?.string(),
                             TeamCreateRequestModel::class.java
                         )
-                        handleSuccessMessage("Команда \"${body.name}\" успешно создана!")
+                        navigation(R.id.action_findTeamFragment_to_navigateTeamFragment)
                     } else {
                         val error = Gson().fromJson(
                             it.value.errorBody()?.string().toString(), ErrorModel::class.java
@@ -126,8 +120,6 @@ class FindTeamFragment :
             }
         }
 
-        commandsList()
-
         viewModel.commands.observe(viewLifecycleOwner) {
             binding.progressBar.visible(it is Resource.Loading)
             hideKeyboard()
@@ -140,9 +132,12 @@ class FindTeamFragment :
                             it.value.body()?.string(),
                             Array<CommandItemResponse>::class.java
                         )
+
+                        // Добавление новых команд в список
                         commandAdapter.setCommands(
                             body.map { it ->
                                 return@map CommandInfoModel(
+                                    id = it.id,
                                     name = it.name,
                                     countMembers = it.countPlayers
                                 )
@@ -168,6 +163,9 @@ class FindTeamFragment :
                 else -> {}
             }
         }
+
+        // Получение списка команд
+        commandsList()
     }
 
     /**

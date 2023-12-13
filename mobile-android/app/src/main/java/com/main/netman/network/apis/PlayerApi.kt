@@ -48,8 +48,32 @@ interface PlayerApi {
     suspend fun playerCommandCreate(@Body requestBody: RequestBody): Response<ResponseBody>
 
     /**
+     * Вступление игрока в команду
+     */
+    @POST(PlayerApiConstants.PLAYER_COMMAND_JOIN)
+    suspend fun playerCommandJoin(@Body requestBody: RequestBody): Response<ResponseBody>
+
+    /**
      * Получение списка всех команд
      */
     @GET(PlayerApiConstants.PLAYER_COMMANDS_LIST)
     suspend fun playerCommandsList(): Response<ResponseBody>
+
+    /**
+     * Выход игрока из команды
+     */
+    @POST(PlayerApiConstants.PLAYER_COMMAND_DETACH)
+    suspend fun playerCommandDetach(@Body requestBody: RequestBody): Response<ResponseBody>
+
+    /**
+     * Получение информации о команде
+     */
+    @POST(PlayerApiConstants.PLAYER_COMMAND)
+    suspend fun playerCommand(@Body requestBody: RequestBody): Response<ResponseBody>
+
+    /**
+     * Получение информации о игроках в команде
+     */
+    @POST(PlayerApiConstants.PLAYER_COMMAND_PLAYERS)
+    suspend fun playerCommandPlayers(@Body requestBody: RequestBody): Response<ResponseBody>
 }

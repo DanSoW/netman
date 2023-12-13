@@ -83,7 +83,6 @@ class UserProfileFragment : BaseFragment<PlayerViewModel, FragmentUserProfileBin
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-
         binding.upSettingsIcon.setOnClickListener {
             navigation(R.id.action_userProfileFragment_to_userSettingsFragment)
         }

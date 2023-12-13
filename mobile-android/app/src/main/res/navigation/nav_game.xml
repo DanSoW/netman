@@ -16,15 +16,49 @@
         <action
             android:id="@+id/action_navigateTeamFragment_to_leadTeamFragment"
             app:destination="@id/leadTeamFragment" />
+        <action
+            android:id="@+id/action_navigateTeamFragment_to_memberTeamFragment"
+            app:destination="@id/memberTeamFragment" />
     </fragment>
     <fragment
         android:id="@+id/findTeamFragment"
         android:name="com.main.netman.containers.game.fragments.FindTeamFragment"
         android:label="fragment_find_team"
-        tools:layout="@layout/fragment_find_team" />
+        tools:layout="@layout/fragment_find_team" >
+        <action
+            android:id="@+id/action_findTeamFragment_to_navigateTeamFragment"
+            app:destination="@id/navigateTeamFragment" />
+        <action
+            android:id="@+id/action_findTeamFragment_to_viewTeamFragment"
+            app:destination="@id/viewTeamFragment" />
+    </fragment>
     <fragment
         android:id="@+id/leadTeamFragment"
         android:name="com.main.netman.containers.game.fragments.LeadTeamFragment"
         android:label="fragment_lead_team"
-        tools:layout="@layout/fragment_lead_team" />
+        tools:layout="@layout/fragment_lead_team" >
+        <action
+            android:id="@+id/action_leadTeamFragment_to_navigateTeamFragment"
+            app:destination="@id/navigateTeamFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/viewTeamFragment"
+        android:name="com.main.netman.containers.game.fragments.ViewTeamFragment"
+        android:label="ViewTeamFragment" >
+        <action
+            android:id="@+id/action_viewTeamFragment_to_findTeamFragment"
+            app:destination="@id/findTeamFragment" />
+        <action
+            android:id="@+id/action_viewTeamFragment_to_navigateTeamFragment"
+            app:destination="@id/navigateTeamFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/memberTeamFragment"
+        android:name="com.main.netman.containers.game.fragments.MemberTeamFragment"
+        android:label="fragment_member_team"
+        tools:layout="@layout/fragment_member_team" >
+        <action
+            android:id="@+id/action_memberTeamFragment_to_navigateTeamFragment"
+            app:destination="@id/navigateTeamFragment" />
+    </fragment>
 </navigation>

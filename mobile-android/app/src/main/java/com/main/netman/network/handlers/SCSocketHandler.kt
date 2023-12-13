@@ -37,6 +37,9 @@ object SCSocketHandler {
     @Synchronized
     fun disconnection() {
         mSocket?.disconnect()
+        mSocket?.close()
+        mSocket = null
+        auth = false
     }
 
     @Synchronized

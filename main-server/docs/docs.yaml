@@ -1099,8 +1099,8 @@
           - 
             JWT: []
     /player/command: 
-      get: 
-        description: "Получение информации о команде игрока"
+      post: 
+        description: "Получение информации о команде"
         tags: 
           - "Игрок"
         responses: 

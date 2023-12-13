@@ -15,12 +15,15 @@ import com.main.netman.models.auth.AuthModel
 import com.main.netman.models.error.ErrorModel
 import com.main.netman.network.RemoteDataSource
 import com.main.netman.network.apis.AuthApi
+import com.main.netman.network.handlers.SCSocketHandler
 import com.main.netman.repositories.BaseRepository
+import com.main.netman.store.CommandPreferences
 import com.main.netman.store.CookiePreferences
 import com.main.netman.store.CoordsPreferences
 import com.main.netman.store.TestMarkPreferences
 import com.main.netman.store.UserPreferences
 import com.main.netman.store.cookieDataStore
+import com.main.netman.store.getCommandDataStore
 import com.main.netman.store.getCoordsDataStore
 import com.main.netman.store.testMarkDataStore
 import com.main.netman.store.userDataStore
@@ -43,6 +46,9 @@ abstract class BaseFragment<VM: BaseViewModel, B: ViewBinding, R: BaseRepository
 
     // Локальное хранилище для координат пользователя
     protected lateinit var coordsPreferences: CoordsPreferences
+
+    // Локальное хранилище для информации о команде пользователя
+    protected lateinit var commandPreferences: CommandPreferences
 
     // Локальное хранилище для количества отправленных меток пользователя
     protected lateinit var testMarkPreferences: TestMarkPreferences
@@ -70,6 +76,7 @@ abstract class BaseFragment<VM: BaseViewModel, B: ViewBinding, R: BaseRepository
         userPreferences = UserPreferences(requireContext().userDataStore)
         cookiePreferences = CookiePreferences(requireContext().cookieDataStore)
         coordsPreferences = CoordsPreferences(getCoordsDataStore(requireContext().applicationContext))
+        commandPreferences = CommandPreferences(getCommandDataStore(requireContext().applicationContext))
         testMarkPreferences = TestMarkPreferences(requireContext().testMarkDataStore)
 
         // Связывание класса ViewBinding с конкретным экземпляром
@@ -119,6 +126,9 @@ abstract class BaseFragment<VM: BaseViewModel, B: ViewBinding, R: BaseRepository
 
         // Очистка пользовательских данных
         userPreferences.clear()
+
+        // Прерывание подключения по веб-сокету
+        SCSocketHandler.disconnection()
 
         // Открытие новой активности авторизации
         // requireActivity().startNewActivity(AuthActivity::class.java)

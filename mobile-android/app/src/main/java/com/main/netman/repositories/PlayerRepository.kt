@@ -1,6 +1,8 @@
 package com.main.netman.repositories
 
 import com.google.gson.Gson
+import com.main.netman.models.command.CommandInfoModel
+import com.main.netman.models.command.CommandsIdModel
 import com.main.netman.models.command.TeamCreateModel
 import com.main.netman.models.user.UserInfoUpdateModel
 import com.main.netman.network.apis.PlayerApi
@@ -64,9 +66,45 @@ class PlayerRepository(
     }
 
     /**
+     * Вступление в команду
+     */
+    suspend fun playerCommandJoin(body: CommandsIdModel) = safeApiCall {
+        val requestBody = Gson().toJson(body).toRequestBody("application/json".toMediaTypeOrNull())
+
+        api.playerCommandJoin(requestBody)
+    }
+
+    /**
      * Получение списка всех комманд
      */
     suspend fun playerCommandsList() = safeApiCall {
         api.playerCommandsList()
+    }
+
+    /**
+     * Выход игрока из команды
+     */
+    suspend fun playerCommandDetach(body: CommandsIdModel) = safeApiCall {
+        val requestBody = Gson().toJson(body).toRequestBody("application/json".toMediaTypeOrNull())
+
+        api.playerCommandDetach(requestBody)
+    }
+
+    /**
+     * Просмотр информации о команде
+     */
+    suspend fun playerCommand(body: CommandsIdModel) = safeApiCall {
+        val requestBody = Gson().toJson(body).toRequestBody("application/json".toMediaTypeOrNull())
+
+        api.playerCommand(requestBody)
+    }
+
+    /**
+     * Получени информации о игроках в команде
+     */
+    suspend fun playerCommandPlayers(body: CommandsIdModel) = safeApiCall {
+        val requestBody = Gson().toJson(body).toRequestBody("application/json".toMediaTypeOrNull())
+
+        api.playerCommandPlayers(requestBody)
     }
 }

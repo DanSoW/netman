@@ -185,19 +185,20 @@ router.get(
 );
 
 /**
- * Получение информации о команде игрока
- * @route GET /player/command
+ * Получение информации о команде
+ * @route POST /player/command
  * @group Игрок - Функции для взаимодействия с игровой механикой
  * @operationId playerCommand
  * @returns {CommandInfoDto.model} 200 - Информация о команде
  * @returns {ApiError.model} default - Ошибка запроса
  * @security JWT
  */
-router.get(
+router.post(
     PlayerRoute.command,
     [
         authMiddleware,
-        check('users_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 })
+        check('users_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 }),
+        check('commands_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 })
     ],
     playerController.command
 );
