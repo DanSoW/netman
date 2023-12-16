@@ -9,12 +9,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.MarginLayoutParams
 import androidx.annotation.RequiresApi
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.updateLayoutParams
 import com.google.gson.Gson
 import com.main.netman.R
 import com.main.netman.constants.data.value.CommandStatus
 import com.main.netman.containers.base.BaseFragment
+import com.main.netman.containers.game.adapters.CommandPlayersAdapter
+import com.main.netman.containers.game.adapters.SuccessGameAdapter
 import com.main.netman.containers.game.models.GameTeamViewModel
 import com.main.netman.databinding.FragmentGamesTeamBinding
+import com.main.netman.models.command.CommandPlayerModel
 import com.main.netman.models.command.CommandsIdModel
 import com.main.netman.models.error.ErrorModel
 import com.main.netman.models.game.GameAvailableModel
@@ -32,10 +37,18 @@ class GamesTeamFragment(
     private var commandStatus: Int?,
     private var commandsId: Int?
 ) : BaseFragment<GameTeamViewModel, FragmentGamesTeamBinding, PlayerRepository>() {
+    private lateinit var commandGamesAdapter: SuccessGameAdapter
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
+
+        commandGamesAdapter = SuccessGameAdapter(
+            requireContext(),
+            games = arrayListOf()
+        )
+
+        binding.fgtGameList.adapter = commandGamesAdapter
 
         viewModel.currentGame.observe(viewLifecycleOwner) {
             when (it) {
@@ -43,7 +56,7 @@ class GamesTeamFragment(
                 is Resource.Success -> {
                     if (it.value.isSuccessful) {
                         val currentGame = it.value.body()?.string()
-                        if (currentGame != null) {
+                        if ((!currentGame.isNullOrEmpty()) && (currentGame != "null")) {
                             val body = Gson().fromJson(
                                 currentGame,
                                 GameAvailableModel::class.java
@@ -53,6 +66,7 @@ class GamesTeamFragment(
                         } else {
                             if (commandStatus == CommandStatus.TEAM_CREATOR) {
                                 binding.constraintJoinGame.visibility = View.VISIBLE
+                                binding.cardGame.visibility = View.GONE
 
                                 binding.btnJoinGame.setOnClickListener {
                                     val args = Bundle()
@@ -64,12 +78,6 @@ class GamesTeamFragment(
                                         args
                                     )
                                 }
-                            } else {
-                                // Устанавливаем стандартный отступ для пустого места
-                                val marginLayoutParams =
-                                    MarginLayoutParams(binding.fgtGameList.layoutParams)
-                                marginLayoutParams.marginStart = 32
-                                binding.fgtGameList.layoutParams = marginLayoutParams
                             }
                         }
 
@@ -93,7 +101,44 @@ class GamesTeamFragment(
             }
         }
 
-        commandsId?.let { getCurrentGame(it) }
+        viewModel.commandGames.observe(viewLifecycleOwner) {
+            when (it) {
+                // Обработка успешного сетевого взаимодействия
+                is Resource.Success -> {
+                    if (it.value.isSuccessful) {
+                        val body = Gson().fromJson(
+                            it.value.body()?.string(),
+                            Array<GameAvailableModel>::class.java
+                        )
+
+                        commandGamesAdapter.setGames(
+                            body.map { it ->
+                                return@map it
+                            } as ArrayList<GameAvailableModel>)
+                    } else {
+                        val error = Gson().fromJson(
+                            it.value.errorBody()?.string().toString(), ErrorModel::class.java
+                        )
+                        handleErrorMessage(
+                            if (error.errors != null && error.errors!!.isNotEmpty()) error.errors?.first()!!.msg
+                            else error.message!!
+                        )
+                    }
+                }
+
+                // Обработка ошибок связанные с сетью
+                is Resource.Failure -> {
+                    handleApiError(it) { }
+                }
+
+                else -> {}
+            }
+        }
+
+        commandsId?.let {
+            getCommandGames(it)
+            getCurrentGame(it)
+        }
     }
 
     /**
@@ -129,6 +174,14 @@ class GamesTeamFragment(
         )
     }
 
+    private fun getCommandGames(id: Int) {
+        viewModel.playerCommandGames(
+            CommandsIdModel(
+                commandsId = id
+            )
+        )
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("SetTextI18n")
     private fun viewCurrentGame(game: GameAvailableModel) {
@@ -155,10 +208,14 @@ class GamesTeamFragment(
         val begin = Instant.parse(game.dateBegin)
         val now = Instant.now()
 
-        if(Duration.between(now, begin).toHours() <= 0) {
+        if(Duration.between(now, begin).toMinutes() <= 0) {
             binding.tvStatusGame.text = "Началась!"
         } else {
             binding.tvStatusGame.text = "Скоро"
+        }
+
+        binding.fgtGameList.updateLayoutParams<ConstraintLayout.LayoutParams> {
+            topToBottom = R.id.cardGame
         }
     }
 }

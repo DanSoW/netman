@@ -1,11 +1,13 @@
 package com.main.netman.containers.home
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -18,6 +20,7 @@ import com.main.netman.containers.profile.ProfileActivity
 import com.main.netman.databinding.ActivityHomeBinding
 import com.main.netman.models.auth.AuthModel
 import com.main.netman.models.command.CommandStatusModel
+import com.main.netman.models.game.CurrentGameModel
 import com.main.netman.models.user.GameStatusModel
 import com.main.netman.network.handlers.SCSocketHandler
 import com.main.netman.store.UserPreferences
@@ -49,6 +52,7 @@ class HomeActivity : AppCompatActivity() {
     val socket: LiveData<Socket?>
         get() = _socket
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeBinding.inflate(layoutInflater)
@@ -85,6 +89,16 @@ class HomeActivity : AppCompatActivity() {
             socketConnection()
         }
 
+        binding.icArrow.setOnClickListener {
+            // Поворот view элемента на 180 градусов
+            binding.icArrow.rotation = binding.icArrow.rotation + 180f
+            if (binding.tvTaskDescription.visibility == View.VISIBLE) {
+                binding.tvTaskDescription.visibility = View.GONE
+            } else {
+                binding.tvTaskDescription.visibility = View.VISIBLE
+            }
+        }
+
         // Определение обработчиков для сокета после подключения
         socket.observe(this) {
             if (it == null) {
@@ -104,14 +118,33 @@ class HomeActivity : AppCompatActivity() {
                     return@on
                 }
 
+                // Получение статуса игрока в текущий момент времени
                 val status =
                     Gson().fromJson(itLocal.first() as String, GameStatusModel::class.java)
+
                 if (status.judge) {
-                    Log.w("SOCKET", "STATUS IS JUDGE")
+                    runOnUiThread {
+                        binding.cardTask.visibility = View.GONE
+                        binding.cardHint.visibility = View.GONE
+                    }
                 } else if (status.player) {
-                    Log.w("SOCKET", "STATUS IS PLAYER")
+                    if (itLocal.size > 1 && itLocal[1] != null) {
+                        runOnUiThread {
+                            binding.cardTask.visibility = View.VISIBLE
+                            binding.cardHint.visibility = View.VISIBLE
+
+                            val task =
+                                Gson().fromJson(itLocal[1].toString(), CurrentGameModel::class.java)
+                            binding.tvTaskDescription.text = task.task
+                            binding.tvNumberQuest.text = "№ ${task.number}"
+                            binding.tvGameHint.text = task.hint
+                        }
+                    }
                 } else {
-                    Log.w("SOCKET", "STATUS IS OTHER USER")
+                    runOnUiThread {
+                        binding.cardTask.visibility = View.GONE
+                        binding.cardHint.visibility = View.GONE
+                    }
                 }
 
                 /*if(args[0] != null){

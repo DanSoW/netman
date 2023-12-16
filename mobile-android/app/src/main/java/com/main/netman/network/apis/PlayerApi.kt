@@ -94,4 +94,10 @@ interface PlayerApi {
      */
     @POST(PlayerApiConstants.PLAYER_COMMAND_CURRENT_GAME)
     suspend fun playerCommandCurrentGame(@Body requestBody: RequestBody): Response<ResponseBody>
+
+    /**
+     * Получение информации о всех пройденных командой играх
+     */
+    @POST(PlayerApiConstants.PLAYER_COMMAND_GAMES)
+    suspend fun playerCommandGames(@Body requestBody: RequestBody): Response<ResponseBody>
 }

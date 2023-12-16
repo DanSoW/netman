@@ -133,4 +133,13 @@ class PlayerRepository(
 
         api.playerCommandCurrentGame(requestBody)
     }
+
+    /**
+     * Получение информации о пройденных играх
+     */
+    suspend fun playerCommandGames(body: CommandsIdModel) = safeApiCall {
+        val requestBody = Gson().toJson(body).toRequestBody("application/json".toMediaTypeOrNull())
+
+        api.playerCommandGames(requestBody)
+    }
 }

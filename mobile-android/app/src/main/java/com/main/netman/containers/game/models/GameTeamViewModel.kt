@@ -162,4 +162,18 @@ class GameTeamViewModel(
         _currentGame.value = Resource.Loading
         _currentGame.value = repository.playerCommandCurrentGame(commandsId)
     }
+
+    private val _commandGames: MutableLiveData<Resource<Response<ResponseBody>>> =
+        MutableLiveData()
+    val commandGames: LiveData<Resource<Response<ResponseBody>>>
+        get() = _commandGames
+
+
+    /**
+     * Получение информации о игроках в команде
+     */
+    fun playerCommandGames(commandsId: CommandsIdModel) = viewModelScope.launch {
+        _commandGames.value = Resource.Loading
+        _commandGames.value = repository.playerCommandGames(commandsId)
+    }
 }

@@ -347,7 +347,7 @@ io.on("connection", (socket) => {
                 return;
             }
 
-            // Если данные об игроке есть
+            // Если данные об игроке есть, но команды у пользователя нет
             if (!dataPlayers.commands_id) {
                 // то, отправляем статус - "Обычный пользователь"
                 socket.emit("status_on", JSON.stringify({
@@ -402,6 +402,8 @@ io.on("connection", (socket) => {
                     // то есть смысл удалить его из этой комнаты (всех пользователей удаляем)
                     socket.leave(dataPlayers.commands_id);
                 }
+
+                // Событие "очистить все игровые метки"
                 socket.emit("clear_games_marks");
 
                 // Завершение определения статуса игрока (пользователь)
@@ -427,7 +429,7 @@ io.on("connection", (socket) => {
                 // Поиск всех завершённых игр команды
                 let gamesFinisheds = await db.FinishedGames.findAll({
                     where: {
-                        game_id: {
+                        games_id: {
                             [db.Sequelize.Op.in]: games.map((item) => item.id)
                         }
                     }
@@ -459,7 +461,7 @@ io.on("connection", (socket) => {
                         where: {
                             id: {
                                 [db.Sequelize.Op.and]: [
-                                    { [db.Sequelize.Op.notIn]: gamesFinisheds.map((item) => item.game_id) },
+                                    { [db.Sequelize.Op.notIn]: gamesFinisheds.map((item) => item.games_id) },
                                     { [db.Sequelize.Op.in]: games.map((item) => item.id) }
                                 ]
                             }
@@ -508,10 +510,10 @@ io.on("connection", (socket) => {
                             JSON.stringify({
                                 task: currentGameQuestInfo.task,
                                 hint: currentGameQuestInfo.hint,
-                                number: ((await Games.findAll({
+                                number: ((await db.Games.findAll({
                                     where: {
                                         id: {
-                                            [db.Sequelize.Op.in]: gamesFinisheds.map((item) => item.game_id)
+                                            [db.Sequelize.Op.in]: gamesFinisheds.map((item) => item.games_id)
                                         }
                                     }
                                 })).length + 1),
@@ -661,6 +663,7 @@ io.on("connection", (socket) => {
         const t = await db.sequelize.transaction();
         try {
             const location = JSON.parse(data);
+
             let index = duExistsValueIndex(dataUsers, socket.id);
 
             if (index < 0) {
@@ -851,7 +854,7 @@ io.on("connection", (socket) => {
             console.log(e);
         }
 
-        await sleep(1000);
+        await sleep(10000);
     }
 })();
 
@@ -925,7 +928,7 @@ io.on("connection", (socket) => {
             console.log(e);
         }
 
-        await sleep(1000);
+        await sleep(10000);
     }
 })();
 
@@ -1009,7 +1012,7 @@ io.on("connection", (socket) => {
                 // Определение всех заданий для текущей игры и текущей команды, которые были пройдены
                 const finisheds = await db.FinishedGames.findAll({
                     where: {
-                        game_id: {
+                        games_id: {
                             [db.Sequelize.Op.in]: games.map((item) => item.id)
                         }
                     }
@@ -1021,7 +1024,7 @@ io.on("connection", (socket) => {
                 await games.removeIfAsync(async (item) => {
                     let flag = false;
                     for (let i = 0; i < finisheds.length; i++) {
-                        if (finisheds[i].game_id == item.id) {
+                        if (finisheds[i].games_id == item.id) {
                             flag = true;
                             gamesFinished.push(item);
                             break;
@@ -1259,7 +1262,7 @@ io.on("connection", (socket) => {
                                 id: currentGame.quests_id
                             },
                             include: {
-                                model: Marks
+                                model: db.Marks
                             }
                         });
 
@@ -1343,6 +1346,6 @@ io.on("connection", (socket) => {
             console.log(e);
         }
 
-        await sleep(1000);
+        await sleep(10000);
     }
 })();
