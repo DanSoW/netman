@@ -10,17 +10,24 @@ const sequelize = new Sequelize(            //установка подключ�
         host: config.get("database").host,
         port: config.get("database").port,
         define: {
-            timestamps: false
+            timestamps: false,
+        },
+        logging: false,
+        pool: {
+            max: 1000,
+            min: 0,
+            idle: 20000,
+            acquire: 20000
         }
     }
 );
 
 //-----------------------------------------------------------------------------------------
 //взаимодействие с моделями базы данных
-const MediaResults      = require('../models/media_results')(sequelize, Sequelize);
+const MediaResults = require('../models/media_results')(sequelize, Sequelize);
 const MediaInstructions = require('../models/media_instructions')(sequelize, Sequelize);
-const UsersIcons        = require('../models/users_icons')(sequelize, Sequelize);
-const MediaFiles        = require('../models/media_files')(sequelize, Sequelize);
+const UsersIcons = require('../models/users_icons')(sequelize, Sequelize);
+const MediaFiles = require('../models/media_files')(sequelize, Sequelize);
 
 MediaInstructions.hasMany(MediaResults, {
     foreignKey: {
@@ -33,16 +40,16 @@ MediaInstructions.hasMany(MediaResults, {
 
 
 //синхронизация моделей с базой данных
-sequelize.sync().then(result => {}).catch(err => {
+sequelize.sync().then(result => { }).catch(err => {
     logger.error({
         method: 'Synchronization of models with the database',
         message: 'Ошибка при синхронизации моделей с базой данных',
     });
 });
 
-module.exports.MediaInstructions    = MediaInstructions;
-module.exports.MediaResults         = MediaResults;
-module.exports.UsersIcons           = UsersIcons;
-module.exports.MediaFiles           = MediaFiles;
-module.exports.sequelize            = sequelize;
-module.exports.Sequelize            = Sequelize;
+module.exports.MediaInstructions = MediaInstructions;
+module.exports.MediaResults = MediaResults;
+module.exports.UsersIcons = UsersIcons;
+module.exports.MediaFiles = MediaFiles;
+module.exports.sequelize = sequelize;
+module.exports.Sequelize = Sequelize;
