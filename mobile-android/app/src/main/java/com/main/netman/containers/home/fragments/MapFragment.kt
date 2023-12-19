@@ -24,7 +24,11 @@ import com.main.netman.utils.LocationPermissionHelper
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
+import com.mapbox.maps.Event
+import com.mapbox.maps.Observer
 import com.mapbox.maps.Style
+import com.mapbox.maps.extension.observable.eventdata.MapLoadedEventData
+import com.mapbox.maps.extension.observable.subscribeMapLoaded
 import com.mapbox.maps.extension.style.expressions.dsl.generated.interpolate
 import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.annotation.AnnotationConfig
@@ -49,29 +53,36 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.lang.ref.WeakReference
 
-class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository>() {
-    // Socket
-    private val _socket: MutableLiveData<Socket?> = MutableLiveData(SCSocketHandler.getSocket())
+class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository>(), Observer {
 
     private lateinit var point: PointD
+
+    // Socket
+    private val _socket: MutableLiveData<Socket?> = MutableLiveData(SCSocketHandler.getSocket())
 
     // Помощник для определения разрешения на получения доступа к геолокации пользователя
     private lateinit var locationPermissionHelper: LocationPermissionHelper
 
     // Координаты игроков в команде
-    private var commandPlayers: MutableMap<Int, PointD> = mutableMapOf()
+    private var commandPlayers: MutableMap<Int, PointAnnotation> = mutableMapOf()
 
     // Задача на получение координат других игроков
     private var _coroutineGetCoordinates: Job? = null
     private var _coroutineIO: Job? = null
+
+    // Менеджер управления аннотациями
+    private var pointAnnotationManager: PointAnnotationManager? = null
 
     private val onIndicatorBearingChangedListener = OnIndicatorBearingChangedListener {
         // [Отключено, т.к. вызывает слишком большие изменения экрана, что нежелательно]
         // binding.mapView.getMapboxMap().setCamera(CameraOptions.Builder().bearing(it).build())
     }
 
+    /**
+     * Обработка изменения позиции пользователя в окружающем мире (определение точных координат пользователя)
+     */
     private val onIndicatorPositionChangedListener = OnIndicatorPositionChangedListener {
-        val point = Point.fromLngLat(104.279491, 52.281000)
+        val point = Point.fromLngLat(104.279491, 52.287000)
         binding.mapView.getMapboxMap().setCamera(CameraOptions.Builder().center(point).build())
         binding.mapView.gestures.focalPoint =
             binding.mapView.getMapboxMap().pixelForCoordinate(point)
@@ -103,6 +114,7 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
         point = PointD(52.282473, 104.279491)
 
         binding.mapView.getMapboxMap().loadStyleUri(Style.MAPBOX_STREETS)
+        binding.mapView.getMapboxMap().subscribeMapLoaded(this@MapFragment)
 
         locationPermissionHelper = LocationPermissionHelper(WeakReference(requireActivity()))
         locationPermissionHelper.checkPermissions {
@@ -176,6 +188,7 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
                 it.off(SocketHandlerConstants.ADD_PLAYER_COORDINATES)
             }
 
+            // Обработка добавления другого пользователя на карту
             it.on(SocketHandlerConstants.ADD_PLAYER_COORDINATES) { args ->
                 if (args[0] != null) {
                     val data = Gson().fromJson(
@@ -185,14 +198,23 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
 
                     activity?.runOnUiThread {
                         if (!(commandPlayers.contains(data.usersId))) {
-                            commandPlayers[data.usersId] = PointD(data.lat, data.lng)
-                        } else {
-                            val value = commandPlayers[data.usersId]
-                            value?.x = data.lat
-                            value?.y = data.lng
-                        }
+                            val value = addElementToMap(
+                                R.drawable.mapbox_user_command_icon,
+                                PointD(data.lat, data.lng)
+                            )
 
-                        renderMapData()
+                            if(value != null) {
+                                commandPlayers[data.usersId] = value
+                            }
+                        } else {
+                            val annotation = commandPlayers[data.usersId]
+                            if(annotation != null) {
+                                val value = updateMapElement(annotation, PointD(data.lat, data.lng))
+                                if(value != null) {
+                                    commandPlayers[data.usersId] = value
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -203,15 +225,14 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
 
             // Удаление координат игроков, которые отключились от игрового процесса
             it.on(SocketHandlerConstants.TEAM_PLAYER_DISCONNECT) { args ->
-                Log.w("HELLO", "DISCONNECT: ${args}")
                 if(args[0] != null){
                     val obj = Gson().fromJson((args[0] as String), GamePlayerCoordinatesModel::class.java)
 
                     activity?.runOnUiThread {
-                        Log.w("HELLO", "DISCONNECT: ${obj.usersId}")
                         if(commandPlayers.containsKey(obj.usersId)){
+                            Log.w("HELLO", "УДАЛЕНИЕ ЮЗЕРА ${obj.usersId}")
+                            deleteMapElement(commandPlayers[obj.usersId]!!)
                             commandPlayers.remove(obj.usersId)
-                            renderMapData()
                         }
                     }
                 }
@@ -242,29 +263,6 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
         }
 
         socketConnection()
-    }
-
-    private fun renderMapData(withoutKey: Int? = null) {
-        if (binding.mapView.getMapboxMap().getStyle()?.isStyleLoaded == true) {
-            cleanUp()
-
-            if(viewModel.coords.isInitialized && viewModel.coords != null) {
-                addElementToMap(
-                    R.drawable.mapbox_user_puck_icon,
-                    PointD(
-                        viewModel.coords.value!!.first,
-                        viewModel.coords.value!!.second
-                    )
-                )
-            }
-
-            for(item in commandPlayers){
-                addElementToMap(
-                    R.drawable.mapbox_user_command_icon,
-                    item.value
-                )
-            }
-        }
     }
 
     /**
@@ -440,14 +438,14 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
      * Добавление элемента на карту
      */
     private fun addElementToMap(@DrawableRes resourceId: Int, point: PointD): PointAnnotation? {
+        if(pointAnnotationManager == null) {
+            return null
+        }
+
         val resource = DrawableToBitmap.bitmapFromDrawableRes(
             requireContext(),
             resourceId
         ) ?: return null
-
-        // Создаём экземпляр API аннотаций и получаем Point AnnotationManager
-        val annotationApi = binding.mapView.annotations
-        val pointAnnotationManager = annotationApi.createPointAnnotationManager()
 
         // Устанавливаем параметры для результирующего слоя символов.
         val pointAnnotationOptions: PointAnnotationOptions = PointAnnotationOptions()
@@ -458,7 +456,37 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
             .withIconImage(resource)
 
         // Добавление результирующего pointAnnotation на карту
-        return pointAnnotationManager.create(pointAnnotationOptions)
+        return pointAnnotationManager?.create(pointAnnotationOptions)
+    }
+
+    /**
+     * Изменение элемента на карте
+     */
+    private fun updateMapElement(annotation: PointAnnotation, point: PointD): PointAnnotation? {
+        if(pointAnnotationManager == null) {
+            return null
+        }
+
+        val index = pointAnnotationManager!!.annotations.indexOf(annotation)
+
+        Log.w("HELLO", "INDEX: ${index}")
+        // Обновление координат аннотации
+        pointAnnotationManager!!.annotations[index].point = Point.fromLngLat(point.y, point.x)
+        pointAnnotationManager!!.update(pointAnnotationManager!!.annotations[index])
+
+        return pointAnnotationManager!!.annotations[index]
+    }
+
+    /**
+     * Удаление элемента с карты
+     */
+    private fun deleteMapElement(annotation: PointAnnotation): Unit {
+        if(pointAnnotationManager == null) {
+            return
+        }
+
+        // Обновление координат аннотации
+        pointAnnotationManager!!.delete(annotation)
     }
 
     private fun socketConnection() {
@@ -472,5 +500,32 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
                 delay(5000)
             }
         }
+    }
+
+    /**
+     * Обработка события "Загрузка карты"
+     */
+    override fun notify(event: Event) {
+       if(event.type == "map-loaded") {
+           // Создание нового менеджера добавления точечных аннотаций
+           pointAnnotationManager = binding.mapView.annotations.createPointAnnotationManager()
+
+           if(viewModel.coords.isInitialized && viewModel.coords != null) {
+               addElementToMap(
+                   R.drawable.mapbox_user_puck_icon,
+                   PointD(
+                       viewModel.coords.value!!.first,
+                       viewModel.coords.value!!.second
+                   )
+               )
+           }
+
+           for(item in commandPlayers){
+               addElementToMap(
+                   R.drawable.mapbox_user_command_icon,
+                   PointD(item.value.point.latitude(), item.value.point.longitude())
+               )
+           }
+       }
     }
 }
