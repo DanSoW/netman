@@ -210,8 +210,6 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
                             if(value != null) {
                                 commandPlayers[data.usersId] = value
                             }
-
-                            Log.w("HELLO", "ADD NEW USER: ${data.usersId}")
                         } else {
                             val annotation = commandPlayers[data.usersId]
                             if(annotation != null) {
@@ -220,9 +218,6 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
                                     commandPlayers[data.usersId] = value
                                 }
                             }
-
-
-                            Log.w("HELLO", "ADD NEW USER: ${data.usersId}")
                         }
                     }
                 }
