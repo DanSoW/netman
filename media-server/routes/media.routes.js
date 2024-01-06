@@ -97,7 +97,6 @@ router.get(address_config.m_download_name, async function (req, res) {
         }
 
         const stats = fs.statSync(mediaInstructions.local_path);
-        console.log(stats);
 
         return res.status(201)
             .set({

@@ -17,6 +17,7 @@ import com.main.netman.databinding.FragmentMapBinding
 import com.main.netman.models.PointD
 import com.main.netman.models.user.GamePlayerCoordinatesModel
 import com.main.netman.models.user.UserCoordsModel
+import com.main.netman.models.user.UserIdModel
 import com.main.netman.network.handlers.SCSocketHandler
 import com.main.netman.repositories.MapRepository
 import com.main.netman.utils.DrawableToBitmap
@@ -138,11 +139,13 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
             }
         }
 
+        // Обработка изменения данных полнодуплексного подключения
         _socket.observe(viewLifecycleOwner) {
             if (it == null) {
                 return@observe
             }
 
+            // Если корутина IO уже инициализирована, то сначала её останавливаем
             if ((_coroutineIO != null) && (_coroutineIO?.isActive == true)) {
                 _coroutineIO!!.cancel()
             }
@@ -153,6 +156,7 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
             }
 
             it.on(SocketHandlerConstants.GET_PLAYER_COORDINATES) { _ ->
+                // Передача текущих координат игрока
                 it.emit(
                     SocketHandlerConstants.SET_PLAYER_COORDINATES, Gson().toJson(
                         UserCoordsModel(
@@ -206,6 +210,8 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
                             if(value != null) {
                                 commandPlayers[data.usersId] = value
                             }
+
+                            Log.w("HELLO", "ADD NEW USER: ${data.usersId}")
                         } else {
                             val annotation = commandPlayers[data.usersId]
                             if(annotation != null) {
@@ -214,6 +220,9 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
                                     commandPlayers[data.usersId] = value
                                 }
                             }
+
+
+                            Log.w("HELLO", "ADD NEW USER: ${data.usersId}")
                         }
                     }
                 }
@@ -226,9 +235,15 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
             // Удаление координат игроков, которые отключились от игрового процесса
             it.on(SocketHandlerConstants.TEAM_PLAYER_DISCONNECT) { args ->
                 if(args[0] != null){
-                    val obj = Gson().fromJson((args[0] as String), GamePlayerCoordinatesModel::class.java)
+                    val obj = Gson().fromJson((args[0] as String), UserIdModel::class.java)
+
+                    Log.w("HELLO", "user ID 2: ${obj.usersId}")
 
                     activity?.runOnUiThread {
+                        Log.w("HELLO", "user ID: ${obj.usersId}")
+                        Log.w("HELLO", "players: ${Gson().toJson(commandPlayers.get(obj.usersId))}")
+                        Log.w("HELLO", "players: ${Gson().toJson(commandPlayers.get(0))}")
+
                         if(commandPlayers.containsKey(obj.usersId)){
                             Log.w("HELLO", "УДАЛЕНИЕ ЮЗЕРА ${obj.usersId}")
                             deleteMapElement(commandPlayers[obj.usersId]!!)
@@ -248,6 +263,8 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
                     _coroutineGetCoordinates = CoroutineScope(Dispatchers.IO).launch {
                         try {
                             while (true) {
+                                // Запрос всех координат пользователей, которые находятся в
+                                // команде текущего пользователя и online
                                 it.emit(SocketHandlerConstants.COORDINATES_PLAYERS)
                                 delay(1000)
                             }

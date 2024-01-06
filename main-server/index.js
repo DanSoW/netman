@@ -31,6 +31,7 @@ import swaggerUi from 'swagger-ui-express';
 import ExpressSwaggerGenerator from 'express-swagger-generator';
 import swiggerOptions from './config/swagger.options.js';
 import mathCircle from './math/circle.js';
+import fs from 'fs';
 
 /* Добавление поддержки require в ES Modules */
 import { createRequire } from "module";
@@ -42,6 +43,11 @@ const socket = require('socket.io');
 const __dirname = dirname(fileURLToPath(import.meta.url));
 // Загрузка Swagger документации из каталога docs
 const swaggerDocument = YAML.load(path.join(__dirname, 'docs', 'docs.yaml'));
+
+// Если нет директории public, то создаём её
+if (!fs.existsSync('public')) {
+    fs.mkdirSync('public');
+}
 
 // Инициализация экземпляра express-приложения
 const app = express();
@@ -625,7 +631,10 @@ io.on("connection", (socket) => {
                 return;
             }
 
-            socket.to(dataPlayers.commands_id).emit("add_player_coordinates", data);
+            socket.to(dataPlayers.commands_id).emit("add_player_coordinates", JSON.stringify({
+                ...JSON.parse(data),
+                users_id: dataPlayers.users_id
+            }));
         } catch (e) {
             console.log(e);
         }
@@ -737,6 +746,7 @@ io.on("connection", (socket) => {
 
         try {
             const index = duExistsValueIndex(dataUsers, socket.id);
+
             if (index >= 0) {
                 const value = await db.DataPlayers.findOne({
                     where: {

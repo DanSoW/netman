@@ -1,3 +1,7 @@
 package com.main.netman.models.user
 
-data class UserIdModel()
+import com.google.gson.annotations.SerializedName
+
+data class UserIdModel(
+    @SerializedName("users_id") var usersId: Int? = null
+)

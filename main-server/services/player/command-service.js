@@ -496,9 +496,9 @@ class CommandService {
                 }
             });
 
-            if (countPlayers < 3) {
+            /* if (countPlayers < 3) {
                 throw ApiError.BadRequest("Для регистрации команды на игру необходимо чтобы в команде было не менее 3-х и не более 6-ти участников");
-            }
+            } */
 
             // Проверка информации об игре
             const infoGame = await db.InfoGames.findOne({
