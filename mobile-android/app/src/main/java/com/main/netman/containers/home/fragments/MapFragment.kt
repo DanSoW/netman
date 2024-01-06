@@ -56,6 +56,7 @@ import java.lang.ref.WeakReference
 
 class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository>(), Observer {
 
+    private var isInit: Boolean = false
     private lateinit var point: PointD
 
     // Socket
@@ -83,10 +84,15 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
      * Обработка изменения позиции пользователя в окружающем мире (определение точных координат пользователя)
      */
     private val onIndicatorPositionChangedListener = OnIndicatorPositionChangedListener {
-        val point = Point.fromLngLat(104.279491, 52.287000)
-        binding.mapView.getMapboxMap().setCamera(CameraOptions.Builder().center(point).build())
-        binding.mapView.gestures.focalPoint =
-            binding.mapView.getMapboxMap().pixelForCoordinate(point)
+        val point = Point.fromLngLat(104.279491, 52.285000)
+
+        if(!isInit) {
+            binding.mapView.getMapboxMap().setCamera(CameraOptions.Builder().center(point).build())
+            binding.mapView.gestures.focalPoint =
+                binding.mapView.getMapboxMap().pixelForCoordinate(point)
+
+            isInit = true
+        }
 
         // Сохранение текущих координат пользователя
         // viewModel.setCoords(it.latitude(), it.longitude())
@@ -109,6 +115,8 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
         override fun onMoveEnd(detector: MoveGestureDetector) {
         }
     }
+
+    private var latitude: Double = 52.283000
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
@@ -156,12 +164,16 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
             }
 
             it.on(SocketHandlerConstants.GET_PLAYER_COORDINATES) { _ ->
+                latitude += 0.0001
+
                 // Передача текущих координат игрока
                 it.emit(
                     SocketHandlerConstants.SET_PLAYER_COORDINATES, Gson().toJson(
                         UserCoordsModel(
                             lat = viewModel.coords.value?.first,
                             lng = viewModel.coords.value?.second
+                            /*lat = latitude,
+                            lng = 104.279491*/
                         )
                     )
                 )
@@ -325,7 +337,7 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
         )
 
         // Отмена скролла пользователем по карте
-        binding.mapView.gestures.scrollEnabled = false
+        // binding.mapView.gestures.scrollEnabled = false
 
         // Визуализация карты
         viewMap()
@@ -403,6 +415,9 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
         locationComponentPlugin.addOnIndicatorBearingChangedListener(
             onIndicatorBearingChangedListener
         )
+
+        binding.mapView.gestures.pitchEnabled = false
+        binding.mapView.gestures.pinchToZoomEnabled = false
     }
 
     /**
@@ -481,7 +496,6 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
 
         val index = pointAnnotationManager!!.annotations.indexOf(annotation)
 
-        Log.w("HELLO", "INDEX: ${index}")
         // Обновление координат аннотации
         pointAnnotationManager!!.annotations[index].point = Point.fromLngLat(point.y, point.x)
         pointAnnotationManager!!.update(pointAnnotationManager!!.annotations[index])
