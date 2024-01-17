@@ -15,7 +15,7 @@ object SocketHandlerConstants {
     const val GET_PLAYER_COORDINATES = "get_player_coordinates"
     const val SET_PLAYER_COORDINATES = "set_player_coordinates"
     const val CLEAR_GAMES_MARKS = "clear_games_marks"
-
+    const val SET_VIEW_CURRENT_QUEST =  "set_view_current_quest"
     const val ADD_PLAYER_COORDINATES = "add_player_coordinates"
     const val COORDINATES_PLAYERS = "coordinates_players"
 

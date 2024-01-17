@@ -51,6 +51,7 @@ if (!fs.existsSync('public')) {
 
 // Инициализация экземпляра express-приложения
 const app = express();
+let server = null;
 
 // Если разрешена демонстрация устаревшей версии Swagger
 if (config.get("doc.swagger2") === true) {
@@ -85,23 +86,31 @@ app.use(PlayerRouteBase, PlayerRouter);
 // Добавление промежуточного ПО для обработки ошибок
 app.use(errorMiddleware);
 
+let gameProcess = true;     // Игровой процесс (активация игрового процесса)
 const PORT = config.get('port') || 5000;
+
+let timerGlobal = null;
+let lockGlobal = false;
+let timerJudge = null;
+let lockJudge = false;
+let timerGame = null;
+let lockGame = false;
 
 /**
  * Запуск express-приложения (начало прослушивания по определённому порту)
  * @returns
  */
-const start = () => {
+const handleStart = () => {
     try {
         // Начало прослушивания конкретного порта
-        const server = app.listen(PORT, () => console.log(`Сервер запущен с портом ${PORT}`));
+        const serverHandle = app.listen(PORT, () => console.log(`Сервер запущен с портом ${PORT}`));
         logger.info({
             port: PORT,
             message: "Запуск сервера"
         });
 
         // Возвращение экземпляра
-        return server;
+        return serverHandle;
     } catch (e) {
         logger.error({
             message: e.message
@@ -111,11 +120,50 @@ const start = () => {
     }
 }
 
-const server = start();
+server = handleStart();
+
+const handleShutdown = () => {
+    gameProcess = false;
+
+    timerGlobal && clearTimeout(timerGlobal);
+    timerJudge && clearTimeout(timerJudge);
+    timerGame && clearTimeout(timerGame);
+
+    timerGlobal = null;
+    timerJudge = null;
+    timerGame = null;
+
+    server.close();
+
+    console.log("Сервер остановлен");
+}
+
+process.on("SIGINT", () => {
+    if (gameProcess) {
+        handleShutdown();
+        process.exit(0);
+    }
+});
+process.on("SIGTERM", () => {
+    if (gameProcess) {
+        handleShutdown();
+        process.exit(0);
+    }
+});
+process.on("SIGHUP", () => {
+    if (gameProcess) {
+        handleShutdown();
+        process.exit(0);
+    }
+});
+process.on('exit', function () {
+    if (gameProcess) {
+        handleShutdown();
+    }
+});
 
 /* Логика работы с Socket.IO */
 const dataUsers = [];       // Глобальный объект, содержащий уникальные данные каждого пользователя (вместо БД)
-let gameProcess = true;     // Игровой процесс (активация игрового процесса)
 
 /**
  * Проверка на существование пользователя по определённым данным элемента
@@ -187,7 +235,7 @@ const duGetIndexById = (data, id) => {
  * @param {*} ms Время задержки в миллисекундах
  * @returns {Promise} Промис ожидания
  */
-function sleep(ms) {
+const sleep = (ms) => {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -343,11 +391,14 @@ io.on("connection", (socket) => {
             // Если данных об игроке нет
             if (!dataPlayers) {
                 // то, отправляем статус - "Отсутствие статуса"
-                socket.emit("status_off", JSON.stringify({
-                    player: false,
-                    judge: false,
-                    player_status: 0
-                }));
+                socket.emit(
+                    "status_off",
+                    JSON.stringify({
+                        player: false,
+                        judge: false,
+                        player_status: 0
+                    })
+                );
 
                 // Завершение определения статуса игрока (пользователь)
                 return;
@@ -356,11 +407,14 @@ io.on("connection", (socket) => {
             // Если данные об игроке есть, но команды у пользователя нет
             if (!dataPlayers.commands_id) {
                 // то, отправляем статус - "Обычный пользователь"
-                socket.emit("status_on", JSON.stringify({
-                    player: false,
-                    judge: false,
-                    player_status: 0
-                }));
+                socket.emit(
+                    "status_on",
+                    JSON.stringify({
+                        player: false,
+                        judge: false,
+                        player_status: 0
+                    })
+                );
 
                 // Очистка игровых меток на карте
                 socket.emit("clear_games_marks");
@@ -395,11 +449,14 @@ io.on("connection", (socket) => {
             // Если текущая игра отсутствует
             if (!currentGames) {
                 // то, отправляем статус - "Обычный пользователь"
-                socket.emit("status_on", JSON.stringify({
-                    player: false,
-                    judge: false,
-                    player_status: 0
-                }));
+                socket.emit(
+                    "status_on",
+                    JSON.stringify({
+                        player: false,
+                        judge: false,
+                        player_status: 0
+                    })
+                );
 
                 // Если текущей игры нет, то нет необходимости быть закреплённым за определённую комнату
                 if (!(socket.rooms.has(dataPlayers.commands_id))) {
@@ -416,7 +473,6 @@ io.on("connection", (socket) => {
                 return;
             } else {
                 // Если текущая игра присутствует - продолжаем определение конечной роли пользователя
-
                 // Поиск регистрационной записи
                 let registerGame = await db.RegisterCommands.findOne({
                     where: {
@@ -452,11 +508,14 @@ io.on("connection", (socket) => {
                 if (gamesFinisheds.length === countQuests) {
                     // Обработка обстоятельства, в котором игра находится
                     // на этапе судейской проверки
-                    socket.emit("status_on", JSON.stringify({
-                        player: false,
-                        judge: false,
-                        player_status: 0
-                    }));
+                    socket.emit(
+                        "status_on",
+                        JSON.stringify({
+                            player: false,
+                            judge: false,
+                            player_status: 0
+                        })
+                    );
 
                     // Завершение определения статуса игрока (пользователь)
                     return;
@@ -477,11 +536,14 @@ io.on("connection", (socket) => {
                     // Если игра ещё не была поставлена на очередь
                     if (games.length === 0) {
                         // то, отправляем игроку пустой статус (без ухода из групповой комнаты)
-                        socket.emit("status_on", JSON.stringify({
-                            player: false,
-                            judge: false,
-                            player_status: 0
-                        }));
+                        socket.emit(
+                            "status_on",
+                            JSON.stringify({
+                                player: false,
+                                judge: false,
+                                player_status: 0
+                            })
+                        );
 
                         // Отправив повторный статус пользователь узнает прошёл ли он игру или находится игра
                         // на этапе судейской оценки
@@ -491,6 +553,7 @@ io.on("connection", (socket) => {
                     } else {
                         // Теперь известно, что games[0] - текущая игра за которой закреплена команда
                         const currentGameQuest = games[0];
+
                         // Получаем информацию о квесте текущей игры (с геолокацией)
                         const currentGameQuestInfo = await db.Quests.findOne({
                             where: {
@@ -508,11 +571,13 @@ io.on("connection", (socket) => {
                         }
 
                         // Отправка игроку информации, о текущем задании
-                        socket.emit("status_on", JSON.stringify({
-                            player: true,
-                            judge: false,
-                            player_status: playerStatus
-                        }),
+                        socket.emit(
+                            "status_on",
+                            JSON.stringify({
+                                player: true,
+                                judge: false,
+                                player_status: playerStatus
+                            }),
                             JSON.stringify({
                                 task: currentGameQuestInfo.task,
                                 hint: currentGameQuestInfo.hint,
@@ -531,18 +596,21 @@ io.on("connection", (socket) => {
                         // Если данный квест видим
                         if (currentGameQuest.view) {
                             // То отправляем сообщение пользователям - "Визуализируй видимый квест"
-                            socket.emit("set_view_current_quest", JSON.stringify({
-                                radius: currentGameQuestInfo.radius,
-                                lat: currentGameQuestInfo.dataValues.mark.dataValues.lat,
-                                lng: currentGameQuestInfo.dataValues.mark.dataValues.lng
-                            }));
+                            socket.emit(
+                                "set_view_current_quest",
+                                JSON.stringify({
+                                    radius: currentGameQuestInfo.radius,
+                                    lat: currentGameQuestInfo.dataValues.mark.dataValues.lat,
+                                    lng: currentGameQuestInfo.dataValues.mark.dataValues.lng
+                                })
+                            );
 
                             // Отправка сообщения всем игрокам команды о том, 
                             // что необходимо загрузить медиафайл с инструкцией
                             socket.emit("load_media_instructions");
                         } else {
                             // Очистка меток
-                            socket.emit("clear_games_marks");
+                            // socket.emit("clear_games_marks");
 
                             // Не загружаем медиафайл с инструкцией
                             socket.emit("not_load_media_instructions");
@@ -768,518 +836,589 @@ io.on("connection", (socket) => {
     });
 });
 
-// Обработка выбора судей для судейства существующих текущих игр
-(async () => {
-    while (gameProcess) {
-        try {
-            // Получение списка всех игр
-            const games = await db.CurrentGames.findAll();
+timerJudge = setInterval(async () => {
+    if (!gameProcess) {
+        return;
+    }
 
-            // Фильтруем список игр таким образом, что остаются 
-            // только те текущие игры, которые остались без судьи
-            await games.removeIfAsync(async (item) => {
-                const fixJudges = await db.FixJudges.findOne({
+    while (lockJudge && gameProcess) {
+        if (!gameProcess) {
+            return;
+        }
+
+        await sleep(10);
+    }
+
+    if (!gameProcess) {
+        return;
+    }
+
+    lockJudge = true;
+    const t = await db.sequelize.transaction();
+
+    try {
+        // Получение списка всех игр
+        const games = await db.CurrentGames.findAll();
+
+        // Фильтруем список игр таким образом, что остаются 
+        // только те текущие игры, которые остались без судьи
+        await games.removeIfAsync(async (item) => {
+            const fixJudges = await db.FixJudges.findOne({
+                where: {
+                    commands_id: item.commands_id,
+                    info_games_id: item.info_games_id
+                }
+            });
+
+            return (fixJudges) ? true : false;
+        });
+
+        // Формирование списка идентификаторов всех команд, которые в
+        // данный момент имеют текущую игру
+        const allCommandsId = games.map((item) => {
+            return item.commands_id
+        });
+
+        for (let i = 0; i < games.length; i++) {
+            // Алгоритм закрепления судьи за определённой командой
+            // Описание:
+            // Проихсодит получение всех игроков, которые не принадлежат командам,
+            // которые имеют в настоящий момент текущую игру (чтобы не отвлекать других игроков от судейской роли),
+            // в случае, если таких игроков нет, то происходит рандомный выбор игрока судьи из всех имеющихся игроков [NOT CORRECT]
+
+            // Выбор всех игроков, которые не принадлежат ни одной команде
+            let players = await db.DataPlayers.findAll({
+                where: {
+                    commands_id: {
+                        [db.Sequelize.Op.notIn]: allCommandsId
+                    }
+                }
+            });
+
+            // Если таких игроков нет, то выбираем судью из всех имеющихся игроков (рандомным образом)
+            if (players.length == 0) {
+                players = await db.DataPlayers.findAll();
+            }
+
+            // Отсеивание игроков, которые уже являются судьями для текущих игр
+            await players.removeIfAsync(async (item) => {
+                // Считывание судейской статистики данного игрока
+                const fixJudges = await db.FixJudges.findAll({
+                    where: {
+                        users_id: item.users_id
+                    }
+                });
+
+                // Фильтрация судейской статистики данного игрока
+                await fixJudges.removeIfAsync(async (item) => {
+                    const isCompleted = await db.CompleteGames.findOne({
+                        where: {
+                            info_games_id: item.info_games_id,
+                            commands_id: item.commands_id
+                        }
+                    });
+
+                    const isGameEnding = await db.InfoGames.findOne({
+                        where: {
+                            id: item.info_games_id,
+                            date_end: {
+                                [db.Sequelize.Op.lt]: (new Date())
+                            }
+                        }
+                    });
+
+                    return (isCompleted || isGameEnding);
+                });
+
+                return (fixJudges.length > 0) ? true : false;
+            });
+
+            if (players.length > 0) {
+                // Выбор рандомного игрока
+                const index = getRandomInt(0, (players.length - 1));
+
+                // Добавление выбранного игрока за текущей игрой в качестве судьи
+                await db.FixJudges.create(
+                    {
+                        users_id: players[index].users_id,
+                        commands_id: games[i].commands_id,
+                        info_games_id: games[i].info_games_id
+                    },
+                    { transaction: t }
+                );
+            }
+        }
+
+        await t.commit();
+    } catch (e) {
+        await t.rollback();
+        console.log(e);
+    }
+
+    lockJudge = false;
+}, 5000);
+
+timerGame = setInterval(async () => {
+    if (!gameProcess) {
+        return;
+    }
+
+    while (lockGame && gameProcess) {
+        if (!gameProcess) {
+            return;
+        }
+
+        await sleep(10);
+    }
+
+    if (!gameProcess) {
+        return;
+    }
+
+    lockGame = true;
+    const t = await db.sequelize.transaction();
+
+    try {
+        // Выбор всех команд, у которых имеются текущие игры
+        const teamsHaveGames = await db.CurrentGames.findAll();
+
+        // Выбор всех команд, у которых текущих игр не имеется
+        const commands = await db.Commands.findAll({
+            where: {
+                id: {
+                    [db.Sequelize.Op.notIn]: teamsHaveGames.map((item) => item.commands_id)
+                }
+            }
+        });
+
+        if (commands.length > 0) {
+            // Выбор всех записей в таблице регистрации, которые определяют регистрацию команды на игру
+            const registers = await db.RegisterCommands.findAll({
+                where: {
+                    commands_id: {
+                        [db.Sequelize.Op.in]: commands.map((item) => item.id)
+                    }
+                }
+            });
+
+            // Фильтрация данных в таблице регистрации: нужны только те записи регистрации для
+            // команд, которые не были пройдены командами, а также записи, где игры,
+            // на которые были зарегистрированы команды ещё не закончились
+            await registers.removeIfAsync(async (item) => {
+                const value1 = await db.CompleteGames.findOne({
                     where: {
                         commands_id: item.commands_id,
                         info_games_id: item.info_games_id
                     }
                 });
 
-                return (fixJudges) ? true : false;
-            });
-
-            // Формирование списка идентификаторов всех команд, которые в
-            // данный момент имеют текущую игру
-            const allCommandsId = games.map((item) => {
-                return item.commands_id
-            });
-
-            for (let i = 0; i < games.length; i++) {
-                // Алгоритм закрепления судьи за определённой командой
-                // Описание:
-                // Проихсодит получение всех игроков, которые не принадлежат командам,
-                // которые имеют в настоящий момент текущую игру (чтобы не отвлекать других игроков от судейской роли),
-                // в случае, если таких игроков нет, то происходит рандомный выбор игрока судьи из всех имеющихся игроков [NOT CORRECT]
-
-                // Выбор всех игроков, которые не принадлежат ни одной команде
-                let players = await db.DataPlayers.findAll({
+                // Поиск игры, которая уже началась по данной записи в таблице регистрации
+                const value2 = await db.InfoGames.findOne({
                     where: {
-                        commands_id: {
-                            [db.Sequelize.Op.notIn]: allCommandsId
+                        id: item.info_games_id,
+                        // Дата начала игры меньше текущей даты (или равна ей)
+                        date_begin: {
+                            [db.Sequelize.Op.lte]: (new Date())
+                        },
+                        // И дата завершения игры больше текущей даты
+                        date_end: {
+                            [db.Sequelize.Op.gt]: (new Date())
                         }
                     }
                 });
 
-                // Если таких игроков нет, то выбираем судью из всех имеющихся игроков (рандомным образом)
-                if (players.length == 0) {
-                    players = await db.DataPlayers.findAll();
-                }
-
-                // Отсеивание игроков, которые уже являются судьями для текущих игр
-                await players.removeIfAsync(async (item) => {
-                    // Считывание судейской статистики данного игрока
-                    const fixJudges = await db.FixJudges.findAll({
-                        where: {
-                            users_id: item.users_id
-                        }
-                    });
-
-                    // Фильтрация судейской статистики данного игрока
-                    await fixJudges.removeIfAsync(async (item) => {
-                        const isCompleted = await db.CompleteGames.findOne({
-                            where: {
-                                info_games_id: item.info_games_id,
-                                commands_id: item.commands_id
-                            }
-                        });
-
-                        const isGameEnding = await db.InfoGames.findOne({
-                            where: {
-                                id: item.info_games_id,
-                                date_end: {
-                                    [db.Sequelize.Op.lt]: (new Date())
-                                }
-                            }
-                        });
-
-                        return (isCompleted || isGameEnding);
-                    });
-
-                    return (fixJudges.length > 0) ? true : false;
-                });
-
-                if (players.length > 0) {
-                    // Выбор рандомного игрока
-                    const index = getRandomInt(0, (players.length - 1));
-
-                    // Добавление выбранного игрока за текущей игрой в качестве судьи
-                    await db.FixJudges.create({
-                        users_id: players[index].users_id,
-                        commands_id: games[i].commands_id,
-                        info_games_id: games[i].info_games_id
-                    });
-                }
-            }
-        } catch (e) {
-            console.log(e);
-        }
-
-        await sleep(10000);
-    }
-})();
-
-// Автоматизация установки текущих игр для команд, которые были на них зарегистрированы
-(async () => {
-    while (gameProcess) {
-        try {
-            // Выбор всех команд, у которых имеются текущие игры
-            const teamsHaveGames = await db.CurrentGames.findAll();
-
-            // Выбор всех команд, у которых текущих игр не имеется
-            const commands = await db.Commands.findAll({
-                where: {
-                    id: {
-                        [db.Sequelize.Op.notIn]: teamsHaveGames.map((item) => item.commands_id)
-                    }
-                }
+                // Если игра завершена или нет такой игры, которая началась, но ещё не завершалась,
+                // то удаляем данную запись из таблицы регистрации
+                return ((value1) || (!value2));
             });
 
-            if (commands.length > 0) {
-                // Выбор всех записей в таблице регистрации, которые определяют регистрацию команды на игру
-                const registers = await db.RegisterCommands.findAll({
-                    where: {
-                        commands_id: {
-                            [db.Sequelize.Op.in]: commands.map((item) => item.id)
-                        }
-                    }
-                });
-
-                // Фильтрация данных в таблице регистрации: нужны только те записи регистрации для
-                // команд, которые не были пройдены командами, а также записи, где игры,
-                // на которые были зарегистрированы команды ещё не закончились
-                await registers.removeIfAsync(async (item) => {
-                    const value1 = await db.CompleteGames.findOne({
-                        where: {
-                            commands_id: item.commands_id,
-                            info_games_id: item.info_games_id
-                        }
-                    });
-
-                    // Поиск игры, которая уже началась по данной записи в таблице регистрации
-                    const value2 = await db.InfoGames.findOne({
-                        where: {
-                            id: item.info_games_id,
-                            // Дата начала игры меньше текущей даты (или равна ей)
-                            date_begin: {
-                                [db.Sequelize.Op.lte]: (new Date())
-                            },
-                            // И дата завершения игры больше текущей даты
-                            date_end: {
-                                [db.Sequelize.Op.gt]: (new Date())
-                            }
-                        }
-                    });
-
-                    // Если игра завершена или нет такой игры, которая началась, но ещё не завершалась,
-                    // то удаляем данную запись из таблицы регистрации
-                    return ((value1) || (!value2));
-                });
-
-                // Перебираем все записи, по которым необходимо добавить новую текущую игру
-                // для каждой команды, которая на такую игру зарегистрировалась
-                for (let i = 0; i < registers.length; i++) {
-                    await db.CurrentGames.create({
+            // Перебираем все записи, по которым необходимо добавить новую текущую игру
+            // для каждой команды, которая на такую игру зарегистрировалась
+            for (let i = 0; i < registers.length; i++) {
+                await db.CurrentGames.create(
+                    {
                         commands_id: registers[i].commands_id,
                         info_games_id: registers[i].info_games_id
-                    });
-                }
+                    },
+                    { transaction: t }
+                );
             }
-        } catch (e) {
-            console.log(e);
         }
 
-        await sleep(10000);
+        await t.commit();
+    } catch (e) {
+        await t.rollback();
+        console.log(e);
     }
-})();
+
+    lockGame = false;
+}, 5000);
 
 // Данная функция просматривает текущие игры и определяет
 // на каком этапе находятся игроки, которые её проходят
-(async () => {
-    while (gameProcess) {
-        try {
-            // Получение списка команд, которые зарегистрированы на игру
-            // register_commands сохраняет в себе все регистрации команд на определённую игру
-            // а current_games только на определённую 1-у игру, которая впоследствии перезаписывается
-            // т.к. текущая игра у команды может быть только одна
-            const commands = await db.CurrentGames.findAll();
+timerGlobal = setInterval(async () => {
+    if (!gameProcess) {
+        return;
+    }
 
-            // Обработка завершения игр и отсеивание их из всех обнаруженных 
-            // текущих игр, а также их завершения в базе данных
-            await commands.removeIfAsync(async (item) => {
-                // Определение завершённой игры
-                const isCompleted = await db.CompleteGames.findOne({
+    while (lockGlobal && gameProcess) {
+        if (!gameProcess) {
+            return;
+        }
+
+        await sleep(10);
+    }
+
+    if (!gameProcess) {
+        return;
+    }
+
+    lockGlobal = true;
+    const t = await db.sequelize.transaction();
+
+    try {
+        // Получение списка команд, которые зарегистрированы на игру
+        // register_commands сохраняет в себе все регистрации команд на определённую игру
+        // а current_games только на определённую 1-у игру, которая впоследствии перезаписывается
+        // т.к. текущая игра у команды может быть только одна
+        const commands = await db.CurrentGames.findAll();
+
+        // Обработка завершения игр и отсеивание их из всех обнаруженных 
+        // текущих игр, а также их завершения в базе данных
+        await commands.removeIfAsync(async (item) => {
+            // Определение завершённой игры
+            const isCompleted = await db.CompleteGames.findOne({
+                where: {
+                    info_games_id: item.info_games_id,
+                    commands_id: item.commands_id
+                }
+            });
+
+            // Поиск игры, которая уже закончилась, но была текущей для данной команды
+            /*const isGameEnding = await InfoGames.findOne({
+                where: {
+                    id: item.info_games_id,
+                    date_end: {
+                        [Sequelize.Op.lt]: (new Date())
+                    }
+                }
+            });
+
+            const result = (isCompleted || isGameEnding);*/
+
+            // Если данная текущая игра пройдена данной командой или была завершена,
+            // то удалить данную игру из БД и из рассматриваемого множества текущих игр
+            if (isCompleted) {
+                // Удаление зафиксированного судьи ...
+                // [функционал удаления на данный момент является условным,
+                // такое решение было принято для того, чтобы не вмешиваться в уже имеющуюся
+                // структуры БД на момент MVP для меньших трудозатрат. Это не мешает игровому процессу]
+
+                // Удаление текущей игры
+                await db.CurrentGames.destroy({
                     where: {
                         info_games_id: item.info_games_id,
                         commands_id: item.commands_id
                     }
-                });
+                }, { transaction: t });
+            }
 
-                // Поиск игры, которая уже закончилась, но была текущей для данной команды
-                /*const isGameEnding = await InfoGames.findOne({
-                    where: {
-                        id: item.info_games_id,
-                        date_end: {
-                            [Sequelize.Op.lt]: (new Date())
-                        }
-                    }
-                });
+            return (isCompleted) ? true : false;
+        });
 
-                const result = (isCompleted || isGameEnding);*/
+        // Проход по всем существующим командам
+        for (let i = 0; i < commands.length; i++) {
+            const commandItem = commands[i];
 
-                // Если данная текущая игра пройдена данной командой или была завершена,
-                // то удалить данную игру из БД и из рассматриваемого множества текущих игр
-                if (isCompleted) {
-                    // Удаление зафиксированного судьи ...
-                    // [функционал удаления на данный момент является условным,
-                    // такое решение было принято для того, чтобы не вмешиваться в уже имеющуюся
-                    // структуры БД на момент MVP для меньших трудозатрат. Это не мешает игровому процессу]
+            if (!commandItem) {
+                continue;
+            }
 
-                    // Удаление текущей игры
-                    await db.CurrentGames.destroy({
-                        where: {
-                            info_games_id: item.info_games_id,
-                            commands_id: item.commands_id
-                        }
-                    });
+            // Поиск регистрационной записи, для текущей игры рассматриваемой команды
+            const registerGame = await db.RegisterCommands.findOne({
+                where: {
+                    info_games_id: commandItem.info_games_id,
+                    commands_id: commandItem.commands_id
                 }
-
-                return (isCompleted) ? true : false;
             });
 
-            for (let i = 0; i < commands.length; i++) {
-                // Поиск регистрационной записи, для текущей игры рассматриваемой команды
-                const registerGame = await db.RegisterCommands.findOne({
+            // Поиск всех игр команды по текущей игре
+            const games = await db.Games.findAll({
+                where: {
+                    register_commands_id: registerGame.id,
+                }
+            });
+
+            // Все квесты данной игры для данной команды
+            const gameQuests = await db.GamesQuests.findAll({
+                where: {
+                    info_games_id: commandItem.info_games_id
+                }
+            });
+
+            // Определение всех заданий для текущей игры и текущей команды, которые были пройдены
+            const finisheds = await db.FinishedGames.findAll({
+                where: {
+                    games_id: {
+                        [db.Sequelize.Op.in]: games.map((item) => item.id)
+                    }
+                }
+            });
+
+            const gamesFinished = [];
+
+            // Отсеивание тех игр для текущей игры, которые были пройдены
+            await games.removeIfAsync(async (item) => {
+                let flag = false;
+
+                for (let i = 0; (i < finisheds.length) && (!flag); i++) {
+                    if (finisheds[i].games_id == item.id) {
+                        flag = true;
+                        gamesFinished.push(item);
+                    }
+                }
+
+                return flag;
+            });
+
+            // Формирование квестов, которые не были пройдены данной командой
+            gameQuests.removeIf((item) => {
+                for (let i = 0; i < gamesFinished.length; i++) {
+                    if (gamesFinished[i].quests_id == item.quests_id) {
+                        return true;
+                    }
+                }
+
+                return false;
+            });
+
+            const infoGames = await db.InfoGames.findOne({
+                where: {
+                    id: commandItem.info_games_id
+                }
+            });
+
+            // Проверка даты текущей игры, если дата завершения 
+            // игры меньше либо равна текущей дате, то игра считается пройденной
+            // и игра завершается
+            if ((new Date(infoGames.date_end)) <= (new Date())) {
+                const completeGames = await db.CompleteGames.findOne({
                     where: {
-                        info_games_id: commands[i].info_games_id,
-                        commands_id: commands[i].commands_id
+                        info_games_id: commandItem.info_games_id
                     }
                 });
 
-                // Поиск всех игр команды по текущей игре
-                const games = await db.Games.findAll({
+                const currentGames = await db.CurrentGames.findOne({
                     where: {
-                        register_commands_id: registerGame.id,
+                        info_games_id: commandItem.info_games_id,
+                        commands_id: commandItem.commands_id
                     }
                 });
 
-                // Все квесты данной игры
-                const gameQuests = await db.GamesQuests.findAll({
-                    where: {
-                        info_games_id: commands[i].info_games_id
-                    }
-                });
+                // Отправка сообщения о завершении игры
+                // всем игрокам, которые находятся в сети
+                // для данной команды
+                io.to(commandItem.commands_id).emit("game_over");
 
-                // Определение всех заданий для текущей игры и текущей команды, которые были пройдены
-                const finisheds = await db.FinishedGames.findAll({
-                    where: {
-                        games_id: {
-                            [db.Sequelize.Op.in]: games.map((item) => item.id)
-                        }
-                    }
-                });
-
-                const gamesFinished = [];
-
-                // Отсеивание тех игр для текущей игры, которые были пройдены
-                await games.removeIfAsync(async (item) => {
-                    let flag = false;
+                if (!completeGames) {
+                    let score = 0;
                     for (let i = 0; i < finisheds.length; i++) {
-                        if (finisheds[i].games_id == item.id) {
-                            flag = true;
-                            gamesFinished.push(item);
-                            break;
+                        const judgeScore = await db.JudgeScores.findOne({
+                            where: {
+                                finished_games_id: finisheds[i].id
+                            }
+                        });
+
+                        if (judgeScore) {
+                            score += judgeScore.score;
                         }
                     }
 
-                    return flag;
-                });
+                    await db.CompleteGames.create({
+                        commands_id: commandItem.commands_id,
+                        info_games_id: commandItem.info_games_id,
+                        completed: false,
+                        current_score: score,
+                    }, { transaction: t });
 
-                // Формирование квестов, которые не были пройдены данной командой
-                gameQuests.removeIf((item) => {
-                    for (let i = 0; i < gamesFinished.length; i++) {
-                        if (gamesFinished[i].quests_id == item.quests_id) {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                });
-
-                const infoGames = await db.InfoGames.findOne({
-                    where: {
-                        id: commands[i].info_games_id
-                    }
-                });
-
-                // Проверка даты текущей игры, если дата завершения 
-                // игры меньше либо равна текущей дате, то игра считается пройденной
-                // и игра завершается
-                if ((new Date(infoGames.date_end)) <= (new Date())) {
-                    const completeGames = await db.CompleteGames.findOne({
-                        where: {
-                            info_games_id: commands[i].info_games_id
-                        }
+                    // Удаление судъи из списка (не удаляется, т.к. необходимо сохранять ссылку на судью)
+                    // ########################### [comment='judge-begin']
+                    /*const fixJudges = await FixJudges.findOne({
+                        commands_id: currentGames.commands_id,
+                        info_games_id: currentGames.info_games_id
                     });
+
+                    await fixJudges.destroy();*/
+                    // ########################### [comment-end='judge-begin']
+
+                    // Удаление текущей игры
+                    await currentGames.destroy({ transaction: t });
+                } else {
+                    // Обновляем статус игры на не пройденную
+                    if (!completeGames.completed) {
+                        await completeGames.update({
+                            completed: false
+                        }, { transaction: t });
+                    }
+
+                    // ########################### [comment='judge-begin']
+                    /*const fixJudges = await FixJudges.findOne({
+                        commands_id: currentGames.commands_id,
+                        info_games_id: currentGames.info_games_id
+                    });
+
+                    await fixJudges.destroy();*/
+                    // ########################### [comment-end='judge-begin']
+                    await currentGames.destroy({ transaction: t });
+                }
+            }
+
+            if (games.length === 0) {
+                // Если нет текущей игры, то инициируется попытка её создания
+                if (gameQuests.length === 0) {
+                    // Если все квесты были пройдены, то необходимо узнать оценил ли судъя каждый
+                    // квест по отдельности, если оценил - то игра считается полностью пройденной, если 
+                    // ещё не дал оценку хотя бы 1 квесту, то игра на этапе оценки. Когда игра на этапе оценки
+                    // команда не может быть зарегистрирована на игру - вся команда ожидает результатов
+                    const judgeScores = [];
+                    for (let i = 0; i < finisheds.length; i++) {
+                        const value = await db.JudgeScores.findOne({
+                            where: {
+                                finished_games_id: finisheds[i].id
+                            }
+                        });
+
+                        if (value) {
+                            judgeScores.push(value);
+                        }
+                    }
 
                     const currentGames = await db.CurrentGames.findOne({
                         where: {
-                            info_games_id: commands[i].info_games_id,
-                            commands_id: commands[i].commands_id
+                            info_games_id: commandItem.info_games_id,
+                            commands_id: commandItem.commands_id
                         }
                     });
 
-                    // Отправка сообщения о завершении игры
-                    // всем игрокам, которые находятся в сети
-                    // для данной команды
-                    io.to(commands[i].commands_id).emit("game_over");
-
-                    if (!completeGames) {
-                        let score = 0;
-                        for (let i = 0; i < finisheds.length; i++) {
-                            const judgeScore = await db.JudgeScores.findOne({
-                                where: {
-                                    finished_games_id: finisheds[i].id
-                                }
-                            });
-
-                            if (judgeScore) {
-                                score += judgeScore.score;
-                            }
+                    const countQuests = await db.GamesQuests.findAll({
+                        where: {
+                            info_games_id: commandItem.info_games_id
                         }
+                    });
 
-                        await db.CompleteGames.create({
-                            commands_id: commands[i].commands_id,
-                            info_games_id: commands[i].info_games_id,
-                            completed: false,
-                            current_score: score,
-                        });
-
-                        // Удаление судъи из списка (не удаляется, т.к. необходимо сохранять ссылку на судью)
-                        // ########################### [comment='judge-begin']
-                        /*const fixJudges = await FixJudges.findOne({
-                            commands_id: currentGames.commands_id,
-                            info_games_id: currentGames.info_games_id
-                        });
-
-                        await fixJudges.destroy();*/
-                        // ########################### [comment-end='judge-begin']
-
-                        // Удаление текущей игры
-                        await currentGames.destroy();
-                    } else {
-                        // Обновляем статус игры на не пройденную
-                        if (!completeGames.completed) {
-                            await completeGames.update({
-                                completed: false
-                            });
-                        }
-
-                        // ########################### [comment='judge-begin']
-                        /*const fixJudges = await FixJudges.findOne({
-                            commands_id: currentGames.commands_id,
-                            info_games_id: currentGames.info_games_id
-                        });
-
-                        await fixJudges.destroy();*/
-                        // ########################### [comment-end='judge-begin']
-                        await currentGames.destroy();
-                    }
-                }
-
-                if (games.length === 0) {
-                    // Если нет текущей игры, то инициируется попытка её создания
-                    if (gameQuests.length === 0) {
-                        // Если все квесты были пройдены, то необходимо узнать оценил ли судъя каждый
-                        // квест по отдельности, если оценил - то игра считается полностью пройденной, если 
-                        // ещё не дал оценку хотя бы 1 квесту, то игра на этапе оценки. Когда игра на этапе оценки
-                        // команда не может быть зарегистрирована на игру - вся команда ожидает результатов
-                        const judgeScores = [];
-                        for (let i = 0; i < finisheds.length; i++) {
-                            const value = await db.JudgeScores.findOne({
-                                where: {
-                                    finished_games_id: finisheds[i].id
-                                }
-                            });
-
-                            if (value) {
-                                judgeScores.push(value);
-                            }
-                        }
-
-                        const currentGames = await db.CurrentGames.findOne({
+                    if ((judgeScores.length === finisheds.length)
+                        && (finisheds.length === countQuests.length)) {
+                        // Если количество записей в таблице оценок равно количеству
+                        // записей в таблице завершённых меток, то игра считается пройденной полностью
+                        // (также необходимо чтобы оба значения были равны общему числу квестов в текущей игре)
+                        // и оцененной судъей полностью
+                        const completeGames = await db.CompleteGames.findOne({
                             where: {
-                                info_games_id: commands[i].info_games_id,
-                                commands_id: commands[i].commands_id
+                                info_games_id: commandItem.info_games_id
                             }
                         });
 
-                        const countQuests = await db.GamesQuests.findAll({
-                            where: {
-                                info_games_id: commands[i].info_games_id
-                            }
-                        });
+                        io.to(commandItem.commands_id).emit("game_over");
 
-                        if ((judgeScores.length === finisheds.length)
-                            && (finisheds.length === countQuests.length)) {
-                            // Если количество записей в таблице оценок равно количеству
-                            // записей в таблице завершённых меток, то игра считается пройденной полностью
-                            // (также необходимо чтобы оба значения были равны общему числу квестов в текущей игре)
-                            // и оцененной судъей полностью
-                            const completeGames = await db.CompleteGames.findOne({
-                                where: {
-                                    info_games_id: commands[i].info_games_id
-                                }
-                            });
-
-                            io.to(commands[i].commands_id).emit("game_over");
-                            if (!completeGames) {
-                                let score = 0;
-                                for (let i = 0; i < finisheds.length; i++) {
-                                    const judgeScore = await db.JudgeScores.findOne({
-                                        where: {
-                                            finished_games_id: finisheds[i].id
-                                        }
-                                    });
-
-                                    if (judgeScore) {
-                                        score += judgeScore.score;
+                        if (!completeGames) {
+                            let score = 0;
+                            for (let i = 0; i < finisheds.length; i++) {
+                                const judgeScore = await db.JudgeScores.findOne({
+                                    where: {
+                                        finished_games_id: finisheds[i].id
                                     }
+                                });
+
+                                if (judgeScore) {
+                                    score += judgeScore.score;
                                 }
-
-                                await db.CompleteGames.create({
-                                    commands_id: commands[i].commands_id,
-                                    info_games_id: commands[i].info_games_id,
-                                    completed: true,
-                                    current_score: score,
-                                });
-
-                                // ########################### [comment='judge-begin']
-                                /*const fixJudges = await FixJudges.findOne({
-                                    commands_id: currentGames.commands_id,
-                                    info_games_id: currentGames.info_games_id
-                                });
-        
-                                await fixJudges.destroy();*/
-                                // ########################### [comment-end='judge-begin']
-
-                                await currentGames.destroy();
-                            } else {
-                                // Обновляем статус игры на пройденную
-                                if (!completeGames.completed) {
-                                    await completeGames.update({
-                                        completed: true
-                                    });
-                                }
-
-                                // ########################### [comment='judge-begin']
-                                /*const fixJudges = await FixJudges.findOne({
-                                    commands_id: currentGames.commands_id,
-                                    info_games_id: currentGames.info_games_id
-                                });
-       
-                                await fixJudges.destroy();*/
-                                // ########################### [comment-end='judge-begin']
-
-                                await currentGames.destroy();
                             }
+
+                            await db.CompleteGames.create({
+                                commands_id: commandItem.commands_id,
+                                info_games_id: commandItem.info_games_id,
+                                completed: true,
+                                current_score: score,
+                            }, { transaction: t });
+
+                            // ########################### [comment='judge-begin']
+                            /*const fixJudges = await FixJudges.findOne({
+                                commands_id: currentGames.commands_id,
+                                info_games_id: currentGames.info_games_id
+                            });
+    
+                            await fixJudges.destroy();*/
+                            // ########################### [comment-end='judge-begin']
+
+                            await currentGames.destroy({ transaction: t });
+                        } else {
+                            // Обновляем статус игры на пройденную
+                            if (!completeGames.completed) {
+                                await completeGames.update({
+                                    completed: true
+                                }, { transaction: t });
+                            }
+
+                            // ########################### [comment='judge-begin']
+                            /*const fixJudges = await FixJudges.findOne({
+                                commands_id: currentGames.commands_id,
+                                info_games_id: currentGames.info_games_id
+                            });
+   
+                            await fixJudges.destroy();*/
+                            // ########################### [comment-end='judge-begin']
+
+                            await currentGames.destroy({ transaction: t });
                         }
-                    } else {
-                        // Свободные квесты есть, а значит - их можно выдать команде для их прохождения
-                        const newQuest = await db.Quests.findOne({
-                            where: {
-                                id: gameQuests[0].quests_id
-                            }
-                        });
-
-                        // Добавление новой игры для команды
-                        await db.Games.create({
-                            view: false,
-                            commands_id: commands[i].commands_id,
-                            register_commands_id: registerGame.id,
-                            quests_id: newQuest.id
-                        });
                     }
                 } else {
-                    // Текущая игра есть, необходимо определить её видимость для игроков.
-                    // В случае, когда текущая игра, за которой они закреплены, видима,
-                    // игроки получают об этом уведомление. И когда они все собираются у точки
-                    // происходит выбор из команды одного человека, который будет оператором,
-                    // и на все устройства происходит загрузка видео, которое подразумевает собой выполнение
-                    // какого-либо действия
-
-                    // Получение информации о текущем задании
-                    const currentGame = await db.Games.findOne({
+                    // Свободные квесты есть, а значит - их можно выдать команде для их прохождения
+                    const newQuest = await db.Quests.findOne({
                         where: {
-                            id: games[0].id
+                            id: gameQuests[0].quests_id
+                        }
+                    });
+
+                    // Добавление новой игры для команды
+                    await db.Games.create({
+                        view: false,
+                        commands_id: commandItem.commands_id,
+                        register_commands_id: registerGame.id,
+                        quests_id: newQuest.id
+                    }, { transaction: t });
+                }
+            } else {
+                // Текущая игра есть, необходимо определить её видимость для игроков.
+                // В случае, когда текущая игра, за которой они закреплены, видима,
+                // игроки получают об этом уведомление. И когда они все собираются у точки
+                // происходит выбор из команды одного человека, который будет оператором,
+                // и на все устройства происходит загрузка видео, которое подразумевает собой выполнение
+                // какого-либо действия
+
+                // Получение информации о текущем задании
+                const currentGame = await db.Games.findOne({
+                    where: {
+                        id: games[0].id
+                    }
+                });
+
+                if (currentGame) {
+                    // Определение текущего квеста по заданию
+                    const currentQuest = await db.Quests.findOne({
+                        where: {
+                            id: currentGame.quests_id
+                        },
+                        include: {
+                            model: db.Marks
                         }
                     });
 
                     // Для дальнейшего шага необходимо выполнение условия "имеется текущее задание и оно ещё не видимо"
-                    if ((currentGame) && (!currentGame.view)) {
-                        // Определение текущего квеста по заданию
-                        const currentQuest = await db.Quests.findOne({
-                            where: {
-                                id: currentGame.quests_id
-                            },
-                            include: {
-                                model: db.Marks
-                            }
-                        });
-
+                    if (!currentGame.view) {
                         // Определение игроков в текущей команде
                         const dataPlayers = await db.DataPlayers.findAll({
                             where: {
-                                commands_id: commands[i].commands_id
+                                commands_id: commandItem.commands_id
                             }
                         });
 
@@ -1319,7 +1458,7 @@ io.on("connection", (socket) => {
                                     // от которого зависит перейдёт ли команда к следующему квесту или нет
                                     await currentGame.update({
                                         view: true
-                                    });
+                                    }, { transaction: t });
 
                                     // После того, как метка была найдена из всех игроков в команде выбирается тот,
                                     // кто будет вести съёмку видео, которое будет отправлено на сервер в качестве
@@ -1340,7 +1479,7 @@ io.on("connection", (socket) => {
                                         await db.VideoShooters.create({
                                             games_id: currentGame.id,
                                             data_players_id: dataPlayers[playerIndex].id
-                                        });
+                                        }, { transaction: t });
                                     }
 
                                     // Выходим из цикла, т.к. теперь текущее задание видно и можно
@@ -1349,13 +1488,25 @@ io.on("connection", (socket) => {
                                 }
                             }
                         }
+                    } else {
+                        io.to(commandItem.commands_id).emit(
+                            "set_view_current_quest",
+                            JSON.stringify({
+                                radius: currentQuest.dataValues.radius,
+                                lat: currentQuest.dataValues.mark.lat,
+                                lng: currentQuest.dataValues.mark.lng
+                            })
+                        );
                     }
                 }
             }
-        } catch (e) {
-            console.log(e);
         }
 
-        await sleep(10000);
+        await t.commit();
+    } catch (e) {
+        await t.rollback();
+        console.log(e);
     }
-})();
+
+    lockGlobal = false;
+}, 5000);

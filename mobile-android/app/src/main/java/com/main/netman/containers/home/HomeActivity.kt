@@ -28,8 +28,11 @@ import com.main.netman.store.userDataStore
 import com.main.netman.utils.startStdActivity
 import com.main.netman.utils.visible
 import io.socket.client.Socket
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -242,6 +245,14 @@ class HomeActivity : AppCompatActivity() {
                 it.emit(SocketHandlerConstants.STATUS)
             }
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
     }
 
     @Deprecated("Deprecated in Java")
