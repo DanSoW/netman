@@ -8,31 +8,33 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.Button
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.gson.Gson
 import com.main.netman.R
 import com.main.netman.constants.socket.SocketHandlerConstants
 import com.main.netman.containers.game.GameActivity
-import com.main.netman.containers.messenger.MessengerActivity
 import com.main.netman.containers.profile.ProfileActivity
 import com.main.netman.databinding.ActivityHomeBinding
 import com.main.netman.models.auth.AuthModel
-import com.main.netman.models.command.CommandStatusModel
 import com.main.netman.models.game.CurrentGameModel
+import com.main.netman.models.quest.QuestIdModel
 import com.main.netman.models.user.GameStatusModel
 import com.main.netman.network.handlers.SCSocketHandler
+import com.main.netman.store.CurrentQuestPreferences
 import com.main.netman.store.UserPreferences
+import com.main.netman.store.currentQuestDataStore
 import com.main.netman.store.userDataStore
+import com.main.netman.utils.handleErrorMessage
+import com.main.netman.utils.handleSuccessMessage
 import com.main.netman.utils.startStdActivity
 import com.main.netman.utils.visible
 import io.socket.client.Socket
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -49,11 +51,15 @@ class HomeActivity : AppCompatActivity() {
     private var flag: Boolean = true
     private lateinit var binding: ActivityHomeBinding
     private lateinit var userPreferences: UserPreferences
+    private lateinit var currentQuestPreferences: CurrentQuestPreferences
 
     // Socket
     private val _socket: MutableLiveData<Socket?> = MutableLiveData(SCSocketHandler.getSocket())
     val socket: LiveData<Socket?>
         get() = _socket
+
+    // Информация о текущей игре (RAM Storage)
+    private var currentGame: CurrentGameModel? = null
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,7 +87,9 @@ class HomeActivity : AppCompatActivity() {
         // Запрашивание разрешения для работы с файловым хранилищем
         // verifyStoragePermissions()
 
+        // Инициализация локальных хранилищ
         userPreferences = UserPreferences(userDataStore)
+        currentQuestPreferences = CurrentQuestPreferences(currentQuestDataStore)
 
         val data = Gson().fromJson(runBlocking {
             userPreferences.auth.first()
@@ -122,114 +130,82 @@ class HomeActivity : AppCompatActivity() {
                 }
 
                 // Получение статуса игрока в текущий момент времени
-                val status =
-                    Gson().fromJson(itLocal.first() as String, GameStatusModel::class.java)
+                val status = Gson().fromJson(itLocal.first() as String, GameStatusModel::class.java)
 
-                if (status.judge) {
-                    runOnUiThread {
-                        binding.cardTask.visibility = View.GONE
-                        binding.cardHint.visibility = View.GONE
-                    }
-                } else if (status.player) {
+                if (status.player) {
                     if (itLocal.size > 1 && itLocal[1] != null) {
                         runOnUiThread {
                             binding.cardTask.visibility = View.VISIBLE
                             binding.cardHint.visibility = View.VISIBLE
 
-                            val task =
-                                Gson().fromJson(itLocal[1].toString(), CurrentGameModel::class.java)
+                            val dataJson = itLocal[1].toString()
+
+                            val task = Gson().fromJson(dataJson, CurrentGameModel::class.java)
                             binding.tvTaskDescription.text = task.task
                             binding.tvNumberQuest.text = "№ ${task.number}"
                             binding.tvGameHint.text = task.hint
+
+                            binding.icCameraOn.visibility = View.GONE
+                            binding.icCameraOff.visibility = View.GONE
+
+                            if ((status.playerStatus == 2) && (task.view == true)) {
+                                binding.icCameraOn.visibility = View.VISIBLE
+                            } else if (status.playerStatus == 2) {
+                                binding.icCameraOff.visibility = View.VISIBLE
+                            }
+
+                            // Закрепление текущей игры в локальном хранилище
+                            runBlocking {
+                                currentQuestPreferences.saveData(dataJson)
+                            }
                         }
                     }
                 } else {
                     runOnUiThread {
                         binding.cardTask.visibility = View.GONE
                         binding.cardHint.visibility = View.GONE
+                        binding.icCameraOn.visibility = View.GONE
+                        binding.icCameraOff.visibility = View.GONE
                     }
                 }
+            }
 
-                /*if(args[0] != null){
-                    val data = args[0] as String
-                    val gson = Gson()
-                    val gstat = gson.fromJson(data, GameStatusModel::class.java)
-                    if(gstat.judge){
-                        if(!_beginJudgeState){
-                            _gameStatusPlayer = ConfigStatusPlayer.JUDGE
+            if (it.hasListeners(SocketHandlerConstants.SET_VIDEO_TEAM_LEAD)) {
+                it.off(SocketHandlerConstants.SET_VIDEO_TEAM_LEAD)
+            }
 
-                            CoroutineScope(Dispatchers.Main).launch {
-                                _bottomNavigationView?.menu?.findItem(R.id.Team)?.setIcon(R.drawable.ic_star_ruler)
+            it.on(SocketHandlerConstants.SET_VIDEO_TEAM_LEAD) { _ ->
+                runOnUiThread {
+                    binding.icCameraOff.visibility = View.GONE
+                    binding.icCameraOn.visibility = View.VISIBLE
+                }
+            }
 
-                                _tbMain?.visibility = View.GONE
-                                _tbHintContainer?.visibility = View.GONE
+            if (it.hasListeners(SocketHandlerConstants.FINISHED_QUEST_SUCCESS)) {
+                it.off(SocketHandlerConstants.FINISHED_QUEST_SUCCESS)
+            }
 
-                                _hintTextView?.text = ""
-                                _tbTextView?.text = ""
-                                _tbTextViewCentral?.text = ""
-                            }
-                        }
-                        _beginJudgeState = true
+            it.on(SocketHandlerConstants.FINISHED_QUEST_SUCCESS) { itLocal ->
+                if (itLocal.isEmpty()) {
+                    return@on
+                }
 
-                        if(args[1] != null){
-                            val dataStatus = args[1] as String
-                            _judgeData = gson.fromJson(dataStatus, JudgeInfoModel::class.java)
-                        }
-                    }else if(gstat.player){
-                        _gameStatusPlayer = ConfigStatusPlayer.PLAYER_ACTIVE
+                // Данных о пройденном квесте
+                val status = Gson().fromJson(itLocal.first() as String, QuestIdModel::class.java)
 
-                        if(_beginJudgeState){
-                            _bottomNavigationView?.menu?.findItem(R.id.Team)?.setIcon(R.drawable.ic_team)
-                        }
-                        _beginJudgeState = false
-                        if(args[1] != null){
-                            val data = gson.fromJson((args[1] as String), GameCurrentQuestModel::class.java)
-                            _currentQuestData = data
-                            CoroutineScope(Dispatchers.Main).launch {
-                                if(gstat.playerStatus.toByte() == ConfigStatusPlayer.PLAYER_ACTIVE_VIDEO){
-                                    // Данный игрок может вести съёмку видео (снимает пока не закончит съёмку)
-                                    if(_refMediaInstructions != null){
-                                        var intent = Intent(this@MainActivity, VideoActivity::class.java)
-                                        intent.putExtra("player_status", ConfigStatusPlayer.PLAYER_ACTIVE_VIDEO)
-                                        intent.putExtra("game_info", gson.toJson(_currentQuestData))
-                                        intent.putExtra("user_data", _shared?.getString(ConfigStorage.USERS_DATA, null))
-                                        intent.putExtra("ref_media", gson.toJson(_refMediaInstructions))
-                                        _socket?.off("status_on")
-                                        startActivity(intent)
-                                    }
-                                }else{
-                                    _tbMain?.visibility = View.VISIBLE
-                                    _tbHintContainer?.visibility = View.VISIBLE
+                val currentQuest = Gson().fromJson(runBlocking {
+                    currentQuestPreferences.data.first()
+                }, CurrentGameModel::class.java)
 
-                                    _hintTextView?.text = data.hint
-                                    _tbTextView?.text = data.task
-                                    _tbTextViewCentral?.text = "№" + data.number
-                                }
-                            }
-                        }
-                    }else{
-                        _gameStatusPlayer = ConfigStatusPlayer.PLAYER_DEFAULT
-
-                        if(_beginJudgeState){
-                            CoroutineScope(Dispatchers.Main).launch {
-                                _bottomNavigationView?.menu?.findItem(R.id.Team)?.setIcon(R.drawable.ic_team)
-                            }
-                        }
-
-                        _beginJudgeState = false
-                        CoroutineScope(Dispatchers.Main).launch {
-                            _tbMain?.visibility = View.GONE
-                            _tbHintContainer?.visibility = View.GONE
-
-                            _hintTextView?.text = ""
-                            _tbTextView?.text = ""
-                            _tbTextViewCentral?.text = ""
-                        }
-                    }
-                }else{
-                    _tbMain?.visibility = View.GONE
-                    _tbHintContainer?.visibility = View.GONE
-                }*/
+                if (currentQuest != null && currentQuest.id == status.questId) {
+                    // Отправка сообщения о завершении текущего квеста
+                    handleSuccessMessage(
+                        binding.root,
+                        "Вы успешно прошли квест! Не забудьте сохранить записанное видео " +
+                                "для подтверждения прохождения квеста вашей командой!",
+                        10000
+                    )
+                }
             }
 
             it.on(SocketHandlerConstants.AUTH_SUCCESS) { _ ->
@@ -244,6 +220,45 @@ class HomeActivity : AppCompatActivity() {
             if (SCSocketHandler.getAuth()) {
                 it.emit(SocketHandlerConstants.STATUS)
             }
+        }
+
+        binding.icCameraOn.setOnClickListener {
+            // Создание диалогового окна
+            val dialogBuilder = MaterialAlertDialogBuilder(this)
+            val viewDialog = layoutInflater.inflate(R.layout.dialog_captured_video, null)
+            // Добавление view диалоговому окну
+            dialogBuilder.setView(viewDialog)
+            // Открытие диалогового окна
+            val dialog: androidx.appcompat.app.AlertDialog? = dialogBuilder.show()
+
+            // Обработка отмены создания команды
+            viewDialog.findViewById<Button>(R.id.cancel_captured_video)
+                .setOnClickListener(View.OnClickListener {
+                    dialog?.dismiss()
+                })
+
+            // Отправка результата на прохождение квеста
+            viewDialog.findViewById<Button>(R.id.accept_captured_video)
+                .setOnClickListener(View.OnClickListener {
+                    val currentQuest = Gson().fromJson(runBlocking {
+                        currentQuestPreferences.data.first()
+                    }, CurrentGameModel::class.java)
+
+                    if ((socket.value != null) && (currentQuest != null)) {
+                        val questId =
+                            Gson().toJson(QuestIdModel(questId = currentQuest.currentGamesId))
+                        socket.value!!.emit(SocketHandlerConstants.FINISHED_QUEST, questId)
+                    } else {
+                        handleErrorMessage(
+                            binding.root,
+                            "Возникла ошибка при записи в локальное хранилище данных о " +
+                                    "текущей игре. Свяжитесь с разработчиком и сообщите о проблеме.",
+                            10000
+                        )
+                    }
+
+                    dialog?.dismiss()
+                })
         }
     }
 
@@ -277,8 +292,7 @@ class HomeActivity : AppCompatActivity() {
         binding.pbActivityHome.visible(true)
         binding.bnvActivityHome.menu.findItem(menuId).isChecked = true
 
-        when (menuId) {
-            /*
+        when (menuId) {/*
             R.id.itemMessengerMenu -> {
                 return MessengerActivity::class.java
             }
@@ -329,8 +343,7 @@ class HomeActivity : AppCompatActivity() {
 
     private fun verifyStoragePermissions() {
         val permission = ActivityCompat.checkSelfPermission(
-            this,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
+            this, Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
 
         if (permission != PackageManager.PERMISSION_GRANTED) {

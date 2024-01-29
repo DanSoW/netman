@@ -57,7 +57,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:background="@drawable/back_tb_main"
-        android:visibility="gone"
+        android:visibility="visible"
         app:collapseIcon="@null"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -68,23 +68,23 @@
         app:titleMargin="0dp">
 
         <View
-            android:id="@+id/view10"
+            android:id="@+id/icCameraOn"
             android:layout_width="45dp"
             android:layout_height="45dp"
-            android:layout_marginStart="15dp"
-            android:layout_marginLeft="15dp"
+            android:layout_marginStart="16dp"
             android:background="@drawable/ic_media"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@+id/tvNumberQuest"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/tvNumberQuest" />
 
         <View
-            android:id="@+id/view1010"
+            android:id="@+id/icCameraOff"
             android:layout_width="45dp"
             android:layout_height="45dp"
             android:layout_marginStart="15dp"
-            android:layout_marginLeft="15dp"
             android:background="@drawable/ic_camera_none"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@+id/tvNumberQuest"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/tvNumberQuest" />
@@ -93,8 +93,7 @@
             android:id="@+id/icArrow"
             android:layout_width="45dp"
             android:layout_height="30dp"
-            android:layout_marginEnd="15dp"
-            android:layout_marginRight="15dp"
+            android:layout_marginEnd="16dp"
             android:background="@drawable/ic_arrow_down"
             app:layout_constraintBottom_toBottomOf="@+id/tvNumberQuest"
             app:layout_constraintEnd_toEndOf="parent"
@@ -116,7 +115,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/icArrow"
             app:layout_constraintHorizontal_bias="0.61"
-            app:layout_constraintStart_toEndOf="@+id/view10"
+            app:layout_constraintStart_toEndOf="@+id/icCameraOn"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -124,6 +123,8 @@
             android:id="@+id/tvTaskDescription"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
             android:layout_marginBottom="16dp"
             android:fontFamily="@font/century_gothic"
             android:gravity="top"
@@ -132,9 +133,9 @@
             android:textSize="16sp"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@+id/icArrow"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toStartOf="@+id/view10" />
+            app:layout_constraintStart_toStartOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

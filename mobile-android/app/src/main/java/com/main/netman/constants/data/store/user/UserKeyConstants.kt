@@ -8,4 +8,5 @@ object UserKeyConstants {
     const val USER_COMMAND = "user_command"
     const val COOKIE = "cookie"
     const val TEST_MARK = "test_mark"
+    const val CURRENT_GAME_QUEST = "current_game_quest_key"
 }

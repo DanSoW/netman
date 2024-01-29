@@ -67,17 +67,19 @@ fun <A : Activity> Activity.startStdActivity(
 
 fun Activity.handleMessage(
     root: View,
-    message: String
+    message: String,
+    duration: Int = Snackbar.LENGTH_SHORT
 ) {
-    Snackbar.make(root, message, Snackbar.LENGTH_SHORT).show()
+    Snackbar.make(root, message, duration).show()
 }
 
 fun Activity.handleErrorMessage(
     root: View,
-    message: String
+    message: String,
+    duration: Int = Snackbar.LENGTH_LONG
 ) {
     CustomSnackBar.make(
-        root.parent as ViewGroup, message, Snackbar.LENGTH_LONG, null,
+        root.parent as ViewGroup, message, duration, null,
         R.drawable.ic_error_polygon, null, ContextCompat.getColor(this, R.color.red_color)
     )?.show()
 }
@@ -90,6 +92,17 @@ fun Activity.handleWarningMessage(
     CustomSnackBar.make(
         root.parent as ViewGroup, message, Snackbar.LENGTH_SHORT, null,
         R.drawable.ic_warning_polygon, null, ContextCompat.getColor(this, R.color.warning_color)
+    )?.show()
+}
+
+fun Activity.handleSuccessMessage(
+    root: View,
+    message: String,
+    duration: Int = Snackbar.LENGTH_SHORT
+) {
+    CustomSnackBar.make(
+        root.parent as ViewGroup, message, duration, null,
+        R.drawable.ic_success, null, ContextCompat.getColor(this, org.koin.android.R.color.material_blue_grey_800),
     )?.show()
 }
 

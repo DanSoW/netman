@@ -20,4 +20,8 @@ object SocketHandlerConstants {
     const val COORDINATES_PLAYERS = "coordinates_players"
 
     const val TEAM_PLAYER_DISCONNECT = "team_player_disconnect"
+    const val SET_VIDEO_TEAM_LEAD = "set_video_team_lead"
+
+    const val FINISHED_QUEST = "finished_quest"
+    const val FINISHED_QUEST_SUCCESS = "finished_quest_success"
 }

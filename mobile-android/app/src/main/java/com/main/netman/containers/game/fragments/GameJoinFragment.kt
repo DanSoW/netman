@@ -29,7 +29,8 @@ import com.main.netman.utils.navigation
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
-class GameJoinFragment: BaseFragment<GameTeamViewModel, FragmentGameJoinBinding, PlayerRepository>() {
+class GameJoinFragment :
+    BaseFragment<GameTeamViewModel, FragmentGameJoinBinding, PlayerRepository>() {
     private lateinit var commandAvailableAdapter: AvailableGameAdapter
 
     @SuppressLint("SetTextI18n", "MissingInflatedId")
@@ -45,7 +46,8 @@ class GameJoinFragment: BaseFragment<GameTeamViewModel, FragmentGameJoinBinding,
             // Открытие диалогового окна
             val dialog: androidx.appcompat.app.AlertDialog? = dialogBuilder.show()
 
-            viewDialog.findViewById<TextView>(R.id.tvDialogDescription).text = "Зарегистрироваться на игру \"${name}\" ?"
+            viewDialog.findViewById<TextView>(R.id.tvDialogDescription).text =
+                "Зарегистрироваться на игру \"${name}\" ?"
 
             // Обработка отмены создания команды
             viewDialog.findViewById<Button>(R.id.cancel_join_game_command)
