@@ -19,6 +19,7 @@ import com.main.netman.constants.socket.SocketHandlerConstants
 import com.main.netman.containers.game.GameActivity
 import com.main.netman.containers.profile.ProfileActivity
 import com.main.netman.databinding.ActivityHomeBinding
+import com.main.netman.event.CurrentQuestEvent
 import com.main.netman.models.auth.AuthModel
 import com.main.netman.models.game.CurrentGameModel
 import com.main.netman.models.quest.QuestIdModel
@@ -39,6 +40,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import org.greenrobot.eventbus.EventBus
 import java.util.ArrayDeque
 
 /**
@@ -198,13 +200,7 @@ class HomeActivity : AppCompatActivity() {
                 }, CurrentGameModel::class.java)
 
                 if (currentQuest != null && currentQuest.id == status.questId) {
-                    // Отправка сообщения о завершении текущего квеста
-                    handleSuccessMessage(
-                        binding.root,
-                        "Вы успешно прошли квест! Не забудьте сохранить записанное видео " +
-                                "для подтверждения прохождения квеста вашей командой!",
-                        10000
-                    )
+                    EventBus.getDefault().post(CurrentQuestEvent(questId = status.questId))
                 }
             }
 

@@ -49,9 +49,10 @@ fun Fragment.handleMessage(
 }
 
 fun Fragment.handleSuccessMessage(
-    message: String
+    message: String,
+    duration: Int = Snackbar.LENGTH_SHORT
 ){
-    CustomSnackBar.make(this.requireView(), message, Snackbar.LENGTH_SHORT,null,
+    CustomSnackBar.make(this.requireView(), message, duration,null,
         R.drawable.ic_success,null, ContextCompat.getColor(requireContext(), R.color.blue))?.show()
 }
 

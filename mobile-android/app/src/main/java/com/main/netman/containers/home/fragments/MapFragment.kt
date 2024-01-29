@@ -14,6 +14,7 @@ import com.main.netman.constants.socket.SocketHandlerConstants
 import com.main.netman.containers.base.BaseFragment
 import com.main.netman.containers.home.models.MapViewModel
 import com.main.netman.databinding.FragmentMapBinding
+import com.main.netman.event.CurrentQuestEvent
 import com.main.netman.models.PointD
 import com.main.netman.models.quest.QuestDataModel
 import com.main.netman.models.user.GamePlayerCoordinatesModel
@@ -23,6 +24,7 @@ import com.main.netman.network.handlers.SCSocketHandler
 import com.main.netman.repositories.MapRepository
 import com.main.netman.utils.DrawableToBitmap
 import com.main.netman.utils.LocationPermissionHelper
+import com.main.netman.utils.handleSuccessMessage
 import com.mapbox.android.gestures.MoveGestureDetector
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
@@ -53,6 +55,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import java.lang.ref.WeakReference
 
 /**
@@ -74,6 +79,9 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
 
     // Координаты игроков в команде
     private var commandPlayers: MutableMap<Int, PointAnnotation> = mutableMapOf()
+
+    // Координаты определённых игровых точек
+    private var coordTasks: MutableMap<Int, PointAnnotation> = mutableMapOf()
 
     // Задача на получение координат других игроков
     private var _coroutineGetCoordinates: Job? = null
@@ -129,6 +137,9 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         point = PointD(52.290365, 104.287895)
+
+        // Регистрация подписчика
+        EventBus.getDefault().register(this@MapFragment)
 
         binding.mapView.getMapboxMap().loadStyleUri(Style.MAPBOX_STREETS)
         binding.mapView.getMapboxMap().subscribeMapLoaded(this@MapFragment)
@@ -272,8 +283,26 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
                     val obj = Gson().fromJson((args[0] as String), QuestDataModel::class.java)
 
                     activity?.runOnUiThread {
-                        if(obj?.lat != null && obj.lng != null) {
-                            addElementToMap(R.drawable.ic_camera, PointD(obj.lat!!, obj.lng!!))
+                        if (obj?.lat != null && obj.lng != null) {
+                            if (!(coordTasks.contains(obj.gamesId))) {
+                                val value = addElementToMap(
+                                    R.drawable.ic_camera,
+                                    PointD(obj.lat!!, obj.lng!!)
+                                )
+
+                                if (value != null) {
+                                    coordTasks[obj.gamesId!!] = value
+                                }
+                            } else {
+                                val annotation = coordTasks[obj.gamesId]
+                                if (annotation != null) {
+                                    val value =
+                                        updateMapElement(annotation, PointD(obj.lat!!, obj.lng!!))
+                                    if (value != null) {
+                                        coordTasks[obj.gamesId!!] = value
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -336,6 +365,7 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
     @SuppressLint("Lifecycle")
     override fun onStop() {
         super.onStop()
+        EventBus.getDefault().unregister(this@MapFragment)
         binding.mapView.onStop()
         _coroutineGetCoordinates?.cancel()
         _coroutineIO?.cancel()
@@ -577,5 +607,24 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
                 _socket.value?.emit(SocketHandlerConstants.STATUS)
             }
         }
+    }
+
+    /**
+     * Обработка завершения игрового квеста на карте
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onCurrentQuestFinished(event: CurrentQuestEvent) {
+        // Удаление маркера задачи с карты
+        if (coordTasks.containsKey(event.questId)) {
+            deleteMapElement(coordTasks[event.questId]!!)
+            coordTasks.remove(event.questId)
+        }
+
+        // Отправка сообщения о завершении текущего квеста
+        handleSuccessMessage(
+            "Вы успешно прошли квест! Не забудьте сохранить записанное видео " +
+                    "для подтверждения прохождения квеста вашей командой!",
+            10000
+        )
     }
 }
