@@ -427,14 +427,20 @@ io.on("connection", (socket) => {
             let playerStatus = 1;
 
             // Получение информации об операторе квеста
-            const video = await db.VideoShooters.findOne({
+            /*const video = await db.VideoShooters.findOne({
                 where: {
                     data_players_id: dataPlayers.id
+                }
+            });*/
+
+            const command = await db.Commands.findOne({
+                where: {
+                    id: dataPlayers.commands_id
                 }
             });
 
             // Если игрок оператор
-            if (video) {
+            if (command && command.users_id === dataPlayers.users_id) {
                 // то, устанавливаем ему статус оператора
                 playerStatus = 2;
             }
@@ -599,6 +605,7 @@ io.on("connection", (socket) => {
                             socket.emit(
                                 "set_view_current_quest",
                                 JSON.stringify({
+                                    games_id: currentGameQuest.id,
                                     radius: currentGameQuestInfo.radius,
                                     lat: currentGameQuestInfo.dataValues.mark.dataValues.lat,
                                     lng: currentGameQuestInfo.dataValues.mark.dataValues.lng
@@ -808,6 +815,59 @@ io.on("connection", (socket) => {
         }
     });
 
+    // Обработка события - "Текущий игровой квест завершён"
+    socket.on("finished_quest", async (data) => {
+        const t = await db.sequelize.transaction();
+        try {
+            const questInfo = JSON.parse(data);
+
+            let index = duExistsValueIndex(dataUsers, socket.id);
+
+            if (index < 0) {
+                return;
+            }
+
+            const user = dataUsers[index];
+            if (!user.users_id) {
+                return;
+            }
+
+            const command = await db.Commands.findOne({
+                where: {
+                    users_id: user.users_id
+                }
+            });
+
+            if (!command) {
+                return;
+            }
+
+            console.log({
+                game_id: questInfo.quest_id,
+                ref_image: ''
+            });
+
+            // Добавление завершённой игры команды
+            /*await db.FinishedGames.create({
+                game_id: questInfo.quest_id,
+                ref_image: ''
+            }, { transaction: t });*/
+
+            await t.commit();
+
+            // Отправка всем членам команды сообщения о завершении игры
+            io.to(command.id).emit(
+                "finished_quest_success",
+                JSON.stringify({
+                    quest_id: questInfo.quest_id
+                })
+            );
+        } catch (e) {
+            await t.rollback();
+            console.log(e);
+        }
+    });
+
     // Обработка события - "Отключения пользователя от текущего подключения"
     socket.on('disconnect', async () => {
         console.log("disconnection socket id: ", socket.id);
@@ -836,7 +896,8 @@ io.on("connection", (socket) => {
     });
 });
 
-timerJudge = setInterval(async () => {
+// Механизм определения судей для команды
+/*timerJudge = setInterval(async () => {
     if (!gameProcess) {
         return;
     }
@@ -956,7 +1017,7 @@ timerJudge = setInterval(async () => {
     }
 
     lockJudge = false;
-}, 5000);
+}, 5000);*/
 
 timerGame = setInterval(async () => {
     if (!gameProcess) {
@@ -1131,6 +1192,16 @@ timerGlobal = setInterval(async () => {
             const commandItem = commands[i];
 
             if (!commandItem) {
+                continue;
+            }
+
+            const command = await db.Commands.findOne({
+                where: {
+                    id: commandItem.dataValues.commands_id
+                }
+            });
+
+            if (!command) {
                 continue;
             }
 
@@ -1464,7 +1535,8 @@ timerGlobal = setInterval(async () => {
                                     // кто будет вести съёмку видео, которое будет отправлено на сервер в качестве
                                     // результата действий игроков (ответ на медиафайл квеста)
 
-                                    const playerIndex = getRandomInt(0, (dataPlayers.length - 1));
+
+                                    // const playerIndex = getRandomInt(0, (dataPlayers.length - 1));
 
                                     // Определение того, имеется ли в текущий момент видеооператор для данного задания
                                     const findVideoShooter = await db.VideoShooters.findOne({
@@ -1478,7 +1550,7 @@ timerGlobal = setInterval(async () => {
                                         // то добавляем его в базу данных
                                         await db.VideoShooters.create({
                                             games_id: currentGame.id,
-                                            data_players_id: dataPlayers[playerIndex].id
+                                            data_players_id: command.users_id // dataPlayers[playerIndex].id
                                         }, { transaction: t });
                                     }
 
@@ -1492,11 +1564,19 @@ timerGlobal = setInterval(async () => {
                         io.to(commandItem.commands_id).emit(
                             "set_view_current_quest",
                             JSON.stringify({
+                                games_id: currentGame.dataValues.id,
                                 radius: currentQuest.dataValues.radius,
                                 lat: currentQuest.dataValues.mark.lat,
                                 lng: currentQuest.dataValues.mark.lng
                             })
                         );
+
+                        // Визуализация элемента для записи видео
+                        const teamLeadIndex = duGetIndexById(dataUsers, command.users_id);
+
+                        if (teamLeadIndex >= 0) {
+                            io.to(dataUsers[teamLeadIndex].socket_id).emit("set_video_team_lead");
+                        }
                     }
                 }
             }

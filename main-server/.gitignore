@@ -4,5 +4,7 @@ node_modules
 # .env
 # constants
 logs
+/logs
+./logs
 data/files
 public
