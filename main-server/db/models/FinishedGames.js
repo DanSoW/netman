@@ -9,7 +9,7 @@ const FinishedGames = (sequelize, DataTypes) => {
             autoIncrement: true
         },
         ref_image: {
-            type: DataTypes.STRING(512),
+            type: DataTypes.TEXT,
             allowNull: false
         }
     });

@@ -9,7 +9,7 @@ const UsersRoles = (sequelize, DataTypes) => {
             autoIncrement: true
         },
         name_role: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: false
         },
     });

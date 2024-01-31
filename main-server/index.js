@@ -375,7 +375,7 @@ io.on("connection", (socket) => {
                 );
 
                 // Отправка сообщения пользователю - "Очисти все игровые метки на карте"
-                socket.emit("clear_games_marks");
+                // socket.emit("clear_games_marks");
 
                 // Завершение определения статуса игрока (судья)
                 return;
@@ -417,7 +417,7 @@ io.on("connection", (socket) => {
                 );
 
                 // Очистка игровых меток на карте
-                socket.emit("clear_games_marks");
+                // socket.emit("clear_games_marks");
 
                 // Завершение определения статуса игрока (пользователь)
                 return;
@@ -473,7 +473,7 @@ io.on("connection", (socket) => {
                 }
 
                 // Событие "очистить все игровые метки"
-                socket.emit("clear_games_marks");
+                // socket.emit("clear_games_marks");
 
                 // Завершение определения статуса игрока (пользователь)
                 return;
@@ -586,6 +586,7 @@ io.on("connection", (socket) => {
                             }),
                             JSON.stringify({
                                 task: currentGameQuestInfo.task,
+                                action: currentGameQuestInfo.action,
                                 hint: currentGameQuestInfo.hint,
                                 number: ((await db.Games.findAll({
                                     where: {

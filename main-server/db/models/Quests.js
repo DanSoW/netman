@@ -9,15 +9,15 @@ const Quests = (sequelize, DataTypes) => {
             autoIncrement: true
         },
         task: {
-            type: DataTypes.STRING(1024),
+            type: DataTypes.TEXT,
             allowNull: false
         },
         hint: {
-            type: DataTypes.STRING(512),
+            type: DataTypes.TEXT,
             allowNull: false
         },
-        ref_media: {
-            type: DataTypes.STRING,
+        action: {
+            type: DataTypes.TEXT,
             allowNull: false
         },
         radius: {

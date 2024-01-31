@@ -9,12 +9,12 @@ const Users = (sequelize, DataTypes) => {
             autoIncrement: true
         },
         email: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             unique: true,
             allowNull: false
         },
         password: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: false
         }
     });

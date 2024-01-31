@@ -17,15 +17,15 @@ const TestMarks = (sequelize, DataTypes) => {
             allowNull: false,
         },
         title: {
-            type: DataTypes.STRING(255),
+            type: DataTypes.TEXT,
             allowNull: false
         },
         description: {
-            type: DataTypes.STRING(1024),
+            type: DataTypes.TEXT,
             allowNull: false
         },
         ref_img: {
-            type: DataTypes.STRING(512),
+            type: DataTypes.TEXT,
             allowNull: true
         }
     });

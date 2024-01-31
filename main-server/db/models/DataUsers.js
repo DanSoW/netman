@@ -9,24 +9,24 @@ const DataUsers = (sequelize, DataTypes) => {
             autoIncrement: true
         },
         name: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: false
         },
         surname: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: false
         },
         nickname: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: false,
             unique: true
         },
         ref_image: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: false
         },
         phone_num: {
-            type: DataTypes.STRING(16),
+            type: DataTypes.TEXT,
             allowNull: false,
             unique: true
         },
@@ -35,7 +35,7 @@ const DataUsers = (sequelize, DataTypes) => {
             allowNull: false
         },
         location: {
-            type: DataTypes.STRING(1024),
+            type: DataTypes.TEXT,
             allowNull: false
         },
         date_register: {

@@ -17,7 +17,7 @@ const TaskMarks = (sequelize, DataTypes) => {
             primaryKey: true
         },
         location: {
-            type: DataTypes.STRING(1024),
+            type: DataTypes.TEXT,
             allowNull: false
         }
     });

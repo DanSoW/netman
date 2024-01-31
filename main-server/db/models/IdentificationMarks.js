@@ -17,7 +17,7 @@ const IdentificationMarks = (sequelize, DataTypes) => {
             primaryKey: true
         },
         location: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: false
         },
         radius: {
@@ -25,7 +25,7 @@ const IdentificationMarks = (sequelize, DataTypes) => {
             allowNull: false
         },
         ref_image: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: false
         },
         date_create: {

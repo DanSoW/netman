@@ -9,7 +9,7 @@ const Warnings = (sequelize, DataTypes) => {
             autoIncrement: true
         },
         reason: {
-            type: DataTypes.STRING(1024),
+            type: DataTypes.TEXT,
             allowNull: false
         }
     });

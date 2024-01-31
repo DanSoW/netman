@@ -9,11 +9,11 @@ const Tokens = (sequelize, DataTypes) => {
             autoIncrement: true
         },
         access_token: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: false,
         },
         refresh_token: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: false,
         },
     });

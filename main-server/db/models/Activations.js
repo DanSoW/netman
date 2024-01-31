@@ -16,7 +16,7 @@ const Activations = (sequelize, DataTypes) => {
             allowNull: false,
         },
         activation_link: {
-            type: DataTypes.STRING(512),
+            type: DataTypes.TEXT,
             allowNull: false,
         }
     });

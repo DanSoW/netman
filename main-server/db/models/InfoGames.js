@@ -9,7 +9,7 @@ const InfoGames = (sequelize, DataTypes) => {
             autoIncrement: true
         },
         name: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: false
         },
         max_count_commands: {
@@ -41,7 +41,7 @@ const InfoGames = (sequelize, DataTypes) => {
             allowNull: false
         },
         location: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             allowNull: false
         },
     });

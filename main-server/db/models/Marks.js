@@ -17,7 +17,7 @@ const Marks = (sequelize, DataTypes) => {
             allowNull: false,
         },
         location: {
-            type: DataTypes.STRING(1024),
+            type: DataTypes.TEXT,
             allowNull: false
         }
     });

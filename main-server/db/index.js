@@ -121,20 +121,20 @@ Object.keys(db).forEach(modelName => {
 
 // Синхронизация моделей с базой данных
 sequelize.sync().then(result => {
+  /* Инициализация тестовыми данными */
+  if (config.get("test.init_db")) {
+    initMarks(db);
+    initUsers(db);
+  }
+
   if (config.get('log.sequelize')) {
     console.log(result);
   }
+
   console.log("Синхронизация с базой данных: успешно");
 }).catch(err => console.log(err));
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
-
-/* Инициализация тестовыми данными */
-if(config.get("test.init_db")){
-  initMarks(db);
-  initUsers(db);
-}
-
 
 export default db;

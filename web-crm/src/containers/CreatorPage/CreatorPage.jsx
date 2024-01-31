@@ -66,7 +66,7 @@ const CreatorPage = () => {
     const [dataQuest, setDataQuest] = useState({
         task: "",
         radius: 1,
-        ref_media: "",
+        action: "",
         hint: "",
     });
 
@@ -204,7 +204,7 @@ const CreatorPage = () => {
             message("Свободные метки были загружены!", "success");
         } catch (e) {
             console.log(e);
-         }
+        }
     };
 
     //идентификация маркера, на который было произведено нажатие (клик)
@@ -249,8 +249,8 @@ const CreatorPage = () => {
 
         setDataQuest({
             task: "",
+            action: "",
             radius: 1,
-            ref_media: "",
             hint: "",
         });
     };
@@ -271,8 +271,8 @@ const CreatorPage = () => {
 
         await setDataQuest({
             task: "",
+            action: "",
             radius: 1,
-            ref_media: "",
             hint: "",
         });
 
@@ -290,8 +290,8 @@ const CreatorPage = () => {
             // Считывание данных о квесте, который будет редактируем
             await setDataQuest({
                 task: listQuests.quests[index].task,
+                action: listQuests.quests[index].action,
                 radius: listQuests.quests[index].radius,
-                ref_media: listQuests.quests[index].ref_media,
                 hint: listQuests.quests[index].hint,
             });
 
@@ -338,12 +338,12 @@ const CreatorPage = () => {
         <>
             {/* Таблица с видео материалами */}
             {
-                tableVideo && <TableVideo
+                /*tableVideo && <TableVideo
                     dataQuest={dataQuest}
                     setDataQuest={setDataQuest}
                     tableVideo={tableVideo}
                     setTableVideo={setTableVideo}
-                />
+                />*/
             }
 
             {/* Основное содержимое страницы создателя */}
@@ -683,7 +683,9 @@ const CreatorPage = () => {
                             </span>
                             <input type="text" value={dataCurrentMark.location} />
                         </div>
-                        <div className={styles["item-1-quest-block"]}>
+                        {
+                            /*
+                            <div className={styles["item-1-quest-block"]}>
                             <span className={styles["creator-page-name-main-fields"]}>
                                 Медиафайл
                             </span>
@@ -707,6 +709,8 @@ const CreatorPage = () => {
                                 }}
                             />
                         </div>
+                            */
+                        }
                         <div className={styles["item-1-quest-block"]}>
                             <span className={styles["creator-page-name-main-fields"]}>
                                 Подсказка
@@ -719,9 +723,7 @@ const CreatorPage = () => {
                                 value={dataQuest.hint}
                                 onChange={(e) => {
                                     setDataQuest({
-                                        task: dataQuest.task,
-                                        radius: dataQuest.radius,
-                                        ref_media: dataQuest.ref_media,
+                                        ...dataQuest,
                                         hint: e.target.value,
                                     });
                                 }}
@@ -729,20 +731,36 @@ const CreatorPage = () => {
                         </div>
                         <div className={styles["item-1-quest-block"]}>
                             <span className={styles["creator-page-name-main-fields"]}>
-                                Задание
+                                Задача
                             </span>
                             <textarea
                                 className={styles["white-bottom-border-create-mark-task"]}
-                                placeholder="Задание"
+                                placeholder="Введите описание задачи"
                                 id="task"
                                 name="task"
                                 value={dataQuest.task}
                                 onChange={(e) => {
                                     setDataQuest({
+                                        ...dataQuest,
                                         task: e.target.value,
-                                        radius: dataQuest.radius,
-                                        ref_media: dataQuest.ref_media,
-                                        hint: dataQuest.hint,
+                                    });
+                                }}
+                            />
+                        </div>
+                        <div className={styles["item-1-quest-block"]}>
+                            <span className={styles["creator-page-name-main-fields"]}>
+                                Действие
+                            </span>
+                            <textarea
+                                className={styles["white-bottom-border-create-mark-task"]}
+                                placeholder="Введите описание действия"
+                                id="action"
+                                name="action"
+                                value={dataQuest.action}
+                                onChange={(e) => {
+                                    setDataQuest({
+                                        ...dataQuest,
+                                        action: e.target.value,
                                     });
                                 }}
                             />
@@ -759,10 +777,8 @@ const CreatorPage = () => {
                                 value={dataQuest.radius}
                                 onChange={(e) => {
                                     setDataQuest({
-                                        task: dataQuest.task,
+                                        ...dataQuest,
                                         radius: parseInt(e.target.value),
-                                        ref_media: dataQuest.ref_media,
-                                        hint: dataQuest.hint,
                                     });
                                 }}
                             />
@@ -802,7 +818,7 @@ const CreatorPage = () => {
                                     /* Валидация входных данных для добавления квеста */
                                     if (
                                         dataQuest.task.length === 0 ||
-                                        dataQuest.ref_media.length === 0
+                                        dataQuest.action.length === 0
                                     ) {
                                         message("Необходимо заполнить данные квеста!", "error");
                                         return;
@@ -817,7 +833,7 @@ const CreatorPage = () => {
                                         lat: marker.lat,
                                         lng: marker.lng,
                                         task: dataQuest.task,
-                                        ref_media: dataQuest.ref_media,
+                                        action: dataQuest.action,
                                         radius: dataQuest.radius,
                                         hint: dataQuest.hint,
                                         marks_id: marker.id,
@@ -856,14 +872,14 @@ const CreatorPage = () => {
                                     /* Валидация входных данных для добавления квеста */
                                     if (
                                         dataQuest.task.length === 0 ||
-                                        dataQuest.ref_media.length === 0
+                                        dataQuest.action.length === 0
                                     ) {
                                         message("Необходимо заполнить данные квеста!", "error");
                                         return;
                                     }
 
                                     quests[index].task = dataQuest.task;
-                                    quests[index].ref_media = dataQuest.ref_media;
+                                    quests[index].action = dataQuest.action;
                                     quests[index].radius = dataQuest.radius;
                                     quests[index].hint = dataQuest.hint;
 
@@ -899,11 +915,6 @@ const CreatorPage = () => {
                                     value={item.location}
                                     readOnly
                                 />
-                                <input
-                                    type="text-card"
-                                    value={item.ref_media}
-                                    readOnly
-                                />
                                 <div className={styles["item-1-quest-block"]}>
                                     <img src={hint_image} alt="Подсказка" />
                                     <input
@@ -913,6 +924,7 @@ const CreatorPage = () => {
                                     />
                                 </div>
                                 <textarea type="textarea-card" value={item.task} />
+                                <textarea type="textarea-card" value={item.action} />
                                 <output>{item.radius}</output>
                                 <input
                                     type="range"
@@ -984,7 +996,7 @@ const CreatorPage = () => {
 
                                             setDataQuest({
                                                 task: quests[index].task,
-                                                ref_media: quests[index].ref_media,
+                                                action: quests[index].action,
                                                 radius: quests[index].radius,
                                                 hint: quests[index].hint,
                                             });

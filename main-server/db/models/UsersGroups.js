@@ -9,7 +9,7 @@ const UsersGroups = (sequelize, DataTypes) => {
             autoIncrement: true
         },
         name: {
-            type: DataTypes.STRING,
+            type: DataTypes.TEXT,
             unique: true,
             allowNull: false
         },

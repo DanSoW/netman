@@ -72,7 +72,7 @@ class CreatorService {
                     task: quests[i].task,
                     hint: quests[i].hint,
                     radius: quests[i].radius,
-                    ref_media: quests[i].ref_media,
+                    action: quests[i].action,
                     marks_id: quests[i].marks_id,
                 }, { transaction: t });
 
