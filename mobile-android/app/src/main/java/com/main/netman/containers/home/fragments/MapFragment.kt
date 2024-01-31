@@ -65,7 +65,7 @@ import java.lang.ref.WeakReference
  */
 class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository>(), Observer {
 
-    // Garbage section:
+    // Mock point
     private lateinit var point: PointD
 
     // Флаг характеризующий инициализацию карты (загрузка карты)
@@ -77,18 +77,23 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
     // Помощник для определения разрешения на получения доступа к геолокации пользователя
     private lateinit var locationPermissionHelper: LocationPermissionHelper
 
-    // Координаты игроков в команде
-    private var commandPlayers: MutableMap<Int, PointAnnotation> = mutableMapOf()
-
-    // Координаты определённых игровых точек
-    private var coordTasks: MutableMap<Int, PointAnnotation> = mutableMapOf()
-
     // Задача на получение координат других игроков
     private var _coroutineGetCoordinates: Job? = null
     private var _coroutineIO: Job? = null
 
     // Менеджер управления аннотациями
     private var pointAnnotationManager: PointAnnotationManager? = null
+
+    // -> [RESOURCES]
+    // Координаты игрока
+    private var coordPlayer: PointAnnotation? = null
+
+    // Координаты игроков в команде
+    private var commandPlayers: MutableMap<Int, PointAnnotation> = mutableMapOf()
+
+    // Координаты определённых игровых точек
+    private var coordTasks: MutableMap<Int, PointAnnotation> = mutableMapOf()
+    // <-
 
     private val onIndicatorBearingChangedListener = OnIndicatorBearingChangedListener {
         // [Отключено, т.к. вызывает слишком большие изменения экрана, что нежелательно]
@@ -162,7 +167,13 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
             }
 
             if (binding.mapView.getMapboxMap().getStyle()?.isStyleLoaded == true) {
-                addElementToMap(R.drawable.mapbox_user_puck_icon, PointD(it.first, it.second))
+                coordPlayer = if (coordPlayer != null) {
+                    // Обновление элемента на карте
+                    updateMapElement(coordPlayer!!, PointD(it.first, it.second))
+                } else {
+                    // Добавление нового элемента на карту
+                    addElementToMap(R.drawable.mapbox_user_puck_icon, PointD(it.first, it.second))
+                }
             }
         }
 
@@ -189,10 +200,10 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
                 it.emit(
                     SocketHandlerConstants.SET_PLAYER_COORDINATES, Gson().toJson(
                         UserCoordsModel(
-                            /*lat = viewModel.coords.value?.first,
-                            lng = viewModel.coords.value?.second*/
-                            lat = latitude,
-                            lng = 104.287895
+                            lat = viewModel.coords.value?.first,
+                            lng = viewModel.coords.value?.second
+                            /*lat = latitude,
+                            lng = 104.287895*/
                         )
                     )
                 )
@@ -206,16 +217,32 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
             it.on(SocketHandlerConstants.CLEAR_GAMES_MARKS) {
                 // Добавление координат игрока
                 activity?.runOnUiThread {
+                    Log.w("HELLO", "CLEAR_GAMES_MARKS")
                     cleanUp()
 
                     if (binding.mapView.getMapboxMap().getStyle()?.isStyleLoaded == true
                         && viewModel.coords.isInitialized
                         && viewModel.coords != null
                     ) {
-                        addElementToMap(
-                            R.drawable.mapbox_user_puck_icon,
-                            PointD(viewModel.coords.value!!.first, viewModel.coords.value!!.second)
-                        )
+                        coordPlayer = if (coordPlayer != null) {
+                            // Обновление элемента на карте
+                            updateMapElement(
+                                coordPlayer!!,
+                                PointD(
+                                    viewModel.coords.value!!.first,
+                                    viewModel.coords.value!!.second
+                                )
+                            )
+                        } else {
+                            // Добавление нового элемента на карту
+                            addElementToMap(
+                                R.drawable.mapbox_user_puck_icon,
+                                PointD(
+                                    viewModel.coords.value!!.first,
+                                    viewModel.coords.value!!.second
+                                )
+                            )
+                        }
                     }
                 }
             }
@@ -504,10 +531,30 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
     }
 
     /**
-     * Очистка карты от всех устаревших аннотаций
+     * Очистка карты от всех аннотаций
      */
     private fun cleanUp() {
-        binding.mapView.annotations.cleanup()
+        // Удаление маркера игрока
+        if (coordPlayer != null) {
+            deleteMapElement(coordPlayer!!)
+            coordPlayer = null
+        }
+
+        // Удаление маркеров всех задач
+        coordTasks.forEach { entry ->
+            run {
+                deleteMapElement(entry.value)
+            }
+        }
+        coordTasks.clear()
+
+        // Удаление всех игроков
+        commandPlayers.forEach { entry ->
+            run {
+                deleteMapElement(entry.value)
+            }
+        }
+        commandPlayers.clear()
     }
 
     /**
@@ -586,13 +633,25 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
             pointAnnotationManager = binding.mapView.annotations.createPointAnnotationManager()
 
             if (viewModel.coords.isInitialized && viewModel.coords != null) {
-                addElementToMap(
-                    R.drawable.mapbox_user_puck_icon,
-                    PointD(
-                        viewModel.coords.value!!.first,
-                        viewModel.coords.value!!.second
+                coordPlayer = if (coordPlayer != null) {
+                    // Обновление элемента на карте
+                    updateMapElement(
+                        coordPlayer!!,
+                        PointD(
+                            viewModel.coords.value!!.first,
+                            viewModel.coords.value!!.second
+                        )
                     )
-                )
+                } else {
+                    // Добавление нового элемента на карту
+                    addElementToMap(
+                        R.drawable.mapbox_user_puck_icon,
+                        PointD(
+                            viewModel.coords.value!!.first,
+                            viewModel.coords.value!!.second
+                        )
+                    )
+                }
             }
 
             for (item in commandPlayers) {

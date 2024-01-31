@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class CurrentGameModel(
     @SerializedName("task") var task: String? = null,
+    @SerializedName("action") var action: String? = null,
     @SerializedName("hint") var hint: String? = null,
     @SerializedName("number") var number: Int? = null,
     @SerializedName("id") var id: Int? = null,

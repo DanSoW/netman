@@ -105,10 +105,19 @@ class HomeActivity : AppCompatActivity() {
         binding.icArrow.setOnClickListener {
             // Поворот view элемента на 180 градусов
             binding.icArrow.rotation = binding.icArrow.rotation + 180f
-            if (binding.tvTaskDescription.visibility == View.VISIBLE) {
-                binding.tvTaskDescription.visibility = View.GONE
+            if (binding.descriptionScrollView.visibility == View.VISIBLE) {
+                binding.descriptionScrollView.visibility = View.GONE
             } else {
-                binding.tvTaskDescription.visibility = View.VISIBLE
+                binding.descriptionScrollView.visibility = View.VISIBLE
+            }
+        }
+
+        binding.icArrowAction.setOnClickListener {
+            binding.icArrowAction.rotation = binding.icArrowAction.rotation + 180f
+            if(binding.actionScrollView.visibility == View.VISIBLE){
+                binding.actionScrollView.visibility = View.GONE
+            } else {
+                binding.actionScrollView.visibility = View.VISIBLE
             }
         }
 
@@ -138,7 +147,10 @@ class HomeActivity : AppCompatActivity() {
                     if (itLocal.size > 1 && itLocal[1] != null) {
                         runOnUiThread {
                             binding.cardTask.visibility = View.VISIBLE
+                            binding.cardAction.visibility = View.VISIBLE
                             binding.cardHint.visibility = View.VISIBLE
+                            binding.descriptionScrollView.visibility = View.VISIBLE
+                            binding.actionScrollView.visibility = View.VISIBLE
 
                             val dataJson = itLocal[1].toString()
 
@@ -146,6 +158,7 @@ class HomeActivity : AppCompatActivity() {
                             binding.tvTaskDescription.text = task.task
                             binding.tvNumberQuest.text = "№ ${task.number}"
                             binding.tvGameHint.text = task.hint
+                            binding.tvActionDescription.text = task.action
 
                             binding.icCameraOn.visibility = View.GONE
                             binding.icCameraOff.visibility = View.GONE
@@ -165,7 +178,10 @@ class HomeActivity : AppCompatActivity() {
                 } else {
                     runOnUiThread {
                         binding.cardTask.visibility = View.GONE
+                        binding.cardAction.visibility = View.GONE
                         binding.cardHint.visibility = View.GONE
+                        binding.descriptionScrollView.visibility = View.GONE
+                        binding.actionScrollView.visibility = View.GONE
                         binding.icCameraOn.visibility = View.GONE
                         binding.icCameraOff.visibility = View.GONE
                     }
@@ -199,6 +215,7 @@ class HomeActivity : AppCompatActivity() {
                     currentQuestPreferences.data.first()
                 }, CurrentGameModel::class.java)
 
+                Log.w("HELLO", "${currentQuest} ${currentQuest.id} ${status.questId}")
                 if (currentQuest != null && currentQuest.id == status.questId) {
                     EventBus.getDefault().post(CurrentQuestEvent(questId = status.questId))
                 }

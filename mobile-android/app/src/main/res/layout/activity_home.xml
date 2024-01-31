@@ -51,91 +51,94 @@
         app:navGraph="@navigation/nav_home" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/cardTask"
+        android:id="@+id/cardAction"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:background="@drawable/back_tb_main"
-        android:visibility="visible"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp"
+        android:visibility="gone"
         app:collapseIcon="@null"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.076"
+        app:layout_constraintTop_toBottomOf="@+id/cardHint"
+        app:layout_constraintVertical_bias="0.0"
         app:titleMargin="0dp">
 
         <View
-            android:id="@+id/icCameraOn"
+            android:id="@+id/icAction"
             android:layout_width="45dp"
             android:layout_height="45dp"
             android:layout_marginStart="16dp"
-            android:background="@drawable/ic_media"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@+id/tvNumberQuest"
+            android:background="@drawable/ic_action"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="@+id/tvActionTitle"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/tvNumberQuest" />
+            app:layout_constraintTop_toTopOf="@+id/tvActionTitle" />
 
         <View
-            android:id="@+id/icCameraOff"
-            android:layout_width="45dp"
-            android:layout_height="45dp"
-            android:layout_marginStart="15dp"
-            android:background="@drawable/ic_camera_none"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@+id/tvNumberQuest"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/tvNumberQuest" />
-
-        <View
-            android:id="@+id/icArrow"
+            android:id="@+id/icArrowAction"
             android:layout_width="45dp"
             android:layout_height="30dp"
             android:layout_marginEnd="16dp"
             android:background="@drawable/ic_arrow_down"
-            app:layout_constraintBottom_toBottomOf="@+id/tvNumberQuest"
+            app:layout_constraintBottom_toBottomOf="@+id/tvActionTitle"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/tvNumberQuest" />
+            app:layout_constraintTop_toTopOf="@+id/tvActionTitle" />
 
 
         <TextView
-            android:id="@+id/tvNumberQuest"
+            android:id="@+id/tvActionTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="24dp"
+            android:layout_marginTop="8dp"
             android:fontFamily="@font/century_gothic"
-            android:text="№1"
+            android:text="Действие"
             android:textAllCaps="false"
             android:textColor="#FFFFFF"
             android:textSize="20sp"
-            app:layout_constraintBottom_toTopOf="@+id/tvTaskDescription"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/icArrow"
+            app:layout_constraintEnd_toStartOf="@+id/icArrowAction"
             app:layout_constraintHorizontal_bias="0.61"
-            app:layout_constraintStart_toEndOf="@+id/icCameraOn"
+            app:layout_constraintStart_toEndOf="@+id/icAction"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/tvTaskDescription"
+        <ScrollView
+            android:id="@+id/actionScrollView"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="16dp"
-            android:fontFamily="@font/century_gothic"
-            android:gravity="top"
-            android:lineSpacingExtra="1sp"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:visibility="gone"
+            android:layout_marginTop="16dp"
+            android:visibility="visible"
+            app:layout_constrainedHeight="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintHeight_max="200dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvActionTitle">
+
+            <TextView
+                android:id="@+id/tvActionDescription"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="18dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="18dp"
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/century_gothic"
+                android:gravity="top"
+                android:lineSpacingExtra="1sp"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:visibility="visible"
+                tools:layout_editor_absoluteX="87dp"
+                tools:layout_editor_absoluteY="156dp" />
+        </ScrollView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -199,4 +202,107 @@
             app:layout_constraintStart_toEndOf="@+id/v_lamp"
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cardTask"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/back_tb_main"
+        android:paddingTop="24dp"
+        android:paddingBottom="24dp"
+        android:visibility="gone"
+        app:collapseIcon="@null"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.076"
+        app:titleMargin="0dp">
+
+        <View
+            android:id="@+id/icCameraOn"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginStart="16dp"
+            android:background="@drawable/ic_media"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="@+id/tvNumberQuest"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/tvNumberQuest" />
+
+        <View
+            android:id="@+id/icCameraOff"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_marginStart="15dp"
+            android:background="@drawable/ic_camera_none"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@+id/tvNumberQuest"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/tvNumberQuest" />
+
+        <View
+            android:id="@+id/icArrow"
+            android:layout_width="45dp"
+            android:layout_height="30dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/ic_arrow_down"
+            app:layout_constraintBottom_toBottomOf="@+id/tvNumberQuest"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/tvNumberQuest" />
+
+
+        <TextView
+            android:id="@+id/tvNumberQuest"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/century_gothic"
+            android:text="№1"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/icArrow"
+            app:layout_constraintHorizontal_bias="0.61"
+            app:layout_constraintStart_toEndOf="@+id/icCameraOn"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ScrollView
+            android:id="@+id/descriptionScrollView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:visibility="visible"
+            app:layout_constrainedHeight="true"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_max="200dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvNumberQuest">
+
+            <TextView
+                android:id="@+id/tvTaskDescription"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="18dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="18dp"
+                android:layout_marginBottom="8dp"
+                android:fontFamily="@font/century_gothic"
+                android:gravity="top"
+                android:lineSpacingExtra="1sp"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:visibility="visible"
+                tools:layout_editor_absoluteX="87dp"
+                tools:layout_editor_absoluteY="156dp" />
+        </ScrollView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
