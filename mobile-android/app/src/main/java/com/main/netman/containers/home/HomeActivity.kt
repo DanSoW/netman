@@ -19,9 +19,12 @@ import com.main.netman.constants.socket.SocketHandlerConstants
 import com.main.netman.containers.game.GameActivity
 import com.main.netman.containers.profile.ProfileActivity
 import com.main.netman.databinding.ActivityHomeBinding
+import com.main.netman.event.CurrentGameEvent
 import com.main.netman.event.CurrentQuestEvent
 import com.main.netman.models.auth.AuthModel
 import com.main.netman.models.game.CurrentGameModel
+import com.main.netman.models.quest.GamesIdModel
+import com.main.netman.models.quest.QuestActionModel
 import com.main.netman.models.quest.QuestIdModel
 import com.main.netman.models.user.GameStatusModel
 import com.main.netman.network.handlers.SCSocketHandler
@@ -135,6 +138,7 @@ class HomeActivity : AppCompatActivity() {
                 it.off(SocketHandlerConstants.STATUS_ON)
             }
 
+            // Обработка получения статуса пользователя в текущий момент времени
             it.on(SocketHandlerConstants.STATUS_ON) { itLocal ->
                 if (itLocal.isEmpty()) {
                     return@on
@@ -147,14 +151,18 @@ class HomeActivity : AppCompatActivity() {
                     if (itLocal.size > 1 && itLocal[1] != null) {
                         runOnUiThread {
                             binding.cardTask.visibility = View.VISIBLE
-                            binding.cardAction.visibility = View.VISIBLE
+                            binding.cardAction.visibility = View.GONE
                             binding.cardHint.visibility = View.VISIBLE
-                            binding.descriptionScrollView.visibility = View.VISIBLE
-                            binding.actionScrollView.visibility = View.VISIBLE
+                            binding.descriptionScrollView.visibility = View.GONE
+                            binding.actionScrollView.visibility = View.GONE
 
                             val dataJson = itLocal[1].toString()
 
                             val task = Gson().fromJson(dataJson, CurrentGameModel::class.java)
+                            if(task.view == true) {
+                                binding.cardAction.visibility = View.VISIBLE
+                            }
+
                             binding.tvTaskDescription.text = task.task
                             binding.tvNumberQuest.text = "№ ${task.number}"
                             binding.tvGameHint.text = task.hint
@@ -188,6 +196,25 @@ class HomeActivity : AppCompatActivity() {
                 }
             }
 
+            if(it.hasListeners(SocketHandlerConstants.SET_VIEW_CURRENT_ACTION)) {
+                it.off(SocketHandlerConstants.SET_VIEW_CURRENT_ACTION)
+            }
+
+            it.on(SocketHandlerConstants.SET_VIEW_CURRENT_ACTION) {itLocal ->
+                if (itLocal.isEmpty()) {
+                    return@on
+                }
+
+                // Получение статуса игрока в текущий момент времени
+                val quest = Gson().fromJson(itLocal.first() as String, QuestActionModel::class.java)
+                    ?: return@on
+
+                runOnUiThread {
+                    binding.cardAction.visibility = View.VISIBLE
+                    binding.tvActionDescription.text = quest.action
+                }
+            }
+
             if (it.hasListeners(SocketHandlerConstants.SET_VIDEO_TEAM_LEAD)) {
                 it.off(SocketHandlerConstants.SET_VIDEO_TEAM_LEAD)
             }
@@ -209,16 +236,63 @@ class HomeActivity : AppCompatActivity() {
                 }
 
                 // Данных о пройденном квесте
-                val status = Gson().fromJson(itLocal.first() as String, QuestIdModel::class.java)
+                val status = Gson().fromJson(itLocal.first() as String, GamesIdModel::class.java)
 
                 val currentQuest = Gson().fromJson(runBlocking {
                     currentQuestPreferences.data.first()
                 }, CurrentGameModel::class.java)
 
-                Log.w("HELLO", "${currentQuest} ${currentQuest.id} ${status.questId}")
-                if (currentQuest != null && currentQuest.id == status.questId) {
-                    EventBus.getDefault().post(CurrentQuestEvent(questId = status.questId))
+                // Удаляем маркер текущего квеста
+                if (currentQuest != null && currentQuest.id == status.gamesId) {
+                    EventBus.getDefault().post(CurrentQuestEvent(gamesId = status.gamesId))
                 }
+
+                // Закрытие информационных блоков о текущей игре
+                runOnUiThread {
+                    binding.cardTask.visibility = View.GONE
+                    binding.cardAction.visibility = View.GONE
+                    binding.cardHint.visibility = View.GONE
+                    binding.descriptionScrollView.visibility = View.GONE
+                    binding.actionScrollView.visibility = View.GONE
+                    binding.icCameraOn.visibility = View.GONE
+                    binding.icCameraOff.visibility = View.GONE
+
+                    binding.tvTaskDescription.text = ""
+                    binding.tvNumberQuest.text = ""
+                    binding.tvGameHint.text = ""
+                    binding.tvActionDescription.text = ""
+                }
+
+                runBlocking {
+                    currentQuestPreferences.clear()
+                }
+            }
+
+            if(it.hasListeners(SocketHandlerConstants.GAME_OVER)){
+                it.off(SocketHandlerConstants.GAME_OVER)
+            }
+
+            it.on(SocketHandlerConstants.GAME_OVER) { _ ->
+                // Отправляем сообщение о том, чтобы отключиться от текущей командной комнаты
+                it.emit(SocketHandlerConstants.GAME_OVER_DISCONNECT)
+            }
+
+            if(it.hasListeners(SocketHandlerConstants.GAME_OVER_DISCONNECT_SUCCESS)){
+                it.off(SocketHandlerConstants.GAME_OVER_DISCONNECT_SUCCESS)
+            }
+
+            // Обработка "полного" завершения игрового процесса
+            it.on(SocketHandlerConstants.GAME_OVER_DISCONNECT_SUCCESS) { _ ->
+                // Очистка карты от других игроков
+                EventBus.getDefault().post(CurrentGameEvent())
+            }
+
+            if (it.hasListeners(SocketHandlerConstants.REPEAT_STATUS_REQUEST)) {
+                it.off(SocketHandlerConstants.REPEAT_STATUS_REQUEST)
+            }
+
+            it.on(SocketHandlerConstants.REPEAT_STATUS_REQUEST) { _ ->
+                it.emit(SocketHandlerConstants.STATUS)
             }
 
             it.on(SocketHandlerConstants.AUTH_SUCCESS) { _ ->
@@ -259,7 +333,7 @@ class HomeActivity : AppCompatActivity() {
 
                     if ((socket.value != null) && (currentQuest != null)) {
                         val questId =
-                            Gson().toJson(QuestIdModel(questId = currentQuest.currentGamesId))
+                            Gson().toJson(GamesIdModel(gamesId = currentQuest.id))
                         socket.value!!.emit(SocketHandlerConstants.FINISHED_QUEST, questId)
                     } else {
                         handleErrorMessage(

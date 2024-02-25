@@ -843,16 +843,11 @@ io.on("connection", (socket) => {
                 return;
             }
 
-            console.log({
-                game_id: questInfo.quest_id,
-                ref_image: ''
-            });
-
             // Добавление завершённой игры команды
-            /*await db.FinishedGames.create({
-                game_id: questInfo.quest_id,
+            await db.FinishedGames.create({
+                games_id: questInfo.games_id,
                 ref_image: ''
-            }, { transaction: t });*/
+            }, { transaction: t });
 
             await t.commit();
 
@@ -860,11 +855,40 @@ io.on("connection", (socket) => {
             io.to(command.id).emit(
                 "finished_quest_success",
                 JSON.stringify({
-                    quest_id: questInfo.quest_id
+                    games_id: questInfo.games_id
                 })
             );
         } catch (e) {
             await t.rollback();
+            console.log(e);
+        }
+    });
+
+    socket.on("game_over_disconnect", async () => {
+        try {
+            let index = duExistsValueIndex(dataUsers, socket.id);
+
+            if (index < 0) {
+                return;
+            }
+
+            let room = null;
+            for (let item of socket.rooms.values()) {
+                if ((typeof (item) === "number") ||
+                    (typeof (item) === "string" && !isNaN(item) && !isNaN(parseInt(item)))
+                ) {
+                    room = item;
+                    break
+                }
+            }
+
+            if(room && socket.rooms.has(room)) {
+                socket.leave(room);
+            }
+
+            console.log("socket.rooms: ", socket.rooms);
+            socket.emit("game_over_disconnect_success");
+        } catch (e) {
             console.log(e);
         }
     });
@@ -1145,6 +1169,8 @@ timerGlobal = setInterval(async () => {
         // т.к. текущая игра у команды может быть только одна
         const commands = await db.CurrentGames.findAll();
 
+        let repeatStatusRequest = [];
+
         // Обработка завершения игр и отсеивание их из всех обнаруженных 
         // текущих игр, а также их завершения в базе данных
         await commands.removeIfAsync(async (item) => {
@@ -1171,11 +1197,6 @@ timerGlobal = setInterval(async () => {
             // Если данная текущая игра пройдена данной командой или была завершена,
             // то удалить данную игру из БД и из рассматриваемого множества текущих игр
             if (isCompleted) {
-                // Удаление зафиксированного судьи ...
-                // [функционал удаления на данный момент является условным,
-                // такое решение было принято для того, чтобы не вмешиваться в уже имеющуюся
-                // структуры БД на момент MVP для меньших трудозатрат. Это не мешает игровому процессу]
-
                 // Удаление текущей игры
                 await db.CurrentGames.destroy({
                     where: {
@@ -1287,11 +1308,6 @@ timerGlobal = setInterval(async () => {
                     }
                 });
 
-                // Отправка сообщения о завершении игры
-                // всем игрокам, которые находятся в сети
-                // для данной команды
-                io.to(commandItem.commands_id).emit("game_over");
-
                 if (!completeGames) {
                     let score = 0;
                     for (let i = 0; i < finisheds.length; i++) {
@@ -1343,28 +1359,17 @@ timerGlobal = setInterval(async () => {
                     // ########################### [comment-end='judge-begin']
                     await currentGames.destroy({ transaction: t });
                 }
+
+                // Отправка сообщения о завершении игры
+                // всем игрокам, которые находятся в сети
+                // для данной команды
+                io.to(commandItem.commands_id).emit("game_over");
             }
 
             if (games.length === 0) {
                 // Если нет текущей игры, то инициируется попытка её создания
                 if (gameQuests.length === 0) {
-                    // Если все квесты были пройдены, то необходимо узнать оценил ли судъя каждый
-                    // квест по отдельности, если оценил - то игра считается полностью пройденной, если 
-                    // ещё не дал оценку хотя бы 1 квесту, то игра на этапе оценки. Когда игра на этапе оценки
-                    // команда не может быть зарегистрирована на игру - вся команда ожидает результатов
-                    const judgeScores = [];
-                    for (let i = 0; i < finisheds.length; i++) {
-                        const value = await db.JudgeScores.findOne({
-                            where: {
-                                finished_games_id: finisheds[i].id
-                            }
-                        });
-
-                        if (value) {
-                            judgeScores.push(value);
-                        }
-                    }
-
+                    // Если все квесты были пройдены, то вся игра была успешно пройдена
                     const currentGames = await db.CurrentGames.findOne({
                         where: {
                             info_games_id: commandItem.info_games_id,
@@ -1372,77 +1377,33 @@ timerGlobal = setInterval(async () => {
                         }
                     });
 
-                    const countQuests = await db.GamesQuests.findAll({
+                    const completeGames = await db.CompleteGames.findOne({
                         where: {
                             info_games_id: commandItem.info_games_id
                         }
                     });
 
-                    if ((judgeScores.length === finisheds.length)
-                        && (finisheds.length === countQuests.length)) {
-                        // Если количество записей в таблице оценок равно количеству
-                        // записей в таблице завершённых меток, то игра считается пройденной полностью
-                        // (также необходимо чтобы оба значения были равны общему числу квестов в текущей игре)
-                        // и оцененной судъей полностью
-                        const completeGames = await db.CompleteGames.findOne({
-                            where: {
-                                info_games_id: commandItem.info_games_id
-                            }
-                        });
+                    if (!completeGames) {
+                        await db.CompleteGames.create({
+                            commands_id: commandItem.commands_id,
+                            info_games_id: commandItem.info_games_id,
+                            completed: true,
+                            current_score: 10,
+                        }, { transaction: t });
 
-                        io.to(commandItem.commands_id).emit("game_over");
-
-                        if (!completeGames) {
-                            let score = 0;
-                            for (let i = 0; i < finisheds.length; i++) {
-                                const judgeScore = await db.JudgeScores.findOne({
-                                    where: {
-                                        finished_games_id: finisheds[i].id
-                                    }
-                                });
-
-                                if (judgeScore) {
-                                    score += judgeScore.score;
-                                }
-                            }
-
-                            await db.CompleteGames.create({
-                                commands_id: commandItem.commands_id,
-                                info_games_id: commandItem.info_games_id,
-                                completed: true,
-                                current_score: score,
+                        await currentGames.destroy({ transaction: t });
+                    } else {
+                        // Обновляем статус игры на пройденную
+                        if (!completeGames.completed) {
+                            await completeGames.update({
+                                completed: true
                             }, { transaction: t });
-
-                            // ########################### [comment='judge-begin']
-                            /*const fixJudges = await FixJudges.findOne({
-                                commands_id: currentGames.commands_id,
-                                info_games_id: currentGames.info_games_id
-                            });
-    
-                            await fixJudges.destroy();*/
-                            // ########################### [comment-end='judge-begin']
-
-                            await currentGames.destroy({ transaction: t });
-                        } else {
-                            // Обновляем статус игры на пройденную
-                            if (!completeGames.completed) {
-                                await completeGames.update({
-                                    completed: true
-                                }, { transaction: t });
-                            }
-
-                            // ########################### [comment='judge-begin']
-                            /*const fixJudges = await FixJudges.findOne({
-                                commands_id: currentGames.commands_id,
-                                info_games_id: currentGames.info_games_id
-                            });
-   
-                            await fixJudges.destroy();*/
-                            // ########################### [comment-end='judge-begin']
-
-                            await currentGames.destroy({ transaction: t });
                         }
+
+                        await currentGames.destroy({ transaction: t });
                     }
+
+                    io.to(commandItem.commands_id).emit("game_over");
                 } else {
                     // Свободные квесты есть, а значит - их можно выдать команде для их прохождения
                     const newQuest = await db.Quests.findOne({
@@ -1458,6 +1419,9 @@ timerGlobal = setInterval(async () => {
                         register_commands_id: registerGame.id,
                         quests_id: newQuest.id
                     }, { transaction: t });
+
+                    // Нужно повторно запросить свой статус у каждого члена команды
+                    repeatStatusRequest.push(commandItem.commands_id);
                 }
             } else {
                 // Текущая игра есть, необходимо определить её видимость для игроков.
@@ -1572,6 +1536,14 @@ timerGlobal = setInterval(async () => {
                             })
                         );
 
+                        io.to(commandItem.commands_id).emit(
+                            "set_view_current_action",
+                            JSON.stringify({
+                                games_id: currentGame.dataValues.id,
+                                action: currentQuest.dataValues.action
+                            })
+                        );
+
                         // Визуализация элемента для записи видео
                         const teamLeadIndex = duGetIndexById(dataUsers, command.users_id);
 
@@ -1584,10 +1556,17 @@ timerGlobal = setInterval(async () => {
         }
 
         await t.commit();
+
+        // Повторный запрос статуса в командах, в которых был добавлен новый квест
+        if (repeatStatusRequest.length > 0) {
+            for (let i = 0; i < repeatStatusRequest.length; i++) {
+                io.to(repeatStatusRequest[i]).emit("repeat_status_request");
+            }
+        }
     } catch (e) {
         await t.rollback();
         console.log(e);
     }
 
     lockGlobal = false;
-}, 5000);
+}, 2000);

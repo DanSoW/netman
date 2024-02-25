@@ -16,6 +16,7 @@ object SocketHandlerConstants {
     const val SET_PLAYER_COORDINATES = "set_player_coordinates"
     const val CLEAR_GAMES_MARKS = "clear_games_marks"
     const val SET_VIEW_CURRENT_QUEST =  "set_view_current_quest"
+    const val SET_VIEW_CURRENT_ACTION = "set_view_current_action"
     const val ADD_PLAYER_COORDINATES = "add_player_coordinates"
     const val COORDINATES_PLAYERS = "coordinates_players"
 
@@ -24,4 +25,9 @@ object SocketHandlerConstants {
 
     const val FINISHED_QUEST = "finished_quest"
     const val FINISHED_QUEST_SUCCESS = "finished_quest_success"
+
+    const val REPEAT_STATUS_REQUEST = "repeat_status_request";
+    const val GAME_OVER = "game_over"
+    const val GAME_OVER_DISCONNECT = "game_over_disconnect"
+    const val GAME_OVER_DISCONNECT_SUCCESS = "game_over_disconnect_success"
 }
