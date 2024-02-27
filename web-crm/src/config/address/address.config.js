@@ -10,6 +10,7 @@ const address_config = {
     auth_logout: '/auth/management/logout',
     auth_refresh_token: '/auth/refresh/token',
     map_marks_free: '/map/marks/free',
+    map_mark_create: '/map/mark/create',
     map_geocoder_address: '/map/geocoder/address',
 
     // Функции создателя

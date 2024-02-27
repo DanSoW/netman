@@ -105,6 +105,7 @@ body {
   background-color: inherit;
   color: var(--green);
   box-sizing: border-box;
+  cursor: pointer;
 
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -114,6 +115,7 @@ body {
 }
 
 .button-gray {
+  cursor: pointer;
   height: 40px;
   padding: 8px 16px;
   border: 1px solid var(--gray);

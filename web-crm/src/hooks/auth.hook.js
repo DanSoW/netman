@@ -49,7 +49,6 @@ export const useAuth = () => {
             const localData = JSON.parse(localStorage.getItem(AuthStoragesConstants.main));
 
             const data = await request(AuthApiConstants.logout, 'POST', {
-                users_id: localData.users_id,
                 refresh_token: localData.refresh_token,
                 access_token: localData.access_token,
                 type_auth: localData.type_auth

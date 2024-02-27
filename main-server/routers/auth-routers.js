@@ -77,7 +77,7 @@ router.post(
     [
         authMiddleware,
         check('type_auth', 'Некорректные данные для выхода из системы').isInt(),
-        check('users_id', 'Некорректный идентификатор пользователя').isInt({ min: 1})
+        check('users_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 })
     ],
     authController.logout
 );
@@ -113,7 +113,9 @@ router.post(
 router.post(
     AuthRoute.managementLogout,
     [
-        check('type_auth', 'Некорректные данные для выхода из системы').isInt()
+        authMiddleware,
+        check('type_auth', 'Некорректные данные для выхода из системы').isInt(),
+        check('users_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 })
     ],
     authManagementController.logout
 );

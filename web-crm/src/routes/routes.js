@@ -150,11 +150,7 @@ export const useRoutes = (isAuthenticated, modules) => {
                     //.................................
                 }
 
-                <Route path={MainRoutesConstants.default} exact>
-                    <EmptyPage />
-                </Route>
-
-                <Redirect to={MainRoutesConstants.default}  />
+                <Redirect to={CreatorRoutesConstants.creator} />
 
                 {
                     //Маршруты вне зависимости от доступа к определённому

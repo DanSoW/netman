@@ -36,10 +36,14 @@ const Navbar = () => {
     const auth = useContext(AuthContext);
     const message = useMessage();
     const { loading, request, error, clearError } = useHttp();
-    let [nameRole, setNameRole] = useState("Модуль");
+    let [nameRole, setNameRole] = useState("Создатель");
     let [currentFunction, setCurrentFunction] = useState(null);
     let [roleFunctions, setRoleFunctions] = useState({
-        functions: []
+        functions: [{
+            ref: CreatorRoutesConstants.creator,
+            text: 'Создать игру',
+            name: 'creator',
+        }]
     });
 
     useEffect(() => {
@@ -51,7 +55,7 @@ const Navbar = () => {
     const logoutHandler = (event) => {
         event.preventDefault();
         auth.logout();
-        history.push(MainRoutesConstants.line);
+        history.push(MainRoutesConstants.auth);
     };
 
     // Проверка доступа к определённому функциональному модулю
@@ -132,31 +136,31 @@ const Navbar = () => {
                                     }}
                                     disabled={loading}
                                 >
-                                <button onClick={() => {
-                                    setNameRole("Создатель");
-                                    setRoleFunctions({
-                                        functions: [{
-                                            ref: CreatorRoutesConstants.creator,
-                                            text: 'Создать игру',
-                                            name: 'creator',
-                                        },
+                                    <button onClick={() => {
+                                        setNameRole("Создатель");
+                                        setRoleFunctions({
+                                            functions: [{
+                                                ref: CreatorRoutesConstants.creator,
+                                                text: 'Создать игру',
+                                                name: 'creator',
+                                            },
+                                            /*{
+                                                ref: CreatorRoutesConstants.games_view_created,
+                                                text: 'Просмотр игр',
+                                                name: 'game_views',
+                                            },
                                             {
-                                            ref: CreatorRoutesConstants.games_view_created,
-                                            text: 'Просмотр игр',
-                                            name: 'game_views',
-                                        },
-                                        {
-                                            ref: CreatorRoutesConstants.games_archive,
-                                            text: 'Архив игр',
-                                            name: 'game_archive',
-                                        }]
-                                    });
-                                }}>Создатель</button>
-                            </NavLink>
+                                                ref: CreatorRoutesConstants.games_archive,
+                                                text: 'Архив игр',
+                                                name: 'game_archive',
+                                            }*/]
+                                        });
+                                    }}>Создатель</button>
+                                </NavLink>
                             </li>
                         }
 
-                        {((auth.isAuthenticated) && (auth.modules) &&
+                        {/*{((auth.isAuthenticated) && (auth.modules) &&
                             (auth.modules.moderator)) &&
                             <li><NavLink to={ModeratorRoutesConstants.moderator}
                                 name="moderator"
@@ -172,7 +176,7 @@ const Navbar = () => {
                                         text: 'Просмотр игр',
                                         name: 'moderator'
                                     },
-                                        {
+                                    {
                                         ref: ModeratorRoutesConstants.creators_list,
                                         text: 'Создатели',
                                         name: 'creator_list'
@@ -219,17 +223,7 @@ const Navbar = () => {
                             ><button onClick={() => {
                                 setNameRole("Бог");
                             }}>Бог</button></NavLink></li>
-                        }
-                    </ul>
-                </li>
-                <li className={styles["navbar-topmenu-item-4"]}>
-                    <img src={messenger} />
-                    <ul className={classNames(styles["submenu"], styles["buttons-block"])}>
-                        <li>
-                            <a href="/">
-                                <button onClick={logoutHandler}>New</button>
-                            </a>
-                        </li>
+                        }*/}
                     </ul>
                 </li>
                 <li className={styles["navbar-topmenu-item-5"]}>

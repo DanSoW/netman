@@ -23,6 +23,7 @@ import styles from "./CreatorPage.module.css";
 import delete_image from "../../resources/icons/delete.svg";
 import edit_image from "../../resources/icons/edit.svg";
 import hint_image from "../../resources/icons/hint_image.svg";
+import AddModal from "../../components/pages/AddModal";
 
 const scaleFactor = 0.5;
 
@@ -140,6 +141,7 @@ const CreatorPage = () => {
                     quests: listQuests.quests,
                     users_id: usersId,
                     access_token: accessToken,
+                    type: 0
                 }
             );
 
@@ -334,6 +336,44 @@ const CreatorPage = () => {
         return index;
     };
 
+    const [isAdd, setAdd] = useState(false);
+    const handleAdd = async (location, lat, lng) => {
+        try {
+            const usersId = JSON.parse(
+                localStorage.getItem(default_config.storageName)
+            ).users_id;
+            const accessToken = JSON.parse(
+                localStorage.getItem(default_config.storageName)
+            ).access_token;
+
+            const data = await request(
+                address_config.map_mark_create,
+                "POST",
+                {
+                    location: location,
+                    lat: lat,
+                    lng: lng
+                }
+            );
+
+            if (data.message) {
+                message(data.message, "error");
+
+                const errors = data.errors;
+                if (errors) {
+                    errors.forEach(function (item) {
+                        message(item.msg, "error");
+                    });
+                }
+                return;
+            }
+
+            message("Новая метка добавлена!", "success");
+            await getFreeMarks();
+            setAdd(false);
+        } catch (e) { }
+    }
+
     return (
         <>
             {/* Таблица с видео материалами */}
@@ -372,6 +412,7 @@ const CreatorPage = () => {
                                     type="text"
                                     value={dataGameInfo.name}
                                     onChange={gameInfoChangeHandler}
+                                    className={styles.input}
                                 />
                             </div>
                             <div className={styles["creator-page-item-3-element"]}>
@@ -465,6 +506,7 @@ const CreatorPage = () => {
                                         id="rating"
                                         name="rating"
                                         onChange={gameInfoChangeHandler}
+                                        className={styles.input}
                                     />
                                 </div>
                             </div>
@@ -481,6 +523,7 @@ const CreatorPage = () => {
                                         id="count_commands"
                                         name="count_commands"
                                         onChange={gameInfoChangeHandler}
+                                        className={styles.input}
                                     />
                                 </div>
                             </div>
@@ -494,38 +537,28 @@ const CreatorPage = () => {
                                         id="min_score"
                                         name="min_score"
                                         onChange={gameInfoChangeHandler}
-                                    />
-                                </div>
-                            </div>
-                            <div className={styles["creator-page-item-3-element"]}>
-                                <span className={styles["creator-page-name-main-fields"]}>
-                                    Технология дополненной реальности
-                                </span>
-                                <div>
-                                    <input
-                                        type="checkbox"
-                                        id="arcore"
-                                        name="arcore"
-                                        onChange={(e) => {
-                                            setDataGameInfo({
-                                                location: dataGameInfo.location,
-                                                date_begin: dataGameInfo.date_begin,
-                                                date_end: dataGameInfo.date_end,
-                                                type: !dataGameInfo.type,
-                                                rating: dataGameInfo.rating,
-                                                count_commands: dataGameInfo.count_commands,
-                                                min_score: dataGameInfo.min_score,
-                                                age_limit: dataGameInfo.age_limit,
-                                                name: dataGameInfo.name,
-                                            });
-                                        }}
+                                        className={styles.input}
                                     />
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div className={styles["creator-header"]}>Создание меток</div>
+                <div className={styles["creator-page-item"]}>
+                    <button
+                        className="button-green"
+                        style={{
+                            display:
+                                blockEditQuest.display === "none" ? "grid" : "none",
+                        }}
+                        onClick={() => {
+                            setAdd(true);
+                        }}
+                    >
+                        Добавить новую метку на карту
+                    </button>
+                </div>
+                <div className={styles["creator-header"]}>Создание квеста</div>
                 <div className={styles["creator-page-item"]}>
                     <div className={styles["creator-page-item-1"]}>
                         <div className={styles["creator-page-item-1-gm"]}>
@@ -535,8 +568,6 @@ const CreatorPage = () => {
                                     latitude: 52.262757,
                                     zoom: 14
                                 }}
-                                zoom={14}
-                                scrollZoom={false}
                                 mapStyle="mapbox://styles/mapbox/streets-v11"
                                 mapboxAccessToken="pk.eyJ1IjoiZGFuc3ciLCJhIjoiY2wyMGMyZzhuMHV3MDNjbWt5ajRuNHY2cSJ9.VQGluZCuS2Y1RclO0FuRTQ"
                                 onLoad={() => {
@@ -897,7 +928,7 @@ const CreatorPage = () => {
                     </div>
                 </div>
                 <div className={styles["creator-header"]}>
-                    Созданные метки
+                    Созданные квесты
                 </div>
                 {
                     // Информация об игре, которая будет создана
@@ -1104,6 +1135,13 @@ const CreatorPage = () => {
                     </button>
                 </div>
             </div>
+
+            {
+                isAdd && <AddModal
+                    addHandler={handleAdd}
+                    open={isAdd}
+                    setOpen={setAdd} />
+            }
         </>
     );
 };
