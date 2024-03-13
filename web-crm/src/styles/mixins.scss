@@ -1,0 +1,5 @@
+@mixin flex-block($dir: column, $gap: 8px) {
+    display: flex;
+    flex-direction: $dir;
+    gap: $gap;
+}

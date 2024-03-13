@@ -8,6 +8,7 @@ import App from './containers/App';
 
 import 'src/styles/normalize.css';
 import 'src/styles/index.css';
+import 'react-toastify/dist/ReactToastify.css';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

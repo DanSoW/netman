@@ -1,0 +1,13 @@
+body {
+  color: #ffffff;
+  background: #111111;
+}
+
+span,
+input {
+  font-size: 18px;
+}
+
+a {
+  text-decoration: none;
+}

@@ -1,0 +1,16 @@
+@import "./variables.scss";
+@import "./mixins.scss";
+
+body {
+    color: $color-white;
+    background: $theme-black;
+}
+
+span,
+input {
+    font-size: 18px;
+}
+
+a {
+    text-decoration: none;
+}

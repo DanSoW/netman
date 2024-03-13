@@ -4,19 +4,21 @@
   background-repeat: repeat-y;
   background-attachment: fixed;
   background-size: cover;
-  display: grid;
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-self: center;
 }
 
 
 .content {
   margin-top: 2vh;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .item-login-1 {
