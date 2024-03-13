@@ -99,8 +99,6 @@ class UserProfileFragment : BaseFragment<PlayerViewModel, FragmentUserProfileBin
                             Gson().fromJson(it.value.body()!!.string(), UserInfoModel::class.java)
 
                         binding.upNickname.text = body.nickname
-                        binding.upFullname.text = "${body.surname} ${body.name}"
-                        binding.upLocation.text = body.location
 
                     } else {
                         val error = Gson().fromJson(

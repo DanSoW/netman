@@ -61,40 +61,15 @@
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                android:id="@+id/usConfidentText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="50dp"
-                android:fontFamily="@font/century_gothic"
-                android:text="Конфиденциальность"
-                android:textColor="#3F3F3F"
-                android:textSize="20sp"
-                app:layout_constraintStart_toStartOf="@+id/usAccountText"
-                app:layout_constraintTop_toBottomOf="@+id/usAccountText" />
-
-            <TextView
-                android:id="@+id/tv_adv"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="50dp"
-                android:fontFamily="@font/century_gothic"
-                android:text="Реклама"
-                android:textColor="#3F3F3F"
-                android:textSize="20sp"
-                app:layout_constraintStart_toStartOf="@+id/usConfidentText"
-                app:layout_constraintTop_toBottomOf="@+id/usConfidentText" />
-
-            <TextView
                 android:id="@+id/usExitText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="110dp"
+                android:layout_marginTop="16dp"
                 android:fontFamily="@font/century_gothic"
                 android:text="Выход"
                 android:textColor="#FFFFFF"
                 android:textSize="20sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="@+id/tv_adv" />
+                app:layout_constraintTop_toBottomOf="@+id/usAccountText" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 

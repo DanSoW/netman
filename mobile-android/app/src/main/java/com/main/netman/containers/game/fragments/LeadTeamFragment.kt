@@ -109,6 +109,43 @@ class LeadTeamFragment :
                 else -> {}
             }
         }
+
+        viewModel.commandInfo.observe(viewLifecycleOwner) {
+            when (it) {
+                // Обработка успешного сетевого взаимодействия
+                is Resource.Success -> {
+                    if (it.value.isSuccessful) {
+                        val body = Gson().fromJson(
+                            it.value.body()?.string(),
+                            CommandItemResponse::class.java
+                        )
+
+                        binding.tvTeamName.text = body.name
+                        binding.tvCountPlayers.text = "участников: ${body.countPlayers.toString()}"
+                    } else {
+                        val error = Gson().fromJson(
+                            it.value.errorBody()?.string().toString(), ErrorModel::class.java
+                        )
+                        handleErrorMessage(
+                            if (error.errors != null && error.errors!!.isNotEmpty()) error.errors?.first()!!.msg
+                            else error.message!!
+                        )
+                    }
+                }
+
+                // Обработка ошибок связанные с сетью
+                is Resource.Failure -> {
+                    handleApiError(it) { }
+                }
+
+                else -> {}
+            }
+        }
+
+        if (commandsId != null) {
+            // Получение информации о команде
+            infoTeam((commandsId))
+        }
     }
 
     /**
@@ -141,6 +178,17 @@ class LeadTeamFragment :
      */
     private fun leaveTeam(commandsId: Int) {
         viewModel.commandDetach(
+            CommandsIdModel(
+                commandsId = commandsId
+            )
+        )
+    }
+
+    /**
+     * Получение информации о команде
+     */
+    private fun infoTeam(commandsId: Int) {
+        viewModel.commandInfo(
             CommandsIdModel(
                 commandsId = commandsId
             )

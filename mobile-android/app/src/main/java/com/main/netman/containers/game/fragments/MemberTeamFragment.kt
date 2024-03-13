@@ -133,7 +133,7 @@ class MemberTeamFragment :
 
         if (commandsId != null) {
             // Получение информации о команде
-            infoTeam((commandsId))
+            infoTeam(commandsId)
         }
     }
 

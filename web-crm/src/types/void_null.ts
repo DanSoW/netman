@@ -1,0 +1,1 @@
+export type VOID_NULL = undefined | null;

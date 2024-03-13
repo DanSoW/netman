@@ -28,6 +28,6 @@
         "swagger2": false
     },
     "test": {
-        "init_db": false
+        "init_db": true
     }
 }
