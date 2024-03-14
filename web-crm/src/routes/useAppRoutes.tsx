@@ -5,6 +5,7 @@ import { useAppSelector } from "src/hooks/redux.hook";
 import IRouteModel from "src/models/IRouteModel";
 import BaseRouteConfig from "./configs/base.route";
 import BaseRoute from "src/constants/routes/base.route";
+import AuthRouteConfig from "./configs/auth.route";
 
 /**
  * Хук для получения всех маршрутов
@@ -12,7 +13,8 @@ import BaseRoute from "src/constants/routes/base.route";
  * @returns {JSX.Element} Функциональный компонент по URL
  */
 const useAppRoutes = () => {
-    // const authSelector = useAppSelector((s) => s.authReducer);
+    const authSelector = useAppSelector((s) => s.authReducer);
+
     const createRoutes = useCallback((routes: IRouteModel[]) => {
         return (
             routes &&
@@ -22,9 +24,12 @@ const useAppRoutes = () => {
         );
     }, []);
 
+    console.log("AUTH", authSelector);
     return (
         <Routes>
-            {createRoutes(BaseRouteConfig)}
+            {createRoutes(AuthRouteConfig)}
+            {!!authSelector.access_token && createRoutes(BaseRouteConfig)}
+            
             <Route path="*" element={<Navigate to={BaseRoute.SIGN_IN} />} />
         </Routes>
     );

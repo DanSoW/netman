@@ -1,16 +1,49 @@
-import { FC } from "react";
+import { FC, useEffect, useState } from "react";
 import NetmanPng from "src/assets/images/netman.png";
 import styles from "./SignInPage.module.scss";
 import Input from "src/components/UI/Input";
 import Button from "src/components/UI/Button";
-import { useAppDispatch } from "src/hooks/redux.hook";
+import { useAppDispatch, useAppSelector } from "src/hooks/redux.hook";
 import messageQueueAction from "src/store/actions/MessageQueueAction";
 import BaseRoute from "src/constants/routes/base.route";
 import Link from "src/components/UI/Link";
 import { useLocation, useNavigate } from "react-router-dom";
+import { IAuthData } from "src/models/IAuthModel";
+import { VOID_NULL } from "src/types/void_null";
+import { InputValueType } from "src/types/input";
+import AuthAction from "src/store/actions/AuthAction";
+import Loader from "src/components/UI/Loader";
 
 const SignInPage: FC<any> = () => {
+  const authSlice = useAppSelector((s) => s.authReducer);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const [form, setForm] = useState<IAuthData>({
+    password: '',
+    email: ''
+  });
+
+  const changePassword = (value: InputValueType) => {
+    setForm({
+      ...form,
+      password: String(value)
+    });
+  };
+
+  const changeEmail = (value: InputValueType) => {
+    setForm({
+      ...form,
+      email: String(value)
+    });
+  };
+
+  const clickSignIn = () => {
+    dispatch(AuthAction.signIn(form, () => {
+      dispatch(messageQueueAction.addMessage(null, "success", "Успешная авторизация пользователя!"));
+      navigate(BaseRoute.HOME);
+    }));
+  };
 
   return (
     <>
@@ -26,23 +59,27 @@ const SignInPage: FC<any> = () => {
                 label={"Email"}
                 title={"Введите email"}
                 type={"text"}
+                changeHandler={changeEmail}
               />
               <Input
                 label={"Пароль"}
                 title={"Введите пароль"}
                 type={"password"}
+                changeHandler={changePassword}
               />
               <Button
                 className={styles.btnAuth}
                 label={"Авторизация"}
-                clickHandler={() => {
-                  dispatch(messageQueueAction.addMessage(null, "success", "Нажатие на кнопку!"));
-                }}
+                clickHandler={clickSignIn}
               />
             </div>
           </div>
         </div>
       </div>
+
+      {
+        authSlice.isLoading && <Loader />
+      }
     </>
   );
 };
