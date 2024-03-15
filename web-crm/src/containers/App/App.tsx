@@ -3,9 +3,12 @@ import styles from "./App.module.scss";
 import useAppRoutes from "src/routes/useAppRoutes";
 import { BrowserRouter } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+import { useAppSelector } from "src/hooks/redux.hook";
+import Navbar from "src/components/Navbar";
 
 
 const App: FC<any> = () => {
+    const authSelector = useAppSelector((s) => s.authReducer);
 
     // @ts-ignore
     const routes = useAppRoutes();
@@ -13,6 +16,7 @@ const App: FC<any> = () => {
     return (
         <>
             <BrowserRouter>
+                {authSelector.access_token && <Navbar />}
                 {routes}
                 <ToastContainer
                     position="bottom-right"
