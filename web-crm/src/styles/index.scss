@@ -1,9 +1,11 @@
 @import "./variables.scss";
 @import "./mixins.scss";
+@import "./fonts.scss";
 
 body {
     color: $color-white;
     background: $theme-black;
+    font-family: Proxima-Regular !important;
 }
 
 span,

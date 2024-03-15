@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { Suspense, useCallback } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import WithToastify from "src/hoc-helpers/WithToastify";
 import { useAppSelector } from "src/hooks/redux.hook";
@@ -6,6 +6,8 @@ import IRouteModel from "src/models/IRouteModel";
 import BaseRouteConfig from "./configs/base.route";
 import BaseRoute from "src/constants/routes/base.route";
 import AuthRouteConfig from "./configs/auth.route";
+import CreatorRouteConfig from "./configs/creator.route";
+import Loader from "src/components/UI/Loader";
 
 /**
  * Хук для получения всех маршрутов
@@ -19,17 +21,25 @@ const useAppRoutes = () => {
         return (
             routes &&
             routes.map((value) => (
-                <Route key={value.path} path={value.path} element={<value.element />} />
+                <Route
+                    key={value.path}
+                    path={value.path}
+                    element={
+                        <Suspense fallback={<Loader />}>
+                            <value.element />
+                        </Suspense>
+                    }
+                />
             ))
         );
     }, []);
 
-    console.log("AUTH", authSelector);
     return (
         <Routes>
             {createRoutes(AuthRouteConfig)}
             {!!authSelector.access_token && createRoutes(BaseRouteConfig)}
-            
+            {!!authSelector.access_token && createRoutes(CreatorRouteConfig)}
+
             <Route path="*" element={<Navigate to={BaseRoute.SIGN_IN} />} />
         </Routes>
     );

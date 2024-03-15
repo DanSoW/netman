@@ -9,14 +9,20 @@ import AuthAction from "src/store/actions/AuthAction";
 import messageQueueAction from "src/store/actions/MessageQueueAction";
 import { useNavigate } from "react-router-dom";
 import BaseRoute from "src/constants/routes/base.route";
+import CreatorRoute from "src/constants/routes/creator.route";
 
 const optionsUserProfile: DropdownOption[] = [
     {
         id: 1,
-        label: "Профиль"
+        label: "Главная",
+        path: BaseRoute.HOME
     },
     {
         id: 2,
+        label: "Профиль"
+    },
+    {
+        id: 3,
         label: "Выход"
     }
 ];
@@ -24,7 +30,8 @@ const optionsUserProfile: DropdownOption[] = [
 const optionsCreator: DropdownOption[] = [
     {
         id: 1,
-        label: "Создать игру"
+        label: "Создать игру",
+        path: CreatorRoute.CREATE_GAME
     },
     {
         id: 2,
@@ -50,11 +57,21 @@ const Navbar: FC<any> = () => {
                 navigate(BaseRoute.SIGN_IN);
                 dispatch(messageQueueAction.addMessage(null, "dark", "Вы вышли из системы!"));
             }))
+        } else if (index >= 0) {
+            const option = optionsUserProfile[index];
+            option.path && navigate(option.path);
         }
     };
 
     const creatorClick = (id: number) => {
+        const index = optionsUserProfile.findIndex((item) => {
+            return item.id === id;
+        });
 
+        if (index >= 0) {
+            const option = optionsCreator[index];
+            option.path && navigate(option.path);
+        }
     };
 
     return (

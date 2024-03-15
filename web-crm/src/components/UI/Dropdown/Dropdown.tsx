@@ -6,6 +6,7 @@ import { DirectionType } from "src/types/ui";
 export type DropdownOption = {
     id: number;
     label: string;
+    path?: string;
 }
 
 export interface IDropdownProps {
@@ -113,6 +114,7 @@ const Dropdown: FC<IDropdownProps> = (props) => {
                                             key={index}
                                             onClick={() => {
                                                 clickHandler && clickHandler(item.id);
+                                                handleDropdownClick();
                                             }}
                                         >
                                             {item.label}

@@ -1,6 +1,8 @@
+import { lazy } from "react";
 import BaseRoute from "src/constants/routes/base.route";
 import IRouteModel from "src/models/IRouteModel";
-import HomePage from "src/containers/HomePage";
+
+const HomePage = lazy(() => import("src/containers/HomePage"));
 
 const BaseRouteConfig: IRouteModel[] = [
     {

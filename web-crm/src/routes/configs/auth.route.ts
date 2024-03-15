@@ -1,6 +1,8 @@
+import { lazy } from "react";
 import BaseRoute from "src/constants/routes/base.route";
 import IRouteModel from "src/models/IRouteModel";
-import SignInPage from "src/containers/Auth/SignInPage";
+
+const SignInPage = lazy(() => import("src/containers/Auth/SignInPage"));
 
 const AuthRouteConfig: IRouteModel[] = [
     {
