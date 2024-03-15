@@ -4,18 +4,29 @@ import cn from "classnames";
 
 export interface IButtonProps {
     label?: string;
-    className?: string;
+    customClass?: string;
     clickHandler?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+    width?: number;
+    height?: number;
 }
 
 const Button: FC<IButtonProps> = (props) => {
-    const { className, label, clickHandler } = props;
+    const {
+        customClass, label, clickHandler,
+        width, height
+    } = props;
 
     return (
         <>
-            <div className={styles.container}>
+            <div
+                className={styles.container}
+                style={{
+                    width: width ? `${width}px` : undefined,
+                    height: height ? `${height}px` : undefined
+                }}
+            >
                 <button
-                    className={cn(styles.button, className)}
+                    className={cn(styles.button, customClass)}
                     onClick={clickHandler}
                 >
                     {label}

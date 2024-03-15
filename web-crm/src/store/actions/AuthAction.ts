@@ -1,6 +1,5 @@
 /* Контекст */
 import { authSlice } from "../reducers/AuthSlice";
-import { messageQueueSlice } from "../reducers/MessageQueueSlice";
 import messageQueueAction from "./MessageQueueAction";
 
 /* Константы */
@@ -8,7 +7,6 @@ import apiMainServer from "src/http/http";
 import MainApi from "src/constants/api/main.api";
 import { HeadersDefaultJSON } from "src/config/headers.default";
 import { IAuthData, IAuthModel, IAuthRefresh } from "src/models/IAuthModel";
-import axios from "axios";
 import { FunctionVOID } from "src/types/function";
 
 function signIn(data: IAuthData, cb?: FunctionVOID) {

@@ -1,0 +1,12 @@
+@import "../../../styles/variables.scss";
+@import "../../../styles/mixins.scss";
+
+.page {
+    @include flex-block(column, 32px);
+    align-items: center;
+    margin: 32px 128px;
+}
+
+.button {
+    width: 200px !important;
+}

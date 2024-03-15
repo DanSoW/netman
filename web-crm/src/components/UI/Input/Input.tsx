@@ -2,6 +2,7 @@ import { FC, useEffect, useRef, useState } from "react";
 import styles from "./Input.module.scss";
 import { VOID_NULL, isVoidNull } from "src/types/void_null";
 import { InputValueType } from "src/types/input";
+import cn from "classnames";
 
 export interface IInputProps {
     name?: string;
@@ -10,14 +11,15 @@ export interface IInputProps {
     type?: string;
     defaultValue?: InputValueType;
     changeHandler?: (value?: InputValueType) => void;
-    delay?: number
+    delay?: number;
+    customClass?: string;
 }
 
 const Input: FC<IInputProps> = (props) => {
     const {
         title, label, type = "text",
         defaultValue = '', name, changeHandler,
-        delay = 0
+        delay = 0, customClass
     } = props;
 
     const [value, setValue] = useState<InputValueType>('');
@@ -59,7 +61,7 @@ const Input: FC<IInputProps> = (props) => {
                 {label && <span className={styles.label}>{label}</span>}
                 <input
                     name={name}
-                    className={styles.input}
+                    className={cn(styles.input, customClass)}
                     title={title}
                     type={type}
                     value={value}

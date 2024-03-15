@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useState } from "react";
 import NetmanPng from "src/assets/images/netman.png";
 import styles from "./SignInPage.module.scss";
 import Input from "src/components/UI/Input";
@@ -6,10 +6,8 @@ import Button from "src/components/UI/Button";
 import { useAppDispatch, useAppSelector } from "src/hooks/redux.hook";
 import messageQueueAction from "src/store/actions/MessageQueueAction";
 import BaseRoute from "src/constants/routes/base.route";
-import Link from "src/components/UI/Link";
 import { useLocation, useNavigate } from "react-router-dom";
 import { IAuthData } from "src/models/IAuthModel";
-import { VOID_NULL } from "src/types/void_null";
 import { InputValueType } from "src/types/input";
 import AuthAction from "src/store/actions/AuthAction";
 import Loader from "src/components/UI/Loader";
@@ -68,7 +66,7 @@ const SignInPage: FC<any> = () => {
                 changeHandler={changePassword}
               />
               <Button
-                className={styles.btnAuth}
+                customClass={styles.btnAuth}
                 label={"Авторизация"}
                 clickHandler={clickSignIn}
               />
