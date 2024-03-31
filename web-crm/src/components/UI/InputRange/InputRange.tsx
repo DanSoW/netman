@@ -1,10 +1,10 @@
 import { FC, useEffect, useRef, useState } from "react";
-import styles from "./Input.module.scss";
+import styles from "./InputRange.module.scss";
 import { VOID_NULL, isVoidNull } from "src/types/void_null";
 import { InputValueType } from "src/types/input";
 import cn from "classnames";
 
-export interface IInputProps {
+export interface IInputRangeProps {
     name?: string;
     label?: string;
     title?: string;
@@ -14,13 +14,16 @@ export interface IInputProps {
     delay?: number;
     customClass?: string;
     readOnly?: boolean;
+    min?: number;
+    max?: number;
 }
 
-const Input: FC<IInputProps> = (props) => {
+const InputRange: FC<IInputRangeProps> = (props) => {
     const {
         title, label, type = "text",
         defaultValue = '', name, changeHandler,
         delay = 0, customClass, readOnly = false,
+        min = 1, max = 50
     } = props;
 
     const [value, setValue] = useState<InputValueType>('');
@@ -60,18 +63,22 @@ const Input: FC<IInputProps> = (props) => {
         <>
             <div className={styles.container}>
                 {label && <span className={styles.label}>{label}</span>}
+                <output>{value}</output>
                 <input
                     name={name}
                     className={cn(styles.input, customClass)}
                     title={title}
-                    type={type}
+                    readOnly={readOnly}
+                    type="range"
+                    min={min}
+                    max={max}
+                    defaultValue={defaultValue}
                     value={value}
                     onChange={inputChangeHandler}
-                    readOnly={readOnly}
                 />
             </div>
         </>
     );
 };
 
-export default Input;
+export default InputRange;

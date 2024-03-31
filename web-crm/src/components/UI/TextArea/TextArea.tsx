@@ -1,14 +1,13 @@
 import { FC, useEffect, useRef, useState } from "react";
-import styles from "./Input.module.scss";
+import styles from "./TextArea.module.scss";
 import { VOID_NULL, isVoidNull } from "src/types/void_null";
 import { InputValueType } from "src/types/input";
 import cn from "classnames";
 
-export interface IInputProps {
+export interface ITextAreaProps {
     name?: string;
     label?: string;
     title?: string;
-    type?: string;
     defaultValue?: InputValueType;
     changeHandler?: (value?: InputValueType) => void;
     delay?: number;
@@ -16,11 +15,11 @@ export interface IInputProps {
     readOnly?: boolean;
 }
 
-const Input: FC<IInputProps> = (props) => {
+const TextArea: FC<ITextAreaProps> = (props) => {
     const {
-        title, label, type = "text",
-        defaultValue = '', name, changeHandler,
-        delay = 0, customClass, readOnly = false,
+        title, label, defaultValue = '', 
+        name, changeHandler, delay = 0, 
+        customClass, readOnly = false,
     } = props;
 
     const [value, setValue] = useState<InputValueType>('');
@@ -52,7 +51,7 @@ const Input: FC<IInputProps> = (props) => {
     }, []);
 
     // Обработка изменения данных в Input
-    const inputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const inputChangeHandler = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setValue(e.target.value);
     };
 
@@ -60,11 +59,10 @@ const Input: FC<IInputProps> = (props) => {
         <>
             <div className={styles.container}>
                 {label && <span className={styles.label}>{label}</span>}
-                <input
+                <textarea
                     name={name}
                     className={cn(styles.input, customClass)}
                     title={title}
-                    type={type}
                     value={value}
                     onChange={inputChangeHandler}
                     readOnly={readOnly}
@@ -74,4 +72,4 @@ const Input: FC<IInputProps> = (props) => {
     );
 };
 
-export default Input;
+export default TextArea;

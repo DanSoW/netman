@@ -13,6 +13,7 @@ $width-loader: 5px;
     border-radius: 50%;
 
     @include block-centered-absolute();
+    position: fixed;
 }
 
 .loadingSpinner {

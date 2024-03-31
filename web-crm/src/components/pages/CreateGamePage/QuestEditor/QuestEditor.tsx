@@ -8,6 +8,7 @@ import messageQueueAction from "src/store/actions/MessageQueueAction";
 import { IMarkModel } from "src/models/IMarkModel";
 import { IQuestDataModel, IQuestModel } from "src/models/IQuestModel";
 import Loader from "src/components/UI/Loader";
+import QuestParams from "../QuestParams";
 
 const scaleFactor = 0.5;
 
@@ -108,163 +109,167 @@ const QuestEditor: FC<any> = () => {
     return (
         <>
             <div className={styles.container}>
-                <div className={styles.map}>
-                    <Map
-                        initialViewState={{
-                            longitude: 104.298234,
-                            latitude: 52.262757,
-                            zoom: 14
-                        }}
-                        mapStyle="mapbox://styles/mapbox/streets-v11"
-                        mapboxAccessToken={ConfigApp.MAPBOX_ACCESS_TOKEN}
-                        onLoad={() => {
-                            dispatch(MarkAction.getFreeMarks(() => {
-                                dispatch(messageQueueAction.addMessage(null, "success", "Свободные метки загружены!"));
-                            }))
-                        }}
-                        onDblClick={(e) => {
-                            //resetQuestBlock();
-                        }}
-                    >
-                        {
-                            markSelector.freeMarks.map((value, index) => {
-                                return (
-                                    <>
-                                        <Fragment
-                                            key={value.id}
-                                        >
-                                            <Marker
-                                                longitude={Number(value.lng)}
-                                                latitude={Number(value.lat)}
-                                                color="#FF0000"
-                                                onClick={clickMarkerHandler}
+                <h2>Создание квеста</h2>
+                <div className={styles.quest}>
+                    <div className={styles.map}>
+                        <Map
+                            initialViewState={{
+                                longitude: 104.298234,
+                                latitude: 52.262757,
+                                zoom: 14
+                            }}
+                            mapStyle="mapbox://styles/mapbox/streets-v11"
+                            mapboxAccessToken={ConfigApp.MAPBOX_ACCESS_TOKEN}
+                            onLoad={() => {
+                                dispatch(MarkAction.getFreeMarks(() => {
+                                    dispatch(messageQueueAction.addMessage(null, "success", "Свободные метки загружены!"));
+                                }))
+                            }}
+                            onDblClick={(e) => {
+                                //resetQuestBlock();
+                            }}
+                        >
+                            {
+                                markSelector.freeMarks.map((value, index) => {
+                                    return (
+                                        <>
+                                            <Fragment
+                                                key={value.id}
                                             >
-                                            </Marker>
-                                            <Source
-                                                id={String(value.id)}
-                                                type="geojson" data={
-                                                    {
-                                                        type: 'FeatureCollection',
-                                                        features: [
-                                                            {
-                                                                type: 'Feature',
-                                                                geometry: {
-                                                                    type: 'Point',
-                                                                    coordinates: [Number(value.lng), Number(value.lat)]
-                                                                },
-                                                                properties: null
-                                                            }
-                                                        ]
-                                                    }
-                                                }
-                                            >
-                                                <Layer
-                                                    {
-                                                    ...{
-                                                        key: (String(value.id) + "-layer"),
-                                                        id: String(value.id),
-                                                        type: 'circle',
-                                                        paint: {
-                                                            'circle-radius': (((value.lat === selectMark.lat) &&
-                                                                (value.lng === selectMark.lng))
-                                                                ? 0
-                                                                : 50) * scaleFactor,
-                                                            'circle-color': findQuestByLatLng(value.lat, value.lng) >= 0
-                                                                ? "#00FF00"
-                                                                : "#0000FF",
-                                                            'circle-stroke-width': 1,
-                                                            'circle-stroke-color': findQuestByLatLng(value.lat, value.lng) >= 0
-                                                                ? "#000000"
-                                                                : "#FFFFFF",
-                                                            'circle-opacity': 0.5
+                                                <Marker
+                                                    longitude={Number(value.lng)}
+                                                    latitude={Number(value.lat)}
+                                                    color="#FF0000"
+                                                    onClick={clickMarkerHandler}
+                                                >
+                                                </Marker>
+                                                <Source
+                                                    id={String(value.id)}
+                                                    type="geojson" data={
+                                                        {
+                                                            type: 'FeatureCollection',
+                                                            features: [
+                                                                {
+                                                                    type: 'Feature',
+                                                                    geometry: {
+                                                                        type: 'Point',
+                                                                        coordinates: [Number(value.lng), Number(value.lat)]
+                                                                    },
+                                                                    properties: null
+                                                                }
+                                                            ]
                                                         }
                                                     }
-                                                    } />
-                                            </Source>
-                                        </Fragment>
-                                    </>
-                                );
-                            })
-                        }
+                                                >
+                                                    <Layer
+                                                        {
+                                                        ...{
+                                                            key: (String(value.id) + "-layer"),
+                                                            id: String(value.id),
+                                                            type: 'circle',
+                                                            paint: {
+                                                                'circle-radius': (((value.lat === selectMark.lat) &&
+                                                                    (value.lng === selectMark.lng))
+                                                                    ? 0
+                                                                    : 50) * scaleFactor,
+                                                                'circle-color': findQuestByLatLng(value.lat, value.lng) >= 0
+                                                                    ? "#00FF00"
+                                                                    : "#0000FF",
+                                                                'circle-stroke-width': 1,
+                                                                'circle-stroke-color': findQuestByLatLng(value.lat, value.lng) >= 0
+                                                                    ? "#000000"
+                                                                    : "#FFFFFF",
+                                                                'circle-opacity': 0.5
+                                                            }
+                                                        }
+                                                        } />
+                                                </Source>
+                                            </Fragment>
+                                        </>
+                                    );
+                                })
+                            }
 
-                        {
-                            selectMark.lat !== 0 && selectMark.lng !== 0 && (
-                                <Source
-                                    key={String(selectMark.id) + "-source"}
-                                    id={String(selectMark.id)}
-                                    type="geojson"
-                                    data={
-                                        {
-                                            type: 'FeatureCollection',
-                                            features: [
-                                                {
-                                                    type: 'Feature',
-                                                    geometry: {
-                                                        type: 'Point',
-                                                        coordinates: [Number(selectMark.lng), Number(selectMark.lat)]
-                                                    },
-                                                    properties: null
-                                                }
-                                            ]
-                                        }
-                                    }
-                                >
-                                    <Layer {
-                                        ...{
-                                            id: String(selectMark.lat) + "-current",
-                                            type: 'circle',
-                                            paint: {
-                                                'circle-radius': 50 * scaleFactor,
-                                                'circle-color': "#000000",
-                                                'circle-stroke-width': 1,
-                                                'circle-stroke-color': "#FF0000",
-                                                'circle-opacity': 0.5
+                            {
+                                selectMark.lat !== 0 && selectMark.lng !== 0 && (
+                                    <Source
+                                        key={String(selectMark.id) + "-source"}
+                                        id={String(selectMark.id)}
+                                        type="geojson"
+                                        data={
+                                            {
+                                                type: 'FeatureCollection',
+                                                features: [
+                                                    {
+                                                        type: 'Feature',
+                                                        geometry: {
+                                                            type: 'Point',
+                                                            coordinates: [Number(selectMark.lng), Number(selectMark.lat)]
+                                                        },
+                                                        properties: null
+                                                    }
+                                                ]
                                             }
                                         }
-                                    } />
-                                </Source>
-                            )}
-
-                        {
-                            selectMark.lat !== 0 &&
-                            selectMark.lng !== 0 &&
-                            dataQuest && (
-                                <Source
-                                    key={String(selectMark.id) + "-source"}
-                                    id={String(selectMark.id)}
-                                    type="geojson"
-                                    data={
-                                        {
-                                            type: 'FeatureCollection',
-                                            features: [
-                                                {
-                                                    type: 'Feature',
-                                                    geometry: {
-                                                        type: 'Point',
-                                                        coordinates: [Number(selectMark.lng), Number(selectMark.lat)]
-                                                    },
-                                                    properties: null
+                                    >
+                                        <Layer {
+                                            ...{
+                                                id: String(selectMark.lat) + "-current",
+                                                type: 'circle',
+                                                paint: {
+                                                    'circle-radius': 50 * scaleFactor,
+                                                    'circle-color': "#000000",
+                                                    'circle-stroke-width': 1,
+                                                    'circle-stroke-color': "#FF0000",
+                                                    'circle-opacity': 0.5
                                                 }
-                                            ]
-                                        }
-                                    }
-                                >
-                                    <Layer {
-                                        ...{
-                                            id: selectMark.lat + "-dcm",
-                                            type: 'circle',
-                                            paint: {
-                                                'circle-radius': dataQuest.radius * scaleFactor,
-                                                'circle-color': "#00FF00",
-                                                'circle-stroke-width': 1,
-                                                'circle-stroke-color': "#00FF00",
-                                                'circle-opacity': 0.5
+                                            }
+                                        } />
+                                    </Source>
+                                )}
+
+                            {
+                                selectMark.lat !== 0 &&
+                                selectMark.lng !== 0 &&
+                                dataQuest && (
+                                    <Source
+                                        key={String(selectMark.id) + "-source"}
+                                        id={String(selectMark.id)}
+                                        type="geojson"
+                                        data={
+                                            {
+                                                type: 'FeatureCollection',
+                                                features: [
+                                                    {
+                                                        type: 'Feature',
+                                                        geometry: {
+                                                            type: 'Point',
+                                                            coordinates: [Number(selectMark.lng), Number(selectMark.lat)]
+                                                        },
+                                                        properties: null
+                                                    }
+                                                ]
                                             }
                                         }
-                                    } />
-                                </Source>
-                            )}
-                    </Map>
+                                    >
+                                        <Layer {
+                                            ...{
+                                                id: selectMark.lat + "-dcm",
+                                                type: 'circle',
+                                                paint: {
+                                                    'circle-radius': dataQuest.radius * scaleFactor,
+                                                    'circle-color': "#00FF00",
+                                                    'circle-stroke-width': 1,
+                                                    'circle-stroke-color': "#00FF00",
+                                                    'circle-opacity': 0.5
+                                                }
+                                            }
+                                        } />
+                                    </Source>
+                                )}
+                        </Map>
+                    </div>
+                    <QuestParams />
                 </div>
             </div>
 
