@@ -41,14 +41,8 @@ const Users = (sequelize, DataTypes) => {
         // Создание отношения одного (users) ко многим (users_roles)
         model.hasMany(models.UsersRoles, genForeignKey('users_id'));
 
-        // Создание отношения одного (users) ко многим (users_modules)
-        model.hasMany(models.UsersModules, genForeignKey('users_id'));
-
-        // Создание отношения одного (users) ко многим (users_attributes)
-        model.hasMany(models.UsersAttributes, genForeignKey('users_id'));
-
         // Создание отношения одного (users) ко многим (users_groups)
-        model.hasMany(models.UsersGroups, genForeignKey('users_id'));
+        model.hasMany(models.Roles, genForeignKey('users_id', true));
 
         // Создание отношения одного (users) ко многим (data_players)
         model.hasMany(models.DataPlayers, genForeignKey('users_id'));

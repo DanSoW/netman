@@ -1,4 +1,4 @@
-import ModuleDto from "../auth/module-dto.js";
+import RoleDto from "../auth/role-dto.js";
 
 /**
  * @typedef CreatorInfoDto
@@ -14,7 +14,6 @@ import ModuleDto from "../auth/module-dto.js";
  * @property {string} created_at
  * @property {string} updated_at
  * @property {number} users_id
- * @property {ModuleDto.model} modules
  * @property {string} email
  */
 class CreatorInfoDto {

@@ -8,18 +8,14 @@ const UsersRoles = (sequelize, DataTypes) => {
             allowNull: false,
             autoIncrement: true
         },
-        name_role: {
-            type: DataTypes.TEXT,
-            allowNull: false
-        },
     });
 
     model.associate = (models) => {
         // Создание внешнего ключа из таблицы users_roles, на таблицу users
         model.belongsTo(models.Users, genForeignKey('users_id'));
 
-        // Создание внешнего ключа из таблицы users_roles, на таблицу users_groups
-        model.belongsTo(models.UsersGroups, genForeignKey('users_groups_id'));
+        // Создание внешнего ключа из таблицы users_roles, на таблицу roles
+        model.belongsTo(models.Roles, genForeignKey('roles_id'));
     };
 
     return model;

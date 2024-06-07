@@ -11,7 +11,7 @@ import jwtService from '../token/jwt-service.js';
 import oauthService from '../token/oauth-service.js';
 import ApiError from '../../exceptions/api-error.js';
 import TypeServices from '../../constants/values/type-services.js';
-import ModuleDto from '../../dtos/auth/module-dto.js';
+import RoleDto from '../../dtos/auth/role-dto.js';
 import AttributeDto from '../../dtos/auth/attribute-dto.js';
 import SuccessDto from '../../dtos/response/success-dto.js';
 import RefreshDto from '../../dtos/auth/refresh-dto.js';
@@ -84,21 +84,20 @@ class AuthService {
                 nickname: userNickname, users_id: user.id,
             }, { transaction: t });
 
-            // Установка прав доступа к модулям системы (default)
-            const modules = await db.UsersModules.create({
-                player: true, judge: false, creator: false, moderator: false,
-                manager: false, admin: false, super_admin: false,
-                users_id: user.id
-            }, { transaction: t });
+            // Добавление прав доступа
+            const role = await db.Roles.findOne({
+                where: {
+                    value: "user"
+                }
+            });
 
-            // Установка атрибутов пользователя (default)
-            const attributes = await db.UsersAttributes.create({
-                read: true, write: false, update: false, delete: false, users_id: user.id
-            }, { transaction: t });
+            if (!role) {
+                throw ApiError.BadRequest("Роли для пользователя не существует");
+            }
 
-            // Установка роли пользователя (default)
-            await db.UsersRoles.create({
-                users_id: user.id, users_groups_id: null, name_role: "player"
+            const roleCreated = await db.UsersRoles.create({
+                users_id: user.id,
+                roles_id: role.id
             }, { transaction: t });
 
             // Добавление информации о игроке (default):
@@ -117,12 +116,7 @@ class AuthService {
             return {
                 access_token: tokens.access_token,
                 refresh_token: tokens.refresh_token,
-                modules: {
-                    ...(new ModuleDto(modules.dataValues))
-                },
-                attributes: {
-                    ...(new AttributeDto(attributes.dataValues))
-                },
+                roles: [(new RoleDto(role))],
                 type_auth: 0
             };
         } catch (e) {
@@ -165,7 +159,7 @@ class AuthService {
 
             const userAttributes = await db.UsersAttributes.findOne({ where: { users_id: user.id } });
             const userModules = await db.UsersModules.findOne({ where: { users_id: user.id } });
-            const userGroup = await db.UsersGroups.findOne({ where: { users_id: user.id } });
+            const userGroup = await db.Roles.findOne({ where: { users_id: user.id } });
             let userGroupModules = null;
             let userGroupAttributes = null;
 
@@ -253,7 +247,7 @@ class AuthService {
                 access_token: tokens.access_token,
                 refresh_token: tokens.refresh_token,
                 modules: {
-                    ...(new ModuleDto(resultModules))
+                    ...(new RoleDto(resultModules))
                 },
                 attributes: {
                     ...(new AttributeDto(resultAttributes))
@@ -392,7 +386,7 @@ class AuthService {
             // Логика определения прав доступа
             const candidatAttributes = await db.UsersAttributes.findOne({ where: { users_id: candidat.id } });
             const candidatModules = await db.UsersModules.findOne({ where: { users_id: candidat.id } });
-            const candidatGroup = await db.UsersGroups.findOne({ where: { users_id: candidat.id } });
+            const candidatGroup = await db.Roles.findOne({ where: { users_id: candidat.id } });
             let candidatGroupModules = null;
             let candidatGroupAttributes = null;
 
@@ -490,7 +484,7 @@ class AuthService {
                 access_token: accessToken,
                 refresh_token: data.refresh_token,
                 modules: {
-                    ...(new ModuleDto(resultModules))
+                    ...(new RoleDto(resultModules))
                 },
                 attributes: {
                     ...(new AttributeDto(resultAttributes))

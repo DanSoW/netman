@@ -30,8 +30,6 @@ import FinishedGames from './models/FinishedGames.js';
 import FixJudges from './models/FixJudges.js';
 import Games from './models/Games.js';
 import GamesQuests from './models/GamesQuests.js';
-import GroupsAttributes from './models/GroupsAttributes.js';
-import GroupsModules from './models/GroupsModules.js';
 import IdentificationMarks from './models/IdentificationMarks.js';
 import InfoGames from './models/InfoGames.js';
 import JudgeScores from './models/JudgeScores.js';
@@ -42,13 +40,12 @@ import RegisterCommands from './models/RegisterCommands.js';
 import TaskMarks from './models/TaskMarks.js';
 import Tokens from './models/Tokens.js';
 import Users from './models/Users.js';
-import UsersAttributes from './models/UsersAttributes.js';
-import UsersGroups from './models/UsersGroups.js';
-import UsersModules from './models/UsersModules.js';
+import Roles from './models/Roles.js';
 import UsersRoles from './models/UsersRoles.js';
 import VideoShooters from './models/VideoShooters.js';
 import Warnings from './models/Warnings.js';
 import TestMarks from './models/TestMarks.js';
+import initRoles from './default/roles/init-roles.js';
 
 // Глобальный объект для работы с Sequelize ORM
 const db = {};
@@ -92,8 +89,6 @@ db.FinishedGames = FinishedGames(sequelize, Sequelize.DataTypes);
 db.FixJudges = FixJudges(sequelize, Sequelize.DataTypes);
 db.Games = Games(sequelize, Sequelize.DataTypes);
 db.GamesQuests = GamesQuests(sequelize, Sequelize.DataTypes);
-db.GroupsAttributes = GroupsAttributes(sequelize, Sequelize.DataTypes);
-db.GroupsModules = GroupsModules(sequelize, Sequelize.DataTypes);
 db.IdentificationMarks = IdentificationMarks(sequelize, Sequelize.DataTypes);
 db.InfoGames = InfoGames(sequelize, Sequelize.DataTypes);
 db.JudgeScores = JudgeScores(sequelize, Sequelize.DataTypes);
@@ -104,9 +99,7 @@ db.RegisterCommands = RegisterCommands(sequelize, Sequelize.DataTypes);
 db.TaskMarks = TaskMarks(sequelize, Sequelize.DataTypes);
 db.Tokens = Tokens(sequelize, Sequelize.DataTypes);
 db.Users = Users(sequelize, Sequelize.DataTypes);
-db.UsersAttributes = UsersAttributes(sequelize, Sequelize.DataTypes);
-db.UsersGroups = UsersGroups(sequelize, Sequelize.DataTypes);
-db.UsersModules = UsersModules(sequelize, Sequelize.DataTypes);
+db.Roles = Roles(sequelize, Sequelize.DataTypes);
 db.UsersRoles = UsersRoles(sequelize, Sequelize.DataTypes);
 db.VideoShooters = VideoShooters(sequelize, Sequelize.DataTypes);
 db.Warnings = Warnings(sequelize, Sequelize.DataTypes);
@@ -123,8 +116,10 @@ Object.keys(db).forEach(modelName => {
 sequelize.sync().then(result => {
   /* Инициализация тестовыми данными */
   if (config.get("test.init_db")) {
-    initMarks(db);
-    initUsers(db);
+    initRoles(db).then(() => {
+      initMarks(db);
+      initUsers(db);
+    })
   }
 
   if (config.get('log.sequelize')) {

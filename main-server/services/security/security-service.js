@@ -21,7 +21,7 @@ class SecurityService {
 
         try {
             const candidatModules = await db.UsersModules.findOne({ where: { users_id: data.users_id } });
-            const candidatGroup = await db.UsersGroups.findOne({ where: { users_id: data.users_id } });
+            const candidatGroup = await db.Roles.findOne({ where: { users_id: data.users_id } });
             let candidatGroupModules = null;
 
             let resultModules = {
@@ -135,7 +135,7 @@ class SecurityService {
         }
 
         // Определение группы пользователя
-        const userGroups = await db.UsersGroups.findOne({
+        const userGroups = await db.Roles.findOne({
             where: {
                 id: userRole.users_groups_id
             }

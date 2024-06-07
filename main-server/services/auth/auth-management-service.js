@@ -6,7 +6,7 @@ import tokenService from '../token/token-service.js';
 import jwtService from '../token/jwt-service.js';
 import ApiError from '../../exceptions/api-error.js';
 import TypeServices from '../../constants/values/type-services.js';
-import ModuleDto from '../../dtos/auth/module-dto.js';
+import RoleDto from '../../dtos/auth/role-dto.js';
 import AttributeDto from '../../dtos/auth/attribute-dto.js';
 import SuccessDto from '../../dtos/response/success-dto.js';
 
@@ -46,7 +46,7 @@ class AuthManagementService {
 
             const userAttributes = await db.UsersAttributes.findOne({ where: { users_id: user.id } });
             const userModules = await db.UsersModules.findOne({ where: { users_id: user.id } });
-            const userGroup = await db.UsersGroups.findOne({ where: { users_id: user.id } });
+            const userGroup = await db.Roles.findOne({ where: { users_id: user.id } });
             let userGroupModules = null;
             let userGroupAttributes = null;
 
@@ -140,7 +140,7 @@ class AuthManagementService {
                 access_token: tokens.access_token,
                 refresh_token: tokens.refresh_token,
                 modules: {
-                    ...(new ModuleDto(modules))
+                    ...(new RoleDto(modules))
                 },
                 attributes: {
                     ...(new AttributeDto(attributes))
@@ -251,7 +251,7 @@ class AuthManagementService {
             // Логика определения прав доступа
             const candidatAttributes = await db.UsersAttributes.findOne({ where: { users_id: candidat.id } });
             const candidatModules = await db.UsersModules.findOne({ where: { users_id: candidat.id } });
-            const candidatGroup = await db.UsersGroups.findOne({ where: { users_id: candidat.id } });
+            const candidatGroup = await db.Roles.findOne({ where: { users_id: candidat.id } });
             let candidatGroupModules = null;
             let candidatGroupAttributes = null;
 
@@ -355,7 +355,7 @@ class AuthManagementService {
                     refresh_token: data.refresh_token
                 },
                 modules: {
-                    ...(new ModuleDto(resultModules))
+                    ...(new RoleDto(resultModules))
                 },
                 attributes: {
                     ...(new AttributeDto(resultAttributes))

@@ -1849,12 +1849,13 @@
             type: "string"
             description: "Токен доступа"
           refresh_token: 
-            $ref: "#/components/schemas/ModuleDto"
+            type: "string"
+            description: "Токен обновления"
           type_auth: 
             type: "number"
             description: "Тип авторизации пользователя"
-          attributes: 
-            $ref: "#/components/schemas/AttributeDto"
+          roles: 
+            $ref: "#/components/schemas/RoleDto"
       LogoutDto: 
         required: 
           - "access_token"
@@ -1870,29 +1871,6 @@
           type_auth: 
             type: "number"
             description: ""
-      ModuleDto: 
-        properties: 
-          player: 
-            type: "boolean"
-            description: ""
-          judge: 
-            type: "boolean"
-            description: ""
-          creator: 
-            type: "boolean"
-            description: ""
-          moderator: 
-            type: "boolean"
-            description: ""
-          manager: 
-            type: "boolean"
-            description: ""
-          admin: 
-            type: "boolean"
-            description: ""
-          super_admin: 
-            type: "boolean"
-            description: ""
       RefreshDto: 
         required: 
           - "refresh_token"
@@ -1902,6 +1880,17 @@
             type: "string"
             description: ""
           type_auth: 
+            type: "number"
+            description: ""
+      RoleDto: 
+        properties: 
+          id: 
+            type: "number"
+            description: ""
+          value: 
+            type: "string"
+            description: ""
+          priority: 
             type: "number"
             description: ""
       SignInDto: 
@@ -2190,8 +2179,6 @@
           users_id: 
             type: "number"
             description: ""
-          modules: 
-            $ref: "#/components/schemas/ModuleDto"
           email: 
             type: "string"
             description: ""

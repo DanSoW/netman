@@ -19,21 +19,19 @@ const initUsers = async (db) => {
                 const exUser = await authService.signUp(currUser);
                 const dataFromToken = jwt.verify(exUser.access_token, process.env.JWT_ACCESS_SECRET);
 
-                if(currUser.email === "swdaniel@yandex.ru"){
-                    const userModules = await db.UsersModules.findOne({
+                if (currUser.email === "swdaniel@yandex.ru") {
+                    const role = await db.Roles.findOne({
                         where: {
-                            users_id: dataFromToken.users_id
+                            value: "admin"
                         }
                     });
-
-                    await userModules.update({
-                        judge: true,
-                        creator: true,
-                        moderator: true,
-                        manager: true,
-                        admin: true,
-                        super_admin: true
-                    }, { transaction: t });
+                    
+                    if (role) {
+                        await db.UsersRoles.create({
+                            users_id: dataFromToken.users_id,
+                            roles_id: role.id
+                        }, { transaction: t });
+                    }
                 }
             }
         }
