@@ -3,6 +3,7 @@ dotenv.config({ path: `.${process.env.NODE_ENV}.env` });
 import config from 'config';
 import bcrypt from 'bcryptjs';
 import { v4 as uuid } from 'uuid';
+import { nanoid } from 'nanoid';
 import db from '../../db/index.js';
 import mailService from '../mail/mail-service.js';
 import tokenService from '../token/token-service.js';
@@ -14,12 +15,14 @@ import ModuleDto from '../../dtos/auth/module-dto.js';
 import AttributeDto from '../../dtos/auth/attribute-dto.js';
 import SuccessDto from '../../dtos/response/success-dto.js';
 import RefreshDto from '../../dtos/auth/refresh-dto.js';
+import SignUpDto from '../../dtos/auth/sign-up-dto.js';
+import { isUndefinedOrNull } from '../../utils/objector.js';
 
 /* Сервис авторизации пользователей */
 class AuthService {
     /**
      * Регистрация нового пользователя
-     * @param {*} data Информация о пользователе для регистрации
+     * @param {SignUpDto} data Информация о пользователе для регистрации
      * @returns Авторизационные данные пользователя
      */
     async signUp(data) {
@@ -27,19 +30,16 @@ class AuthService {
 
         try {
             const userEmail = await db.Users.findOne({ where: { email: data.email } });
-            const userNick = await db.DataUsers.findOne({ where: { nickname: data.nickname } });
+            if (userEmail) {
+                throw ApiError.BadRequest(`Пользователь с почтовым адресом ${data.email} уже существует`);
+            }
 
-            // Проверка доступности никнейма / почтового адреса при регистрации
-            if ((userEmail) || (userNick)) {
-                let message = null;
+            if (data.nickname) {
+                const userNick = await db.DataUsers.findOne({ where: { nickname: data.nickname } });
 
-                if (userEmail) {
-                    message = `Пользователь с почтовым адресом ${data.email} уже существует`;
-                } else {
-                    message = `Пользователь с никнеймом ${data.nickname} уже существует`;
+                if (userNick) {
+                    throw ApiError.BadRequest(`Пользователь с никнеймом ${data.nickname} уже существует`);
                 }
-
-                throw ApiError.BadRequest(message);
             }
 
             // Хэширование пароля
@@ -77,9 +77,11 @@ class AuthService {
             await tokenService.saveTokens(user.id, tokens.access_token, tokens.refresh_token, t);
             const dateNow = (new Date()).toISOString().slice(0, 10);
 
+            const userNickname = isUndefinedOrNull(data.nickname) ? nanoid(12) : data.nickname;
+
             // Добавление информации о пользователе
             await db.DataUsers.create({
-                nickname: data.nickname, users_id: user.id, photo: '',
+                nickname: userNickname, users_id: user.id,
             }, { transaction: t });
 
             // Установка прав доступа к модулям системы (default)

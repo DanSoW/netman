@@ -27,9 +27,7 @@ router.post(
     [
         check('email', 'Введите корректный email').isEmail(),
         check('password', 'Минимальная длина пароля должна быть 6 символов, а максимальная длина пароля - 32 символа')
-            .isLength({ min: 6, max: 32 }),
-        check('nickname', 'Минимальная длина для никнейма равна 2 символам')
-            .isLength({ min: 2 }),
+            .isLength({ min: 6, max: 32 })
     ],
     authController.signUp
 );
