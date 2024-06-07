@@ -1,4 +1,4 @@
-export const MediaRouteBase = "/media";
+export const MediaRouteBase = "/api/media";
 
 const MediaRoute = {
     uploadUsersFile: '/upload/users/file',

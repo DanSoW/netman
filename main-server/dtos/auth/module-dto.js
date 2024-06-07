@@ -18,9 +18,13 @@ class ModuleDto {
     super_admin;
 
     constructor(model) {
-        for (const key in model) {
-            this[key] = model[key];
-        }
+        this.player = model.player;
+        this.judge = model.judge;
+        this.creator = model.creator;
+        this.moderator = model.moderator;
+        this.manager = model.manager;
+        this.admin = model.admin;
+        this.super_admin = model.super_admin;
     }
 }
 

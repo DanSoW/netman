@@ -1,4 +1,4 @@
-export const CreatorRouteBase = "/creator";
+export const CreatorRouteBase = "/api/creator";
 
 const CreatorRoute = {
     gameCreate: '/game/create',

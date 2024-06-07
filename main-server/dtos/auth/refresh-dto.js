@@ -8,9 +8,8 @@ class RefreshDto {
     type_auth;
 
     constructor(model) {
-        for (const key in model) {
-            this[key] = model[key];
-        }
+        this.refresh_token = model.refresh_token;
+        this.type_auth = model.type_auth;
     }
 }
 

@@ -8,9 +8,8 @@ class SignInDto {
     password;
 
     constructor(model) {
-        for (const key in model) {
-            this[key] = model[key];
-        }
+        this.email = model.email;
+        this.password = model.password;
     }
 }
 

@@ -28,18 +28,8 @@ router.post(
         check('email', 'Введите корректный email').isEmail(),
         check('password', 'Минимальная длина пароля должна быть 6 символов, а максимальная длина пароля - 32 символа')
             .isLength({ min: 6, max: 32 }),
-        check('phone_num', 'Некорректный номер телефона').isMobilePhone("ru-RU"),
-        check('location', 'Максимальная длина местоположение не может быть меньше 3 символов')
-            .isLength({ min: 3 }),
-        check('date_birthday', "Некорректная дата рождения").isDate({
-            format: "YYYY-MM-DD"
-        }),
         check('nickname', 'Минимальная длина для никнейма равна 2 символам')
             .isLength({ min: 2 }),
-        check('name', 'Минимальная длина для имени равна 2 символам')
-            .isLength({ min: 2 }),
-        check('surname', 'Минимальная длина для фамилии равна 2 символам')
-            .isLength({ min: 2 })
     ],
     authController.signUp
 );

@@ -6,9 +6,7 @@ class ActivationLinkDto {
     activation_link;
 
     constructor(model) {
-        for (const key in model) {
-            this[key] = model[key];
-        }
+        this.activation_link = model.activation_link;
     }
 }
 

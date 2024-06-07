@@ -1,4 +1,4 @@
-export const MapRouteBase = "/map";
+export const MapRouteBase = "/api/map";
 
 const MapRoute = {
     marks: '/marks',

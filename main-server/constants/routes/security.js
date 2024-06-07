@@ -1,4 +1,4 @@
-export const SecurityRouteBase = "/security";
+export const SecurityRouteBase = "/api/security";
 
 const SecurityRoute = {
     access: '/access',

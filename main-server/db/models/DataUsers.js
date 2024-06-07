@@ -8,38 +8,13 @@ const DataUsers = (sequelize, DataTypes) => {
             allowNull: false,
             autoIncrement: true
         },
-        name: {
-            type: DataTypes.TEXT,
-            allowNull: false
-        },
-        surname: {
-            type: DataTypes.TEXT,
-            allowNull: false
-        },
         nickname: {
             type: DataTypes.TEXT,
             allowNull: false,
             unique: true
         },
-        ref_image: {
+        photo: {
             type: DataTypes.TEXT,
-            allowNull: false
-        },
-        phone_num: {
-            type: DataTypes.TEXT,
-            allowNull: false,
-            unique: true
-        },
-        date_birthday: {
-            type: DataTypes.DATE,
-            allowNull: false
-        },
-        location: {
-            type: DataTypes.TEXT,
-            allowNull: false
-        },
-        date_register: {
-            type: DataTypes.DATE,
             allowNull: false
         }
     });

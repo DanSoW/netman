@@ -28,12 +28,16 @@ class AuthService {
         try {
             const userEmail = await db.Users.findOne({ where: { email: data.email } });
             const userNick = await db.DataUsers.findOne({ where: { nickname: data.nickname } });
-            const userPhone = await db.DataUsers.findOne({ where: { phone_num: data.phone_num } });
 
-            if ((userEmail) || (userNick) || (userPhone)) {
-                const message = (userEmail) ? `Пользователь с почтовым адресом ${data.email} уже существует`
-                    : (userNick) ? `Пользователь с никнеймом ${data.nickname} уже существует`
-                        : `Данный мобильный телефон занят`;
+            // Проверка доступности никнейма / почтового адреса при регистрации
+            if ((userEmail) || (userNick)) {
+                let message = null;
+
+                if (userEmail) {
+                    message = `Пользователь с почтовым адресом ${data.email} уже существует`;
+                } else {
+                    message = `Пользователь с никнеймом ${data.nickname} уже существует`;
+                }
 
                 throw ApiError.BadRequest(message);
             }
@@ -56,12 +60,12 @@ class AuthService {
 
             await db.Activations.create({
                 users_id: user.id,
-                is_activated: false,
+                is_activated: true,       // [TEST] До этапа тестирования true
                 activation_link: link
             }, { transaction: t });
 
             // Отправка сообщения о активации пользовательского аккаунта
-            await mailService.sendActivationMail(data.email, `${config.get("url.client")}/auth/activate/${link}`);
+            // [TEST] // await mailService.sendActivationMail(data.email, `${config.get("url.client")}/auth/activate/${link}`);
 
             // Генерация токенов доступа и обновления
             const tokens = jwtService.generateTokens({
@@ -75,9 +79,7 @@ class AuthService {
 
             // Добавление информации о пользователе
             await db.DataUsers.create({
-                name: data.name, surname: data.surname, nickname: data.nickname, phone_num: data.phone_num,
-                location: data.location, date_birthday: data.date_birthday, users_id: user.id,
-                ref_image: '', date_register: dateNow
+                nickname: data.nickname, users_id: user.id, photo: '',
             }, { transaction: t });
 
             // Установка прав доступа к модулям системы (default)
@@ -234,7 +236,7 @@ class AuthService {
             };
 
             // Генерация токенов доступа и обновления
-            const tokens = jwtService.generateTokens({ 
+            const tokens = jwtService.generateTokens({
                 users_id: user.id,
                 type_auth: 0
             });

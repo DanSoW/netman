@@ -17,9 +17,11 @@ class AuthDto {
     attributes;
 
     constructor(model) {
-        for (const key in model) {
-            this[key] = model[key];
-        }
+        this.refresh_token = model.refresh_token;
+        this.access_token = model.access_token;
+        this.type_auth = model.type_auth;
+        this.modules = model.modules;
+        this.attributes = model.attributes;
     }
 }
 

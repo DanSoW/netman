@@ -1,4 +1,4 @@
-export const ModeratorRouteBase = "/moderator";
+export const ModeratorRouteBase = "/api/moderator";
 
 const ModeratorRoute = {
     queueGames: '/queue/games',

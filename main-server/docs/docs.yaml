@@ -1919,12 +1919,7 @@
         required: 
           - "email"
           - "password"
-          - "phone_num"
-          - "location"
-          - "date_birthday"
           - "nickname"
-          - "name"
-          - "surname"
         properties: 
           email: 
             type: "string"
@@ -1932,22 +1927,7 @@
           password: 
             type: "string"
             description: ""
-          phone_num: 
-            type: "string"
-            description: ""
-          location: 
-            type: "string"
-            description: ""
-          date_birthday: 
-            type: "string"
-            description: ""
           nickname: 
-            type: "string"
-            description: ""
-          name: 
-            type: "string"
-            description: ""
-          surname: 
             type: "string"
             description: ""
       TokenDto: 

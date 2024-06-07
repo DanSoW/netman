@@ -1,4 +1,4 @@
-export const GeocoderRouteBase = "/geocoder";
+export const GeocoderRouteBase = "/api/geocoder";
 
 const GeocoderRoute = {
     geocoderAddress: '/address',

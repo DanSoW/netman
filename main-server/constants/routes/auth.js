@@ -1,4 +1,4 @@
-export const AuthRouteBase = "/auth";
+export const AuthRouteBase = "/api/auth";
 
 const AuthRoute = {
     signUp: '/sign-up',

@@ -12,9 +12,10 @@ class AttributeDto {
     delete;
 
     constructor(model) {
-        for (const key in model) {
-            this[key] = model[key];
-        }
+        this.read = model.read;
+        this.write = model.write;
+        this.update = model.update;
+        this.delete = model.delete;
     }
 }
 
