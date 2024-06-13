@@ -157,79 +157,41 @@ class AuthService {
                 throw ApiError.BadRequest("Неверный пароль, повторите попытку");
             }
 
-            const userAttributes = await db.UsersAttributes.findOne({ where: { users_id: user.id } });
-            const userModules = await db.UsersModules.findOne({ where: { users_id: user.id } });
-            const userGroup = await db.Roles.findOne({ where: { users_id: user.id } });
-            let userGroupModules = null;
-            let userGroupAttributes = null;
+            // Список ролей из БД
+            const rolesDB = await db.UsersRoles.findAll({
+                where: {
+                    users_id: user.id
+                }
+            });
 
-            let resultModules = {
-                player: false,
-                judge: false,
-                creator: false,
-                moderator: false,
-                manager: false,
-                admin: false,
-                super_admin: false
-            };
+            // Результирующий список ролей
+            const roles = [];
 
-            let resultAttributes = {
-                read: false,
-                write: false,
-                update: false,
-                delete: false
-            };
+            if (!rolesDB || (Array.isArray(rolesDB) && (rolesDB.length == 0))) {
+                const roleUser = await db.Roles.findOne({
+                    where: {
+                        value: "user"
+                    }
+                }, { transaction: t });
 
-            if (userGroup && userGroup.id) {
-                userGroupModules = await db.GroupsModules.findOne({ where: { users_groups_id: userGroup.id } });
-                userGroupAttributes = await db.GroupsAttributes.findOne({ where: { users_groups_id: userGroup.id } });
+                if (!roleUser) {
+                    throw ApiError.InternalServerError("Роли для обычного пользователя не предусмотрено");
+                }
 
-                if ((!userGroupModules) && (userGroupAttributes)) {
-                    throw ApiError.InternalServerError('В группе пользователей нет данных о доступных модулях');
-                } else if ((userGroupModules) && (!userGroupAttributes)) {
-                    throw ApiError.InternalServerError('В группе пользователей нет данных о атрибутах действий');
-                } else {
-                    resultModules = {
-                        player: userGroupModules.player,
-                        judge: userGroupModules.judge,
-                        creator: userGroupModules.creator,
-                        moderator: userGroupModules.moderator,
-                        manager: userGroupModules.manager,
-                        admin: userGroupModules.admin,
-                        super_admin: userGroupModules.super_admin
-                    };
+                roles.push(new RoleDto(roleUser.dataValues));
+            } else {
+                for (let i = 0; i < rolesDB.length; i++) {
+                    const item = await db.Roles.findOne({
+                        where: {
+                            id: rolesDB[i].dataValues.roles_id
+                        }
+                    });
 
-                    resultAttributes = {
-                        read: userGroupAttributes.read,
-                        write: userGroupAttributes.write,
-                        update: userGroupAttributes.dataValues.update,
-                        delete: userGroupAttributes.delete
-                    };
+                    if (item && roles.map((value) => value.id).includes(item.id) !== true) {
+                        roles.push(new RoleDto(item));
+                    }
                 }
             }
-
-            if ((!user) || (!userAttributes) || (!userModules)) {
-                throw ApiError.BadRequest('Данный пользователь не зарегистрирован');
-            }
-
-            //определение доступа пользователя к функциональным модулям
-            resultModules = {
-                player: (userModules.player || resultModules.player),
-                judge: (userModules.judge || resultModules.judge),
-                creator: (userModules.creator || resultModules.creator),
-                moderator: (userModules.moderator || resultModules.moderator),
-                manager: (userModules.manager || resultModules.manager),
-                admin: (userModules.admin || resultModules.admin),
-                super_admin: (userModules.super_admin || resultModules.super_admin)
-            };
-
-            //определение действий пользователя в функциональных модулях
-            resultAttributes = {
-                read: (userAttributes.read || resultAttributes.read),
-                write: (userAttributes.write || resultAttributes.write),
-                update: (userAttributes.dataValues.update || resultAttributes.update),
-                delete: (userAttributes.delete || resultAttributes.delete)
-            };
 
             // Генерация токенов доступа и обновления
             const tokens = jwtService.generateTokens({
@@ -246,12 +208,7 @@ class AuthService {
             return {
                 access_token: tokens.access_token,
                 refresh_token: tokens.refresh_token,
-                modules: {
-                    ...(new RoleDto(resultModules))
-                },
-                attributes: {
-                    ...(new AttributeDto(resultAttributes))
-                },
+                roles: roles,
                 type_auth: 0
             };
         } catch (e) {

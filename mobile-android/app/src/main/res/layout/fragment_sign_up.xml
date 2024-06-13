@@ -7,336 +7,180 @@
     android:background="@color/bg_color"
     tools:context=".containers.auth.fragments.SignUpFragment">
 
-    <com.main.netman.components.HideKeyboardScrollView
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clickable="true"
-        android:focusable="true">
+        android:layout_marginTop="16dp">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="16dp">
+            android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
+            android:layout_marginEnd="24dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/titleText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/proxima_soft_medium"
+                android:text="@string/sign_up_title2"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                app:lineHeight="24sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginStart="24dp"
-                android:layout_marginEnd="24dp"
-                android:orientation="vertical"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/titleText"
+                    android:id="@+id/txtNickname"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/proxima_soft_medium"
-                    android:text="@string/sign_up_title2"
-                    android:textColor="@color/white"
-                    android:textSize="24sp"
-                    app:lineHeight="24sp" />
+                    android:fontFamily="@font/proxima_soft_regular"
+                    android:text="Никнейм"
+                    android:textColor="@color/gray"
+                    android:textSize="14sp"
+                    app:lineHeight="14sp" />
 
-                <LinearLayout
+                <EditText
+                    android:id="@+id/nickname"
+                    android:layout_width="match_parent"
+                    android:layout_height="42dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/shape_rect_dark_round"
+                    android:ems="10"
+                    android:fontFamily="@font/proxima_soft_medium"
+                    android:hint="Никнейм"
+                    android:inputType="textEmailAddress"
+                    android:minHeight="42dp"
+                    android:textColor="@color/black"
+                    android:textColorHint="#90A4AE"
+                    tools:ignore="DuplicateSpeakableTextCheck" />
+
+                <TextView
+                    android:id="@+id/txtEmail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
+                    android:fontFamily="@font/proxima_soft_regular"
+                    android:text="Email *"
+                    android:textColor="@color/gray"
+                    android:textSize="14sp"
+                    app:lineHeight="14sp" />
+
+                <EditText
+                    android:id="@+id/email"
+                    android:layout_width="match_parent"
+                    android:layout_height="42dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/shape_rect_dark_round"
+                    android:ems="10"
+                    android:fontFamily="@font/proxima_soft_medium"
+                    android:hint="@string/email_text"
+                    android:inputType="textEmailAddress"
+                    android:minHeight="42dp"
+                    android:textColor="@color/black"
+                    android:textColorHint="#90A4AE"
+                    tools:ignore="DuplicateSpeakableTextCheck" />
+
+                <TextView
+                    android:id="@+id/txtPassword"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:fontFamily="@font/proxima_soft_regular"
+                    android:text="Пароль *"
+                    android:textColor="@color/gray"
+                    android:textSize="14sp"
+                    app:lineHeight="14sp" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/TextInputLayoutStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:layout_marginTop="8dp"
+                    app:endIconMode="password_toggle"
+                    app:hintEnabled="false">
 
-                    <TextView
-                        android:id="@+id/txtNickname"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/proxima_soft_regular"
-                        android:text="Никнейм"
-                        android:textColor="@color/gray"
-                        android:textSize="14sp"
-                        app:lineHeight="14sp" />
-
-                    <EditText
-                        android:id="@+id/nickname"
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/password"
                         android:layout_width="match_parent"
                         android:layout_height="42dp"
-                        android:layout_marginTop="8dp"
                         android:background="@drawable/shape_rect_dark_round"
+                        android:digits="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
                         android:ems="10"
                         android:fontFamily="@font/proxima_soft_medium"
-                        android:hint="Никнейм"
-                        android:inputType="textEmailAddress"
+                        android:hint="Пароль"
+                        android:inputType="textPassword"
                         android:minHeight="42dp"
                         android:textColor="@color/black"
                         android:textColorHint="#90A4AE"
                         tools:ignore="DuplicateSpeakableTextCheck" />
+                </com.google.android.material.textfield.TextInputLayout>
 
-                    <TextView
-                        android:layout_marginTop="16dp"
-                        android:id="@+id/txtName"
+                <Button
+                    android:id="@+id/btnAuth"
+                    style="@style/ButtonBlueStyle"
+                    android:layout_width="match_parent"
+                    android:layout_marginTop="32dp"
+                    android:text="Зарегистрироваться"
+                    tools:ignore="DuplicateSpeakableTextCheck" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:fontFamily="@font/proxima_soft_regular"
-                        android:text="Имя"
-                        android:textColor="@color/gray"
-                        android:textSize="14sp"
-                        app:lineHeight="14sp" />
+                        android:layout_marginTop="64dp"
+                        android:orientation="horizontal"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
 
-                    <EditText
-                        android:id="@+id/name"
-                        android:layout_width="match_parent"
-                        android:layout_height="42dp"
-                        android:layout_marginTop="8dp"
-                        android:background="@drawable/shape_rect_dark_round"
-                        android:ems="10"
-                        android:fontFamily="@font/proxima_soft_medium"
-                        android:hint="Имя"
-                        android:inputType="textEmailAddress"
-                        android:minHeight="42dp"
-                        android:textColor="@color/black"
-                        android:textColorHint="#90A4AE"
-                        tools:ignore="DuplicateSpeakableTextCheck" />
-
-                    <TextView
-                        android:layout_marginTop="16dp"
-                        android:id="@+id/txtSurname"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/proxima_soft_regular"
-                        android:text="Фамилия"
-                        android:textColor="@color/gray"
-                        android:textSize="14sp"
-                        app:lineHeight="14sp" />
-
-                    <EditText
-                        android:id="@+id/surname"
-                        android:layout_width="match_parent"
-                        android:layout_height="42dp"
-                        android:layout_marginTop="8dp"
-                        android:background="@drawable/shape_rect_dark_round"
-                        android:ems="10"
-                        android:fontFamily="@font/proxima_soft_medium"
-                        android:hint="Фамилия"
-                        android:inputType="textEmailAddress"
-                        android:minHeight="42dp"
-                        android:textColor="@color/black"
-                        android:textColorHint="#90A4AE"
-                        tools:ignore="DuplicateSpeakableTextCheck" />
-
-                    <TextView
-                        android:layout_marginTop="16dp"
-                        android:id="@+id/txtDateBirthday"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/proxima_soft_regular"
-                        android:text="Дата рождения"
-                        android:textColor="@color/gray"
-                        android:textSize="14sp"
-                        app:lineHeight="14sp" />
-
-                    <com.vicmikhailau.maskededittext.MaskedEditText
-                        android:id="@+id/dateBirthday"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/shape_rect_dark_round"
-
-                        android:layout_marginTop="8dp"
-                        android:ems="10"
-                        android:fontFamily="@font/proxima_soft_medium"
-                        android:minHeight="42dp"
-                        android:textColor="@color/black"
-                        android:textColorHint="#90A4AE"
-                        android:foregroundGravity="left"
-                        android:gravity="start"
-                        android:hint="Дата рождения"
-                        android:inputType="date"
-                        android:maxLength="18"
-                        android:paddingLeft="20dp"
-                        android:paddingRight="20dp"
-                        android:shadowColor="#FFFFFF"
-                        android:textSize="13sp"
-                        app:mask="####-##-##"
-                        tools:ignore="TouchTargetSizeCheck" />
-
-                    <TextView
-                        android:layout_marginTop="16dp"
-                        android:id="@+id/txtLocation"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/proxima_soft_regular"
-                        android:text="Город"
-                        android:textColor="@color/gray"
-                        android:textSize="14sp"
-                        app:lineHeight="14sp" />
-
-                    <EditText
-                        android:id="@+id/location"
-                        android:layout_width="match_parent"
-                        android:layout_height="42dp"
-                        android:layout_marginTop="8dp"
-                        android:background="@drawable/shape_rect_dark_round"
-                        android:ems="10"
-                        android:fontFamily="@font/proxima_soft_medium"
-                        android:hint="Город"
-                        android:inputType="textEmailAddress"
-                        android:minHeight="42dp"
-                        android:textColor="@color/black"
-                        android:textColorHint="#90A4AE"
-                        tools:ignore="DuplicateSpeakableTextCheck" />
-
-                    <TextView
-                        android:layout_marginTop="16dp"
-                        android:id="@+id/txtPhoneNum"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/proxima_soft_regular"
-                        android:text="Номер телефона"
-                        android:textColor="@color/gray"
-                        android:textSize="14sp"
-                        app:lineHeight="14sp" />
-
-                    <com.vicmikhailau.maskededittext.MaskedEditText
-                        android:id="@+id/phoneNum"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/shape_rect_dark_round"
-
-                        android:layout_marginTop="8dp"
-                        android:ems="10"
-                        android:fontFamily="@font/proxima_soft_medium"
-                        android:minHeight="42dp"
-                        android:textColor="@color/black"
-                        android:textColorHint="#90A4AE"
-                        android:foregroundGravity="left"
-                        android:gravity="start"
-                        android:hint="Номер телефона"
-                        android:inputType="phone"
-                        android:maxLength="18"
-                        android:paddingLeft="20dp"
-                        android:paddingRight="20dp"
-                        android:shadowColor="#FFFFFF"
-                        android:textSize="13sp"
-                        app:mask="+7 (###) ###-##-##"
-                        tools:ignore="TouchTargetSizeCheck" />
-
-                    <TextView
-                        android:id="@+id/txtEmail"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:fontFamily="@font/proxima_soft_regular"
-                        android:text="Email"
-                        android:textColor="@color/gray"
-                        android:textSize="14sp"
-                        app:lineHeight="14sp" />
-
-                    <EditText
-                        android:id="@+id/email"
-                        android:layout_width="match_parent"
-                        android:layout_height="42dp"
-                        android:layout_marginTop="8dp"
-                        android:background="@drawable/shape_rect_dark_round"
-                        android:ems="10"
-                        android:fontFamily="@font/proxima_soft_medium"
-                        android:hint="@string/email_text"
-                        android:inputType="textEmailAddress"
-                        android:minHeight="42dp"
-                        android:textColor="@color/black"
-                        android:textColorHint="#90A4AE"
-                        tools:ignore="DuplicateSpeakableTextCheck" />
-
-                    <TextView
-                        android:layout_marginTop="16dp"
-                        android:id="@+id/txtPassword"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="@font/proxima_soft_regular"
-                        android:text="Пароль"
-                        android:textColor="@color/gray"
-                        android:textSize="14sp"
-                        app:lineHeight="14sp" />
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        style="@style/TextInputLayoutStyle"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        app:endIconMode="password_toggle"
-                        app:hintEnabled="false">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/password"
-                            android:layout_width="match_parent"
-                            android:layout_height="42dp"
-                            android:background="@drawable/shape_rect_dark_round"
-                            android:digits="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-                            android:ems="10"
-                            android:fontFamily="@font/proxima_soft_medium"
-                            android:hint="Пароль"
-                            android:inputType="textPassword"
-                            android:minHeight="42dp"
-                            android:textColor="@color/black"
-                            android:textColorHint="#90A4AE"
-                            tools:ignore="DuplicateSpeakableTextCheck" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <Button
-                        android:id="@+id/btnAuth"
-                        style="@style/ButtonBlueStyle"
-                        android:layout_width="match_parent"
-                        android:layout_marginTop="32dp"
-                        android:text="Зарегистрироваться"
-                        tools:ignore="DuplicateSpeakableTextCheck" />
-
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <LinearLayout
+                        <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="64dp"
-                            android:orientation="horizontal"
-                            app:layout_constraintBottom_toBottomOf="parent"
-                            app:layout_constraintEnd_toEndOf="parent"
-                            app:layout_constraintStart_toStartOf="parent"
-                            app:layout_constraintTop_toTopOf="parent">
+                            android:fontFamily="@font/proxima_soft_medium"
+                            android:text="Нет аккаунта?"
+                            android:textColor="@color/white"
+                            android:textSize="14sp"
+                            app:lineHeight="14sp" />
 
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:fontFamily="@font/proxima_soft_medium"
-                                android:text="Нет аккаунта?"
-                                android:textColor="@color/white"
-                                android:textSize="14sp"
-                                app:lineHeight="14sp" />
-
-                            <TextView
-                                android:id="@+id/txtSignUp"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="16dp"
-                                android:fontFamily="@font/proxima_soft_medium"
-                                android:text="Зарегистрироваться"
-                                android:textColor="@color/white"
-                                android:textSize="14sp"
-                                app:lineHeight="14sp" />
-                        </LinearLayout>
-                    </androidx.constraintlayout.widget.ConstraintLayout>
-                </LinearLayout>
+                        <TextView
+                            android:id="@+id/txtSignUp"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="16dp"
+                            android:fontFamily="@font/proxima_soft_medium"
+                            android:text="Зарегистрироваться"
+                            android:textColor="@color/white"
+                            android:textSize="14sp"
+                            app:lineHeight="14sp" />
+                    </LinearLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
             </LinearLayout>
+        </LinearLayout>
 
-            <!-- Центральный Progress Bar -->
-            <ProgressBar
-                android:id="@+id/progressBar"
-                style="?android:attr/progressBarStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </com.main.netman.components.HideKeyboardScrollView>
+        <!-- Центральный Progress Bar -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </RelativeLayout>

@@ -44,61 +44,6 @@ class SignUpFragment : BaseFragment<AuthViewModel, FragmentSignUpBinding, AuthRe
         binding.progressBar.visible(false)
         binding.btnAuth.enable(false)
 
-        /*binding.dateBirthday.addTextChangedListener {
-            object : TextWatcher {
-
-                var sb: StringBuilder = StringBuilder("")
-                var ignore = false
-                override fun afterTextChanged(s: Editable?) {}
-                override fun beforeTextChanged(
-                    s: CharSequence?,
-                    start: Int,
-                    count: Int,
-                    after: Int
-                ) {
-                }
-
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-
-                    if (ignore) {
-                        ignore = false
-                        return
-                    }
-
-                    sb.clear()
-                    sb.append(
-                        if (s!!.length > 10) {
-                            s.subSequence(0, 10)
-                        } else {
-                            s
-                        }
-                    )
-
-                    if (sb.lastIndex == 2) {
-                        if (sb[2] != '/') {
-                            sb.insert(2, "/")
-                        }
-                    } else if (sb.lastIndex == 5) {
-                        if (sb[5] != '/') {
-                            sb.insert(5, "/")
-                        }
-                    }
-
-                    ignore = true
-                    binding.dateBirthday.setText(sb.toString())
-                    binding.dateBirthday.setSelection(sb.length)
-                }
-            }
-        }*/
-
-        datePicker = DatePickerHelper(requireActivity())
-        binding.dateBirthday.isFocusable = false
-        binding.dateBirthday.isClickable = true
-
-        binding.dateBirthday.setOnClickListener {
-            showDatePickerDialog()
-        }
-
         // Устанавливаем прослушивание на изменение данных loginResponse из viewModel
         // абстрактного класса (который был сгенерирован на основе переданного AuthViewModel)
         viewModel.signUpResponse.observe(viewLifecycleOwner) {
@@ -186,43 +131,12 @@ class SignUpFragment : BaseFragment<AuthViewModel, FragmentSignUpBinding, AuthRe
      * Функционал элемента управления, который был выведен в отдельную функцию
      */
     private fun signUp() {
-        val phoneNum = binding.phoneNum.text.toString()
-            .replace(" ", "")
-            .replace("(", "")
-            .replace(")", "")
-            .replace("-", "")
-            .drop(2)
-
         viewModel.signUp(
             AuthSignUpModel(
-                name = binding.name.text.toString(),
-                surname = binding.surname.text.toString(),
                 nickname = binding.nickname.text.toString(),
-                phoneNum = phoneNum,
-                dateBirthday = binding.dateBirthday.text.toString(),
-                location = binding.location.text.toString(),
                 email = binding.email.text.toString(),
                 password = binding.password.text.toString()
             )
         )
-    }
-
-    /**
-     * Открытие панели выбора даты
-     */
-    private fun showDatePickerDialog() {
-        val cal = Calendar.getInstance()
-        val d = cal.get(Calendar.DAY_OF_MONTH)
-        val m = cal.get(Calendar.MONTH)
-        val y = cal.get(Calendar.YEAR)
-        datePicker.showDialog(d, m, y, object : DatePickerHelper.Callback {
-            @SuppressLint("SetTextI18n")
-            override fun onDateSelected(dayofMonth: Int, month: Int, year: Int) {
-                val dayStr = if (dayofMonth < 10) "0${dayofMonth}" else "$dayofMonth"
-                val mon = month + 1
-                val monthStr = if (mon < 10) "0${mon}" else "$mon"
-                binding.dateBirthday.setText("${year}${monthStr}${dayStr}")
-            }
-        })
     }
 }

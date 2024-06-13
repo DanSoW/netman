@@ -17,10 +17,10 @@ class AuthManagementService {
      * @param {*} data Информация о пользователе для авторизации
      * @returns Авторизационные данные пользователя
      */
-    async signIn(data){
+    async signIn(data) {
         const t = await db.sequelize.transaction();
 
-        try{
+        try {
             const user = await db.Users.findOne({ where: { email: data.email } });
 
             if (!user) {
@@ -44,88 +44,42 @@ class AuthManagementService {
                 throw ApiError.BadRequest("Неверный пароль, повторите попытку");
             }
 
-            const userAttributes = await db.UsersAttributes.findOne({ where: { users_id: user.id } });
-            const userModules = await db.UsersModules.findOne({ where: { users_id: user.id } });
-            const userGroup = await db.Roles.findOne({ where: { users_id: user.id } });
-            let userGroupModules = null;
-            let userGroupAttributes = null;
+            // Список ролей из БД
+            const rolesDB = await db.UsersRoles.findAll({
+                where: {
+                    users_id: user.id
+                }
+            });
 
-            let resultModules = {
-                player: false,
-                judge: false,
-                creator: false,
-                moderator: false,
-                manager: false,
-                admin: false,
-                super_admin: false
-            };
+            // Результирующий список ролей
+            const roles = [];
 
-            let resultAttributes = {
-                read: false,
-                write: false,
-                update: false,
-                delete: false
-            };
+            if (!rolesDB || (Array.isArray(rolesDB) && (rolesDB.length == 0))) {
+                throw ApiError.Forbidden("Отказано в доступе");
+            } else {
+                for (let i = 0; i < rolesDB.length; i++) {
+                    const item = await db.Roles.findOne({
+                        where: {
+                            id: rolesDB[i].dataValues.roles_id
+                        }
+                    });
 
-            if (userGroup && userGroup.id) {
-                userGroupModules = await db.GroupsModules.findOne({ where: { users_groups_id: userGroup.id } });
-                userGroupAttributes = await db.GroupsAttributes.findOne({ where: { users_groups_id: userGroup.id } });
-
-                if ((!userGroupModules) && (userGroupAttributes)) {
-                    throw ApiError.InternalServerError('В группе пользователей нет данных о доступных модулях');
-                } else if ((userGroupModules) && (!userGroupAttributes)) {
-                    throw ApiError.InternalServerError('В группе пользователей нет данных о атрибутах действий');
-                } else {
-                    resultModules = {
-                        player: userGroupModules.player,
-                        judge: userGroupModules.judge,
-                        creator: userGroupModules.creator,
-                        moderator: userGroupModules.moderator,
-                        manager: userGroupModules.manager,
-                        admin: userGroupModules.admin,
-                        super_admin: userGroupModules.super_admin
-                    };
-
-                    resultAttributes = {
-                        read: userGroupAttributes.read,
-                        write: userGroupAttributes.write,
-                        update: userGroupAttributes.dataValues.update,
-                        delete: userGroupAttributes.delete
-                    };
+                    if (item && roles.map((value) => value.id).includes(item.id) !== true) {
+                        roles.push(new RoleDto(item));
+                    }
                 }
             }
 
-            if ((!user) || (!userAttributes) || (!userModules)) {
-                throw ApiError.BadRequest('Данный пользователь не зарегистрирован');
+            const priorityThanZero = roles.indexOf((item) => {
+                return item.priority > 0;
+            });
+
+            if(priorityThanZero < 0) {
+                throw ApiError.Forbidden("Отказано в доступе");
             }
-
-            //определение доступа пользователя к функциональным модулям
-            const modules = resultModules = {
-                player: (userModules.player || resultModules.player),
-                judge: (userModules.judge || resultModules.judge),
-                creator: (userModules.creator || resultModules.creator),
-                moderator: (userModules.moderator || resultModules.moderator),
-                manager: (userModules.manager || resultModules.manager),
-                admin: (userModules.admin || resultModules.admin),
-                super_admin: (userModules.super_admin || resultModules.super_admin)
-            };
-
-            if (!(resultModules.super_admin ||
-                resultModules.creator || resultModules.moderator ||
-                resultModules.manager || resultModules.admin)) {
-                throw ApiError.Forbidden("Данный пользователь не имеет доступ к управляющему веб-сайту!");
-            }
-
-            //определение действий пользователя в функциональных модулях
-            const attributes = resultAttributes = {
-                read: (userAttributes.read || resultAttributes.read),
-                write: (userAttributes.write || resultAttributes.write),
-                update: (userAttributes.dataValues.update || resultAttributes.update),
-                delete: (userAttributes.delete || resultAttributes.delete)
-            };
 
             // Генерация токенов доступа и обновления
-            const tokens = jwtService.generateTokens({ 
+            const tokens = jwtService.generateTokens({
                 users_id: user.id,
                 type_auth: 0,
             });
@@ -139,15 +93,10 @@ class AuthManagementService {
             return {
                 access_token: tokens.access_token,
                 refresh_token: tokens.refresh_token,
-                modules: {
-                    ...(new RoleDto(modules))
-                },
-                attributes: {
-                    ...(new AttributeDto(attributes))
-                },
+                roles: roles,
                 type_auth: 0
             };
-        }catch(e){
+        } catch (e) {
             await t.rollback();
             throw ApiError.BadRequest(e.message);
         }
@@ -351,7 +300,7 @@ class AuthManagementService {
 
             return {
                 tokens: {
-                    access_token: accessToken, 
+                    access_token: accessToken,
                     refresh_token: data.refresh_token
                 },
                 modules: {
