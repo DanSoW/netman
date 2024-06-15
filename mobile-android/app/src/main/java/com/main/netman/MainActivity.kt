@@ -4,6 +4,7 @@ package com.main.netman
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import com.google.gson.Gson
 import com.main.netman.containers.auth.AuthActivity
 import com.main.netman.containers.home.HomeActivity

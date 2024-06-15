@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import androidx.navigation.findNavController
 import com.main.netman.MainActivity
 import com.main.netman.R
@@ -16,6 +17,7 @@ import com.main.netman.utils.handleWarningMessage
 import com.main.netman.utils.startNewActivity
 import com.mapbox.maps.extension.style.expressions.dsl.generated.any
 import java.lang.ref.WeakReference
+import kotlin.system.exitProcess
 
 /**
  * Главная активность механизма авторизации пользователя
@@ -26,6 +28,7 @@ class AuthActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         binding = ActivityAuthBinding.inflate(layoutInflater)
         setContentView(binding.root)
         locationPermissionHelper = LocationPermissionHelper(WeakReference(this))
@@ -55,7 +58,9 @@ class AuthActivity : AppCompatActivity() {
     override fun onBackPressed() {
         when(binding.fragmentContainerView.findNavController().currentDestination?.id){
             R.id.signInFragment -> {
-                startNewActivity(MainActivity::class.java)
+                // Обработка завершения работы Android-приложения
+                finish()
+                exitProcess(0)
             }
             R.id.signUpFragment -> {
                 binding.fragmentContainerView.findNavController().navigate(R.id.action_signUpFragment_to_signInFragment)

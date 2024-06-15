@@ -1,7 +1,7 @@
 package com.main.netman.constants.network.auth
 
 object AuthApiConstants {
-    private const val BASE = "/auth"
+    private const val BASE = "/api/auth"
     const val SIGN_UP = "${BASE}/sign-up"
     const val SIGN_IN = "${BASE}/sign-in"
     const val LOGOUT = "${BASE}/logout"

@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.main.netman.components.HideKeyboardRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_color"
-    tools:context=".containers.auth.fragments.SignUpFragment">
+    tools:context=".containers.auth.fragments.SignInFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="16dp">
+        android:layout_height="match_parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -26,7 +25,7 @@
             <TextView
                 android:id="@+id/titleText"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_height="50sp"
                 android:fontFamily="@font/proxima_soft_medium"
                 android:text="@string/sign_up_title2"
                 android:textColor="@color/white"
@@ -36,7 +35,6 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
                 android:orientation="vertical">
 
                 <TextView
@@ -129,7 +127,7 @@
                     android:id="@+id/btnAuth"
                     style="@style/ButtonBlueStyle"
                     android:layout_width="match_parent"
-                    android:layout_marginTop="32dp"
+                    android:layout_marginTop="48dp"
                     android:text="Зарегистрироваться"
                     tools:ignore="DuplicateSpeakableTextCheck" />
 
@@ -151,18 +149,18 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:fontFamily="@font/proxima_soft_medium"
-                            android:text="Нет аккаунта?"
+                            android:text="Уже есть аккаунт?"
                             android:textColor="@color/white"
                             android:textSize="14sp"
                             app:lineHeight="14sp" />
 
                         <TextView
-                            android:id="@+id/txtSignUp"
+                            android:id="@+id/txtSignIn"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="16dp"
                             android:fontFamily="@font/proxima_soft_medium"
-                            android:text="Зарегистрироваться"
+                            android:text="Войти"
                             android:textColor="@color/white"
                             android:textSize="14sp"
                             app:lineHeight="14sp" />
@@ -183,4 +181,4 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-</RelativeLayout>
+</com.main.netman.components.HideKeyboardRelativeLayout>

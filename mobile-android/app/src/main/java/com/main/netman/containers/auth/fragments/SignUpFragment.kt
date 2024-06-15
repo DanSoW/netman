@@ -36,6 +36,7 @@ class SignUpFragment : BaseFragment<AuthViewModel, FragmentSignUpBinding, AuthRe
     // который обозначает что содержащая его активность вызвала
     // метод onCreate() и полностью создалась, таким образом
     // предоставив возможность использовать данные активности
+    @Deprecated("Deprecated in Java")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
@@ -103,8 +104,8 @@ class SignUpFragment : BaseFragment<AuthViewModel, FragmentSignUpBinding, AuthRe
             signUp()
         }
 
-        binding.txtSignUp.setOnClickListener {
-            navigation(R.id.action_signInFragment_to_signUpFragment)
+        binding.txtSignIn.setOnClickListener {
+            navigation(R.id.action_signUpFragment_to_signInFragment)
         }
     }
 

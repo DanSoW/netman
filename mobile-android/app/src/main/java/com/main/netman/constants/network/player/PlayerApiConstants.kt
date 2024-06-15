@@ -1,7 +1,7 @@
 package com.main.netman.constants.network.player
 
 object PlayerApiConstants {
-    private const val BASE = "/player"
+    private const val BASE = "/api/player"
     const val PLAYER_INFO = "${BASE}/info"
     const val PLAYER_INFO_UPDATE = "${BASE}/info/update"
     const val PLAYER_INFO_IMG = "${BASE}/info/img"

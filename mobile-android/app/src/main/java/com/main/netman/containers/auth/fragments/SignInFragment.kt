@@ -1,6 +1,7 @@
 package com.main.netman.containers.auth.fragments
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.main.netman.R
@@ -17,6 +18,8 @@ import androidx.lifecycle.lifecycleScope
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.main.netman.MainActivity
+import com.main.netman.constants.network.auth.AuthApiConstants
+import com.main.netman.constants.network.main.MainNetworkConstants
 import com.main.netman.models.auth.AuthSignInModel
 import com.main.netman.models.error.ErrorModel
 import com.main.netman.network.apis.AuthApi
@@ -34,6 +37,7 @@ class SignInFragment : BaseFragment<AuthViewModel, FragmentSignInBinding, AuthRe
     // который обозначает что содержащая его активность вызвала
     // метод onCreate() и полностью создалась, таким образом
     // предоставив возможность использовать данные активности
+    @Deprecated("Deprecated in Java")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
@@ -67,17 +71,23 @@ class SignInFragment : BaseFragment<AuthViewModel, FragmentSignInBinding, AuthRe
                             requireActivity().startNewActivity(MainActivity::class.java)
                         }
                     } else {
-                        val error = Gson().fromJson(
-                            it.value.errorBody()?.string().toString(),
-                            ErrorModel::class.java
-                        )
+                        if(it.value.code() == 404) {
+                            handleErrorMessage(
+                                it.value.message()
+                            )
+                        } else {
+                            val error = Gson().fromJson(
+                                it.value.errorBody()?.string().toString(),
+                                ErrorModel::class.java
+                            )
 
-                        handleErrorMessage(
-                            if (error.errors != null && error.errors!!.isNotEmpty())
-                                error.errors?.first()!!.msg
-                            else
-                                error.message!!
-                        )
+                            handleErrorMessage(
+                                if (error.errors != null && error.errors!!.isNotEmpty())
+                                    error.errors?.first()!!.msg
+                                else
+                                    error.message!!
+                            )
+                        }
                     }
                 }
 
