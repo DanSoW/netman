@@ -1364,13 +1364,9 @@
     RefreshDto: 
       required: 
         - "refresh_token"
-        - "type_auth"
       properties: 
         refresh_token: 
           type: "string"
-          description: ""
-        type_auth: 
-          type: "number"
           description: ""
     RoleDto: 
       properties: 
@@ -2148,37 +2144,13 @@
           description: ""
     PlayerInfoUpdateDto: 
       required: 
-        - "old_email"
-        - "new_email"
-        - "name"
-        - "surname"
+        - "email"
         - "nickname"
-        - "phone_num"
-        - "location"
-        - "date_birthday"
       properties: 
-        old_email: 
-          type: "string"
-          description: ""
-        new_email: 
-          type: "string"
-          description: ""
-        name: 
-          type: "string"
-          description: ""
-        surname: 
+        email: 
           type: "string"
           description: ""
         nickname: 
-          type: "string"
-          description: ""
-        phone_num: 
-          type: "string"
-          description: ""
-        location: 
-          type: "string"
-          description: ""
-        date_birthday: 
           type: "string"
           description: ""
     PlayerStatisticsDto: 

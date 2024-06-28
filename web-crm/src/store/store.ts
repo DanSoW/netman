@@ -16,6 +16,7 @@ import storage from "redux-persist/lib/storage";
 import messageQueueReducer from "./reducers/MessageQueueSlice";
 import authReducer from "./reducers/AuthSlice";
 import markReducer from "./reducers/Map/MarkSlice";
+import iCreatorReducer from "./reducers/Creator/internal/ICreatorSlice";
 
 /* Константы */
 import ConfigApp from "src/config/config.app";
@@ -24,7 +25,8 @@ import ConfigApp from "src/config/config.app";
 const rootReducer = combineReducers({
   messageQueueReducer,
   authReducer,
-  markReducer
+  markReducer,
+  iCreatorReducer
 });
 
 // Конфигурация Persist
@@ -33,7 +35,8 @@ const persistConfig = {
   storage,
   blacklist: [
     "messageQueueReducer",
-    "markReducer"
+    "markReducer",
+    "iCreatorReducer"
   ],
 };
 

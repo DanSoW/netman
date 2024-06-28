@@ -4,31 +4,35 @@ import Input from "src/components/UI/Input";
 import TextArea from "src/components/UI/TextArea";
 import InputRange from "src/components/UI/InputRange";
 import Button from "src/components/UI/Button";
-import { useAppDispatch } from "src/hooks/redux.hook";
+import { useAppDispatch, useAppSelector } from "src/hooks/redux.hook";
 import messageQueueAction from "src/store/actions/MessageQueueAction";
 import { InputValueType } from "src/types/input";
+import { IMarkModel } from "src/models/IMarkModel";
+import { IQuestDataModel } from "src/models/IQuestModel";
+import { v4 } from "uuid";
+import ICreatorAction from "src/store/actions/Creator/internal/ICreatorAction";
+import { FunctionVOID } from "src/types/function";
 
-export interface IQuestForm {
-    hint: string;
-    task: string;
-    action: string;
-    radius: number;
+export interface IQuestParamsProps {
+    dataQuest: IQuestDataModel;
+    setDataQuest: React.Dispatch<React.SetStateAction<IQuestDataModel>>;
+    selectMark: IMarkModel;
+    clearSelectMark: FunctionVOID;
+    clearDataQuest: FunctionVOID;
 }
 
-const QuestParams: FC<any> = () => {
+const QuestParams: FC<IQuestParamsProps> = (props) => {
+    const {
+        selectMark, dataQuest, setDataQuest,
+        clearSelectMark, clearDataQuest
+    } = props;
+    const iCreatorSelector = useAppSelector((s) => s.iCreatorReducer);
     const dispatch = useAppDispatch();
-
-    const [form, setForm] = useState<IQuestForm>({
-        hint: "",
-        task: "",
-        action: "",
-        radius: 0
-    });
 
     const inputChangeHandler = (type: string) => {
         return (value: InputValueType) => {
-            setForm({
-                ...form,
+            setDataQuest({
+                ...dataQuest,
                 [type]: (type === "radius") ? Number(value) : value
             });
         };
@@ -41,30 +45,39 @@ const QuestParams: FC<any> = () => {
                     <Input
                         label="Местоположение"
                         readOnly={true}
+                        defaultValue={selectMark.location}
+                        required
                     />
                     <Input
                         name="hint"
                         label="Подсказка"
-                        defaultValue={form.hint}
+                        defaultValue={dataQuest.hint}
                         changeHandler={inputChangeHandler("hint")}
+                        required
                     />
                     <TextArea
                         name="task"
                         label="Задача"
-                        defaultValue={form.task}
+                        defaultValue={dataQuest.task}
                         changeHandler={inputChangeHandler("task")}
+                        title="Основная задача (какова цель?)"
+                        required
                     />
                     <TextArea
                         name="action"
                         label="Действие"
-                        defaultValue={form.action}
+                        defaultValue={dataQuest.action}
                         changeHandler={inputChangeHandler("action")}
+                        title="Конкретное действие (что именно нужно сделать?)"
+                        required
                     />
                     <InputRange
                         name="radius"
                         label="Радиус действия"
-                        defaultValue={form.radius} 
+                        defaultValue={dataQuest.radius}
                         changeHandler={inputChangeHandler("radius")}
+                        title="В рамках этого радиуса пользователь сможет определить квест"
+                        required
                     />
                 </div>
 
@@ -72,11 +85,37 @@ const QuestParams: FC<any> = () => {
                     <Button
                         label="Очистить"
                         clickHandler={() => {
+                            clearSelectMark();
+                            clearDataQuest();
+
                             dispatch(messageQueueAction.addMessage(null, "dark", "Форма очищена"));
                         }}
                     />
                     <Button
-                        label="Создать"
+                        label={(dataQuest.id) ? "Изменить" : "Добавить"}
+                        clickHandler={() => {
+                            const index = iCreatorSelector.quests.findIndex((value) => {
+                                return value.id === selectMark.id
+                            });
+
+                            if (index >= 0) {
+                                dispatch(messageQueueAction.addMessage(null, "error", "Квест с данной меткой уже добавлен!"));
+                                return;
+                            }
+
+                            const data = {
+                                ...dataQuest,
+                                mark: selectMark,
+                                id: selectMark.id
+                            };
+
+                            dispatch(ICreatorAction.addQuest(data, () => {
+                                clearSelectMark();
+                                clearDataQuest();
+
+                                dispatch(messageQueueAction.addMessage(null, "success", "Квест добавлен!"));
+                            }));
+                        }}
                     />
                 </div>
             </div>

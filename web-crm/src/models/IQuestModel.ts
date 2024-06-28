@@ -1,3 +1,5 @@
+import { IMarkModel } from "./IMarkModel";
+
 export interface IQuestModel {
   id: number;
   location: string;
@@ -11,8 +13,13 @@ export interface IQuestModel {
 }
 
 export interface IQuestDataModel {
+  id?: number;
   task: string;
   action: string;
   radius: number;
   hint: string;
+}
+
+export interface IQuestData extends IQuestDataModel {
+  mark: IMarkModel;
 }

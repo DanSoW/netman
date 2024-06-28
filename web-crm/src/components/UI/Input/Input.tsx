@@ -14,6 +14,8 @@ export interface IInputProps {
     delay?: number;
     customClass?: string;
     readOnly?: boolean;
+    maxLength?: number;
+    required?: boolean;
 }
 
 const Input: FC<IInputProps> = (props) => {
@@ -21,6 +23,7 @@ const Input: FC<IInputProps> = (props) => {
         title, label, type = "text",
         defaultValue = '', name, changeHandler,
         delay = 0, customClass, readOnly = false,
+        maxLength, required
     } = props;
 
     const [value, setValue] = useState<InputValueType>('');
@@ -59,15 +62,24 @@ const Input: FC<IInputProps> = (props) => {
     return (
         <>
             <div className={styles.container}>
-                {label && <span className={styles.label}>{label}</span>}
+                {
+                    label &&
+                    <span
+                        className={styles.label}
+                        title={title}
+                    >
+                        {label}{(required) ? ' *' : ''}
+                    </span>
+                }
                 <input
                     name={name}
                     className={cn(styles.input, customClass)}
-                    title={title}
                     type={type}
                     value={value}
                     onChange={inputChangeHandler}
                     readOnly={readOnly}
+                    maxLength={maxLength}
+                    required={required}
                 />
             </div>
         </>

@@ -110,17 +110,9 @@ router.post(
     [
         authMiddleware,
         check('users_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 }),
-        check('new_email', 'Введите корректный email').isEmail(),
-        check('old_email', 'Введите корректный email').isEmail(),
-        check('phone_num', 'Некорректный номер телефона').isMobilePhone("ru-RU"),
-        check('location', 'Максимальная длина местоположение не может быть меньше 3 символов')
-            .isLength({ min: 3 }),
+        check('email', 'Введите корректный email').isEmail(),
         check('nickname', 'Минимальная длина для никнейма равна 2 символам')
             .isLength({ min: 2 }),
-        check('name', 'Минимальная длина для имени равна 2 символам')
-            .isLength({ min: 2 }),
-        check('surname', 'Минимальная длина для фамилии равна 2 символам')
-            .isLength({ min: 2 })
     ],
     playerController.infoUpdate
 );

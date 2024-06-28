@@ -1,4 +1,4 @@
-export const MAIN_SERVER_API = "http://localhost:5000"
+export const MAIN_SERVER_API = "http://localhost:5000/api"
 
 const MainApi = {
     MAIN_SERVER: MAIN_SERVER_API,

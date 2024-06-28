@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useCallback, useEffect, useState } from "react";
 import NetmanPng from "src/assets/images/netman.png";
 import styles from "./SignInPage.module.scss";
 import Input from "src/components/UI/Input";
@@ -37,11 +37,35 @@ const SignInPage: FC<any> = () => {
   };
 
   const clickSignIn = () => {
+    if(form.email.trim().length === 0) {
+      dispatch(messageQueueAction.addMessage(null, "error", "Необходимо ввести почтовый адрес"));
+      return;
+    }
+
+    if(form.password.trim().length === 0) {
+      dispatch(messageQueueAction.addMessage(null, "error", "Необходимо ввести пароль"));
+      return;
+    }
+
     dispatch(AuthAction.signIn(form, () => {
       dispatch(messageQueueAction.addMessage(null, "success", "Успешная авторизация пользователя!"));
       navigate(BaseRoute.HOME);
     }));
   };
+
+  const clickEnter = useCallback((e) => {
+    if (e.key === 'Enter' || e.keyCode === 13) {
+      clickSignIn();
+    }
+  }, [form]);
+
+  useEffect(() => {
+    document.addEventListener("keydown", clickEnter);
+
+    return () => {
+      document.removeEventListener("keydown", clickEnter);
+    }
+  }, [clickEnter]);
 
   return (
     <>

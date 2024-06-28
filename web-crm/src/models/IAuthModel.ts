@@ -3,8 +3,13 @@ import { VOID_NULL } from "src/types/void_null";
 export interface IAuthModel {
   access_token: string | VOID_NULL;
   refresh_token: string | VOID_NULL;
-  type_auth: number | VOID_NULL;
-  modules: IAuthModules | VOID_NULL;
+  roles: IAuthRole[];
+}
+
+export interface IAuthRole {
+  id: number;
+  value: string;
+  priority: number;
 }
 
 export interface IAuthData {

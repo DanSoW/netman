@@ -12,3 +12,7 @@
   font-size: 18px;
   height: 128px;
 }
+
+.label {
+  cursor: default;
+}

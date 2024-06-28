@@ -16,6 +16,7 @@ export interface IInputRangeProps {
     readOnly?: boolean;
     min?: number;
     max?: number;
+    required?: boolean;
 }
 
 const InputRange: FC<IInputRangeProps> = (props) => {
@@ -23,7 +24,7 @@ const InputRange: FC<IInputRangeProps> = (props) => {
         title, label, type = "text",
         defaultValue = '', name, changeHandler,
         delay = 0, customClass, readOnly = false,
-        min = 1, max = 50
+        min = 1, max = 50, required
     } = props;
 
     const [value, setValue] = useState<InputValueType>('');
@@ -56,18 +57,29 @@ const InputRange: FC<IInputRangeProps> = (props) => {
 
     // Обработка изменения данных в Input
     const inputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (readOnly) {
+            return;
+        }
+
         setValue(e.target.value);
     };
 
     return (
         <>
             <div className={styles.container}>
-                {label && <span className={styles.label}>{label}</span>}
+                {
+                    label &&
+                    <span
+                        className={styles.label}
+                        title={title}
+                    >
+                        {label}{(required) ? ' *' : ''}
+                    </span>
+                }
                 <output>{value}</output>
                 <input
                     name={name}
                     className={cn(styles.input, customClass)}
-                    title={title}
                     readOnly={readOnly}
                     type="range"
                     min={min}

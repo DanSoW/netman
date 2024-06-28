@@ -6,6 +6,7 @@ import db from '../../db/index.js';
 import FlagDto from '../../dtos/response/flag-dto.js';
 import "../../utils/array.js";
 import fs from 'fs';
+import { isUndefinedOrNull } from '../../utils/objector.js';
 
 /* Сервис управления картами */
 class PlayerService {
@@ -17,6 +18,7 @@ class PlayerService {
     async gameStatus(data) {
         try {
             const { users_id } = data;
+
             const fixedJudges = await db.FixJudges.findOne({
                 where: {
                     users_id: users_id
@@ -111,11 +113,6 @@ class PlayerService {
     async playerInfo(data) {
         try {
             const { users_id } = data;
-            const user = await db.Users.findOne({ where: { id: users_id } });
-
-            if (!user) {
-                throw ApiError.NotFound("Пользователя с данным идентификатором не найдено");
-            }
 
             const dataUser = await db.DataUsers.findOne({ where: { users_id: users_id } });
             dataUser.dataValues.data_players = (await db.DataPlayers.findOne({
@@ -143,48 +140,59 @@ class PlayerService {
         const t = await db.sequelize.transaction();
 
         try {
-            const { users_id, old_email, new_email, name,
-                surname, nickname, phone_num, location,
-                date_birthday } = data;
-            const user = await db.Users.findOne({ where: { id: users_id, email: old_email } });
+            const { users_id, nickname, email } = data;
+            const user = await db.Users.findOne({
+                where: {
+                    id: users_id
+                }
+            });
 
             if (!user) {
                 throw ApiError.NotFound("Пользователя с данным идентификатором не найдено");
             }
 
-            const userNew = await db.Users.findOne({ where: { email: new_email } });
+            const userData = await db.DataUsers.findOne({
+                where: {
+                    users_id: users_id
+                }
+            });
 
-            if ((user) && (userNew) && (user.id != userNew.id)) {
-                throw ApiError.BadRequest(`Почтовый адрес ${new_email} уже существует`);
+            if (!userData) {
+                throw ApiError.NotFound("Данных у пользователя не существует!");
             }
 
-            const userNickname = await db.DataUsers.findOne({ where: { nickname: nickname }});
-            if ((userNickname) && (userNickname.users_id != user.id)) {
-                throw ApiError.BadRequest(`Никнейм ${nickname} уже существует`);
-            }
-            
-            let updateValues = {
-                name: name,
-                surname: surname,
-                nickname: nickname,
-                phone_num: phone_num,
-                location: location,
-                // date_birthday: new Date(date_birthday)
+            const userEmail = await db.Users.findOne({
+                where: {
+                    email: email
+                }
+            });
+
+            if (userEmail && (userEmail.id !== user.id)) {
+                throw ApiError.BadRequest(`Пользователь с почтовым адресом ${email} уже существует`);
             }
 
-            // Обновление персональных данных пользователя
-            await db.DataUsers.update(updateValues, { where: { users_id: users_id }, transaction: t });
-
-            if ((user) && (!userNew)) {
-                user.email = new_email;
-                await user.update({ transaction: t });
+            if (email !== user.email) {
+                user.email = email;
             }
+
+            const userNickname = await db.DataUsers.findOne({ where: { nickname: nickname } });
+            if (userNickname && (userNickname.users_id !== user.id)) {
+                throw ApiError.BadRequest(`Пользователь с никнеймом ${nickname} уже существует`);
+            }
+
+            if (nickname !== userData.nickname) {
+                userData.nickname = nickname;
+            }
+
+            await user.update({ transaction: t });
+            await userData.update({ transaction: t });
 
             await t.commit();
 
             return {
-                ...updateValues,
-                users_id: users_id
+                users_id: users_id,
+                nickname: nickname,
+                email: email
             }
         } catch (e) {
             await t.rollback();
@@ -233,7 +241,7 @@ class PlayerService {
             });
 
             if ((dataUser) && (dataUser.ref_image) && (dataUser.ref_image.length > 0)) {
-                if(fs.existsSync(dataUser.ref_image)){
+                if (fs.existsSync(dataUser.ref_image)) {
                     return {
                         url: `${config.get("url.api")}/${dataUser.ref_image}`
                     };

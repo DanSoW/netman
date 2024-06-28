@@ -5,6 +5,7 @@ import oauthService from '../services/token/oauth-service.js';
 import jwtService from '../services/token/jwt-service.js';
 import CookieKeys from '../constants/values/cookie-keys.js';
 import jwt from 'jsonwebtoken';
+import { isUndefinedOrNull } from '../utils/objector.js';
 
 /**
  * Middleware для проверки авторизационных данных пользователя
@@ -29,51 +30,41 @@ const authMiddleware = async function (req, res, next) {
         }
 
         const userData = jwtService.validateAccessToken(accessToken);
-        /*switch (Number(authData[1])) {
-            case 0: {
-                // Авторизация с помощью сервиса NetMan (обычная авторизация)
-                userData = jwtService.validateAccessToken(accessToken);
-                break;
-            }
+        if (!userData) {
+            return next(ApiError.UnathorizedError());
+        }
 
-            case 1: {
-                // Авторизация с помощью сервиса Google OAuth2
-                userData = await oauthService.validateAccessToken(accessToken);
-                const candidat = await db.Users.findOne({
-                    where: {
-                        email: userData.email
-                    }
-                });
-                userData.users_id = candidat.id;
-
-                break;
+        const user = await db.Users.findOne({
+            where: {
+                id: userData.users_id
             }
-        }*/
+        });
+
+        if (!user) {
+            return next(ApiError.NotFound("Пользователя с данным идентификатором не существует"));
+        }
 
         // Поиск токена доступа по определённому ID пользователя (для предотвращения подделки токенов доступа)
         const findToken = await tokenService.findTokenByAccessToken(userData.users_id, accessToken);
 
-        if ((!userData) || (!findToken)) {
+        if (!findToken) {
             return next(ApiError.UnathorizedError());
         }
 
+        /*
         const refreshToken = req.cookies[CookieKeys.refreshToken];
 
         if (!refreshToken) {
-            // return next(ApiError.UnathorizedError());
-        }
+            return next(ApiError.UnathorizedError());
+        } 
+        */
 
-        const user = await db.Users.findOne({ where: { id: userData.users_id } });
-
-        if (!user) {
-            return next(ApiError.NotFound("Пользователя с данным идентификатором не найдено"));
-        }
+        // req.body.refresh_token = findToken.refresh_token;
 
         // Встраивание дополнительных полей в тело запроса
         req.body.users_id = userData.users_id;
         req.body.type_auth = userData.type_auth;
-        req.body.refresh_token = findToken.refresh_token;
-        
+
         next();
     } catch (e) {
         return next(ApiError.UnathorizedError());

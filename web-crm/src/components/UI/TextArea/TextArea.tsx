@@ -13,13 +13,14 @@ export interface ITextAreaProps {
     delay?: number;
     customClass?: string;
     readOnly?: boolean;
+    required?: boolean;
 }
 
 const TextArea: FC<ITextAreaProps> = (props) => {
     const {
-        title, label, defaultValue = '', 
-        name, changeHandler, delay = 0, 
-        customClass, readOnly = false,
+        title, label, defaultValue = '',
+        name, changeHandler, delay = 0,
+        customClass, readOnly = false, required
     } = props;
 
     const [value, setValue] = useState<InputValueType>('');
@@ -58,11 +59,18 @@ const TextArea: FC<ITextAreaProps> = (props) => {
     return (
         <>
             <div className={styles.container}>
-                {label && <span className={styles.label}>{label}</span>}
+                {
+                    label &&
+                    <span
+                        className={styles.label}
+                        title={title}
+                    >
+                        {label}{(required) ? ' *' : ''}
+                    </span>
+                }
                 <textarea
                     name={name}
                     className={cn(styles.input, customClass)}
-                    title={title}
                     value={value}
                     onChange={inputChangeHandler}
                     readOnly={readOnly}

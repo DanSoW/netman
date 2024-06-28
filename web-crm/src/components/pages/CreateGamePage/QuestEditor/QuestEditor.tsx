@@ -13,6 +13,7 @@ import QuestParams from "../QuestParams";
 const scaleFactor = 0.5;
 
 const QuestEditor: FC<any> = () => {
+    const iCreatorSelector = useAppSelector((s) => s.iCreatorReducer);
     const markSelector = useAppSelector((s) => s.markReducer);
     const dispatch = useAppDispatch();
 
@@ -20,13 +21,28 @@ const QuestEditor: FC<any> = () => {
         location: "Выберите метку на карте",
     });
 
+    const clearSelectMark = () => {
+        setSelectMark({
+            location: "Выберите метку на карте"
+        });
+    };
+
     const [dataQuest, setDataQuest] = useState<IQuestDataModel>({
         task: "",
         action: "",
         radius: 1,
         hint: ""
     });
-    const [listQuests, setListQuests] = useState<IQuestModel[]>([]);
+
+    const clearDataQuest = () => {
+        setDataQuest({
+            id: undefined,
+            task: "",
+            action: "",
+            radius: 1,
+            hint: ""
+        });
+    };
 
     /**
      * Поиск квеста по заданным координатам (lat; lng)
@@ -36,8 +52,10 @@ const QuestEditor: FC<any> = () => {
      */
     const findQuestByLatLng = (lat, lng) => {
         let index = -1;
-        for (let i = 0; i < listQuests.length; i++) {
-            if (listQuests[i].lat == lat && listQuests[i].lng == lng) {
+        for (let i = 0; i < iCreatorSelector.quests.length; i++) {
+            const item = iCreatorSelector.quests[i];
+
+            if ((item.mark.lat == lat) && (item.mark.lng == lng)) {
                 index = i;
                 break;
             }
@@ -83,17 +101,23 @@ const QuestEditor: FC<any> = () => {
         }
 
         let index = findQuestByLatLng(marker.lat, marker.lng);
+
         if (index >= 0) {
+            const quest = iCreatorSelector.quests[index];
+
             setDataQuest({
-                task: listQuests[index].task,
-                action: listQuests[index].action,
-                radius: listQuests[index].radius,
-                hint: listQuests[index].hint,
+                task: quest.task,
+                action: quest.action,
+                radius: quest.radius,
+                hint: quest.hint,
+                id: quest.id
             });
 
             /*setBlockEditQuest({
                 display: "grid",
             });*/
+        } else {
+            clearDataQuest();
         }
 
         setSelectMark({
@@ -269,7 +293,13 @@ const QuestEditor: FC<any> = () => {
                                 )}
                         </Map>
                     </div>
-                    <QuestParams />
+                    <QuestParams
+                        dataQuest={dataQuest}
+                        setDataQuest={setDataQuest}
+                        selectMark={selectMark}
+                        clearSelectMark={clearSelectMark}
+                        clearDataQuest={clearDataQuest}
+                    />
                 </div>
             </div>
 

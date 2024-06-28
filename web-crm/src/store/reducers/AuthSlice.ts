@@ -11,8 +11,7 @@ export interface IAuthSlice extends IAuthModel {
 const initialState: IAuthSlice = {
   access_token: null,
   refresh_token: null,
-  type_auth: null,
-  modules: null,
+  roles: [],
   isLoading: false,
   isAuthenticated: false,
 };
@@ -34,11 +33,10 @@ export const authSlice = createSlice({
 
     clear(state) {
       state.isLoading = false;
+      state.isAuthenticated = false;
+
       state.access_token = null;
       state.refresh_token = null;
-      state.isAuthenticated = false;
-      state.modules = null;
-      state.type_auth = null;
     },
 
     getAuthData(state) {
@@ -46,8 +44,7 @@ export const authSlice = createSlice({
 
       state.access_token = null;
       state.refresh_token = null;
-      state.modules = null;
-      state.type_auth = null;
+      state.roles = [];
 
       if (mainStore) {
         const parse = JSON.parse(mainStore) as IAuthModel;
@@ -55,8 +52,7 @@ export const authSlice = createSlice({
         if (mainStore) {
           state.access_token = parse.access_token;
           state.refresh_token = parse.refresh_token;
-          state.modules = parse.modules;
-          state.type_auth = parse.type_auth;
+          state.roles = parse.roles;
         }
 
         state.isAuthenticated = !!state.access_token;
@@ -66,8 +62,7 @@ export const authSlice = createSlice({
     setAuthData(state, action: PayloadAction<IAuthModel>) {
       state.access_token = action.payload.access_token;
       state.refresh_token = action.payload.refresh_token;
-      state.modules = action.payload.modules;
-      state.type_auth = action.payload.type_auth;
+      state.roles = action.payload.roles;
       state.isAuthenticated = !!state.access_token;
 
       const slice = state as IAuthModel;
@@ -79,8 +74,7 @@ export const authSlice = createSlice({
       state.isLoading = false;
       state.access_token = action.payload.access_token;
       state.refresh_token = action.payload.refresh_token;
-      state.modules = action.payload.modules;
-      state.type_auth = action.payload.type_auth;
+      state.roles = action.payload.roles;
       state.isAuthenticated = !!state.access_token;
 
       const slice = state as IAuthModel;
@@ -97,7 +91,7 @@ export const authSlice = createSlice({
       state.access_token = null;
       state.refresh_token = null;
       state.refresh_token = null;
-      state.modules = null;
+      state.roles = [];
       state.isAuthenticated = false;
 
       localStorage.removeItem(ConfigApp.MAIN_STORE_KEY);

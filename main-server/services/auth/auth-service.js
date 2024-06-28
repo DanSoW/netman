@@ -17,6 +17,7 @@ import SuccessDto from '../../dtos/response/success-dto.js';
 import RefreshDto from '../../dtos/auth/refresh-dto.js';
 import SignUpDto from '../../dtos/auth/sign-up-dto.js';
 import { isUndefinedOrNull } from '../../utils/objector.js';
+import roleService from '../role/role-service.js';
 
 /* Сервис авторизации пользователей */
 class AuthService {
@@ -34,7 +35,7 @@ class AuthService {
                 throw ApiError.BadRequest(`Пользователь с почтовым адресом ${data.email} уже существует`);
             }
 
-            if (data.nickname) {
+            if (data.nickname && data.nickname.trim().length > 0) {
                 const userNick = await db.DataUsers.findOne({ where: { nickname: data.nickname } });
 
                 if (userNick) {
@@ -77,7 +78,7 @@ class AuthService {
             await tokenService.saveTokens(user.id, tokens.access_token, tokens.refresh_token, t);
             const dateNow = (new Date()).toISOString().slice(0, 10);
 
-            const userNickname = isUndefinedOrNull(data.nickname) ? nanoid(12) : data.nickname;
+            const userNickname = ((isUndefinedOrNull(data.nickname)) || (data.nickname.trim().length == 0)) ? nanoid(12) : data.nickname;
 
             // Добавление информации о пользователе
             await db.DataUsers.create({
@@ -116,8 +117,7 @@ class AuthService {
             return {
                 access_token: tokens.access_token,
                 refresh_token: tokens.refresh_token,
-                roles: [(new RoleDto(role))],
-                type_auth: 0
+                roles: [(new RoleDto(role))]
             };
         } catch (e) {
             await t.rollback();
@@ -157,41 +157,8 @@ class AuthService {
                 throw ApiError.BadRequest("Неверный пароль, повторите попытку");
             }
 
-            // Список ролей из БД
-            const rolesDB = await db.UsersRoles.findAll({
-                where: {
-                    users_id: user.id
-                }
-            });
-
             // Результирующий список ролей
-            const roles = [];
-
-            if (!rolesDB || (Array.isArray(rolesDB) && (rolesDB.length == 0))) {
-                const roleUser = await db.Roles.findOne({
-                    where: {
-                        value: "user"
-                    }
-                }, { transaction: t });
-
-                if (!roleUser) {
-                    throw ApiError.InternalServerError("Роли для обычного пользователя не предусмотрено");
-                }
-
-                roles.push(new RoleDto(roleUser.dataValues));
-            } else {
-                for (let i = 0; i < rolesDB.length; i++) {
-                    const item = await db.Roles.findOne({
-                        where: {
-                            id: rolesDB[i].dataValues.roles_id
-                        }
-                    });
-
-                    if (item && roles.map((value) => value.id).includes(item.id) !== true) {
-                        roles.push(new RoleDto(item));
-                    }
-                }
-            }
+            const roles = await roleService.getRoleList(user.id, true, true, t);
 
             // Генерация токенов доступа и обновления
             const tokens = jwtService.generateTokens({
@@ -208,8 +175,7 @@ class AuthService {
             return {
                 access_token: tokens.access_token,
                 refresh_token: tokens.refresh_token,
-                roles: roles,
-                type_auth: 0
+                roles: roles
             };
         } catch (e) {
             await t.rollback();
@@ -286,167 +252,41 @@ class AuthService {
         try {
             // Декодирование токена обновления (с пользовательскими данными)
             let user = null;
+            let refreshToken = data.refresh_token;
 
-            switch (Number(data.type_auth)) {
-                case 0: {
-                    user = jwtService.validateRefreshToken(data.refresh_token);
-                    break;
-                }
+            let dataFromToken = jwtService.validateRefreshToken(refreshToken);
 
-                case 1: {
-                    const findData = await tokenService.findUserByRefreshToken(data.refresh_token, data.type_auth);
-                    user = {
-                        users_id: findData.id,
-                        email: findData.email
-                    };
+            // Обработка ситуации, когда refresh_token не активен
+            if (!dataFromToken) {
+                refreshToken = null;
+                dataFromToken = await tokenService.findUserByRefreshToken(refreshToken, 0);
 
-                    break;
+                if (!dataFromToken) {
+                    throw ApiError.NotFound("Пользователь с данным токеном обновления не найден");
                 }
             }
 
-            let candidat = null;
-            if (data.type_auth == 1) {
-                // При OAuth2 авторизации для определения внутреннего ID пользователя
-                // необходимо осуществить его поиск в базе данных
-                candidat = await db.Users.findOne({ where: { email: user.email } });
-                user.users_id = candidat.id;
+            const tokens = jwtService.generateTokens({ users_id: dataFromToken.users_id, type_auth: dataFromToken.type_auth });
+            if (!refreshToken) {
+                refreshToken = tokens.refresh_token;
             }
 
-            // Поиск записи о токене в базе данных по токену и пользовательскому ID
-            const tokenExists = await tokenService.findToken(data.refresh_token, user.users_id);
+            const accessToken = tokens.access_token;
 
-            // Проверка валидности токена
-            if ((!user) || (!tokenExists)) {
-                throw ApiError.Forbidden('Пользователь не авторизован');
+            const roles = await roleService.getRoleList(dataFromToken.users_id);
+
+            if (!accessToken || !refreshToken) {
+                throw ApiError.InternalServerError('Возникла непредвиденная ошибка');
             }
 
-            // Поиск информации о пользователе
-            if (!candidat) {
-                candidat = await db.Users.findOne({ where: { id: user.users_id } });
-            }
-
-            if (!candidat) {
-                throw ApiError.BadRequest(`Аккаунта с почтовым адресом ${email} не существует`);
-            }
-
-            // Определение типа вторизации
-            const authType = await db.AuthTypes.findOne({
-                where: {
-                    users_id: candidat.id
-                }
-            });
-
-            if (authType.type !== data.type_auth) {
-                throw ApiError.BadRequest('Была осуществлена модификация аутентификационных данных. Необходимо авторизоваться заново');
-            }
-
-            // Логика определения прав доступа
-            const candidatAttributes = await db.UsersAttributes.findOne({ where: { users_id: candidat.id } });
-            const candidatModules = await db.UsersModules.findOne({ where: { users_id: candidat.id } });
-            const candidatGroup = await db.Roles.findOne({ where: { users_id: candidat.id } });
-            let candidatGroupModules = null;
-            let candidatGroupAttributes = null;
-
-            let resultModules = {
-                player: false,
-                judge: false,
-                creator: false,
-                moderator: false,
-                manager: false,
-                admin: false,
-                super_admin: false
-            };
-
-            let resultAttributes = {
-                read: false,
-                write: false,
-                update: false,
-                delete: false
-            };
-
-            if (candidatGroup && candidatGroup.id) {
-                candidatGroupModules = await db.GroupsModules.findOne({ where: { users_groups_id: candidatGroup.id } });
-                candidatGroupAttributes = await db.GroupsAttributes.findOne({ where: { users_groups_id: candidatGroup.id } });
-
-                if ((!candidatGroupModules) && (candidatGroupAttributes)) {
-                    throw ApiError.InternalServerError('В группе пользователей нет данных о доступных модулях');
-                } else if ((candidatGroupModules) && (!candidatGroupAttributes)) {
-                    throw ApiError.InternalServerError('В группе пользователей нет данных о атрибутах действий');
-                } else {
-                    resultModules = {
-                        player: candidatGroupModules.player,
-                        judge: candidatGroupModules.judge,
-                        creator: candidatGroupModules.creator,
-                        moderator: candidatGroupModules.moderator,
-                        manager: candidatGroupModules.manager,
-                        admin: candidatGroupModules.admin,
-                        super_admin: candidatGroupModules.super_admin
-                    };
-
-                    resultAttributes = {
-                        read: candidatGroupAttributes.read,
-                        write: candidatGroupAttributes.write,
-                        update: candidatGroupAttributes.dataValues.update,
-                        delete: candidatGroupAttributes.delete
-                    };
-                }
-            }
-
-            if ((!candidat) || (!candidatAttributes) || (!candidatModules)) {
-                throw ApiError.NotFound('Данный пользователь не зарегистрирован');
-            }
-
-            //определение доступа пользователя к функциональным модулям
-            resultModules = {
-                player: (candidatModules.player || resultModules.player),
-                judge: (candidatModules.judge || resultModules.judge),
-                creator: (candidatModules.creator || resultModules.creator),
-                moderator: (candidatModules.moderator || resultModules.moderator),
-                manager: (candidatModules.manager || resultModules.manager),
-                admin: (candidatModules.admin || resultModules.admin),
-                super_admin: (candidatModules.super_admin || resultModules.super_admin)
-            };
-
-            // Определение действий пользователя в функциональных модулях
-            resultAttributes = {
-                read: (candidatAttributes.read || resultAttributes.read),
-                write: (candidatAttributes.write || resultAttributes.write),
-                update: (candidatAttributes.dataValues.update || resultAttributes.update),
-                delete: (candidatAttributes.delete || resultAttributes.delete)
-            };
-
-            let accessToken = null;
-            // Логика обновления токенов доступа по токенам обновления
-            switch (authType.type) {
-                case 0: {
-                    accessToken = jwtService.generateTokens({ users_id: candidat.id }).access_token;
-                    break;
-                }
-
-                case 1: {
-                    accessToken = oauthService.refreshAccessToken(data.refresh_token);
-                    break;
-                }
-            }
-
-            if (!accessToken) {
-                throw ApiError.UnathorizedError('Необходима авторизация');
-            }
-
-            await tokenService.saveTokens(candidat.id, accessToken, data.refresh_token, t);
+            await tokenService.saveTokens(dataFromToken.users_id, accessToken, refreshToken, t);
 
             await t.commit();
 
             return {
                 access_token: accessToken,
-                refresh_token: data.refresh_token,
-                modules: {
-                    ...(new RoleDto(resultModules))
-                },
-                attributes: {
-                    ...(new AttributeDto(resultAttributes))
-                },
-                type_auth: data.type_auth
+                refresh_token: refreshToken,
+                roles: roles
             };
         } catch (e) {
             await t.rollback();

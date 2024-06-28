@@ -103,8 +103,7 @@ class RemoteDataSource {
                 // Формируем данные для отправки запроса (берём их из локального хранилища)
                 val requestBody = Gson().toJson(
                     AuthRefreshModel(
-                        refreshToken = auth.refreshToken!!,
-                        typeAuth = auth.typeAuth!!
+                        refreshToken = auth.refreshToken!!
                     )
                 ).toRequestBody("application/json".toMediaTypeOrNull())
 

@@ -70,7 +70,7 @@ class AuthManagementService {
                 }
             }
 
-            const priorityThanZero = roles.indexOf((item) => {
+            const priorityThanZero = roles.findIndex((item) => {
                 return item.priority > 0;
             });
 

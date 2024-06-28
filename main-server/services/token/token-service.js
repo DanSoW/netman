@@ -16,7 +16,7 @@ class TokenService {
      * @param {*} t Транзакция
      * @returns Токены доступа и обновления, сохранённые в БД
      */
-    async saveTokens(userId, accessToken, refreshToken, t){
+    async saveTokens(userId, accessToken, refreshToken, t) {
         // Получение конкретной записи о токене пользователя из БД
         let token = await db.Tokens.findOne({
             where: {
@@ -25,7 +25,7 @@ class TokenService {
         });
 
         // Перезапись данных токена, в случае если он был найден
-        if(token){
+        if (token) {
             token.access_token = accessToken;
             token.refresh_token = refreshToken;
 
@@ -47,12 +47,12 @@ class TokenService {
      * @param {int} userId Идентификатор пользователя
      * @returns Удалённый объект модели Tokens
      */
-    async removeTokenByUserId(userId, t){
+    async removeTokenByUserId(userId, t) {
         return await db.Tokens.destroy({
             where: {
                 users_id: userId
             }
-        }, { transaction: t});
+        }, { transaction: t });
     }
 
     /**
@@ -73,7 +73,7 @@ class TokenService {
      * @param {int} userId Идентификатор пользователя
      * @returns Найденный объект модели Tokens
      */
-    async findTokenByUserId(userId){
+    async findTokenByUserId(userId) {
         return await db.Tokens.findOne({
             where: {
                 users_id: userId
@@ -100,7 +100,7 @@ class TokenService {
      * @param {string} accessToken Токен доступа
      * @returns Найденный объект типа Tokens
      */
-    async findTokenByAccessToken(userId, accessToken){
+    async findTokenByAccessToken(userId, accessToken) {
         return await db.Tokens.findOne({
             where: {
                 users_id: userId,
@@ -115,24 +115,26 @@ class TokenService {
      * @param {int} authType Тип авторизации
      * @returns Найденный объект модели Users
      */
-    async findUserByRefreshToken(refreshToken, authType){
+    async findUserByRefreshToken(refreshToken, authType) {
         let token = await db.Tokens.findOne({
             where: {
                 refresh_token: refreshToken
             }
         });
 
-        if(token){
-            const authData = await db.AuthTypes.findOne({
-                where: {
-                    type: authType,
-                    users_id: token.users_id
-                }
-            });
+        if (!token) {
+            return null;
+        }
 
-            if(!authData){
-                return false;
+        const authData = await db.AuthTypes.findOne({
+            where: {
+                type: authType,
+                users_id: token.users_id
             }
+        });
+
+        if (!authData) {
+            return null;
         }
 
         const user = await db.Users.findOne({
@@ -141,9 +143,13 @@ class TokenService {
             }
         });
 
+        if (!user) {
+            return null;
+        }
+
         return {
-            id: user.id,
-            email: user.email
+            users_id: user.id,
+            type_auth: authType
         };
     }
 
@@ -155,7 +161,7 @@ class TokenService {
      * @param {int} type_auth Тип авторизации
      * @returns Результат проверки существования пользователя
      */
-    async isExistsUser(users_id, access_token, refresh_token, type_auth){
+    async isExistsUser(users_id, access_token, refresh_token, type_auth) {
         const token = await db.Tokens.findOne({
             where: {
                 users_id: users_id,
@@ -179,7 +185,7 @@ class TokenService {
      * @param {string} token Токен доступа
      * @returns {boolean} Результат проверки токена
      */
-    async checkAccessToken(token)  {
+    async checkAccessToken(token) {
         try {
             // Попытка верифицировать токен JWT
             jwt.verify(token, process.env.JWT_ACCESS_SECRET);
@@ -196,11 +202,11 @@ class TokenService {
                 .then(json => {
                     verified_email = json.verified_email;
                 });
-    
+
             if (!verified_email) {
                 return false;
             }
-    
+
             return true;
         }
     }

@@ -8,12 +8,13 @@ export interface IButtonProps {
     clickHandler?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
     width?: number;
     height?: number;
+    disabled?: boolean;
 }
 
 const Button: FC<IButtonProps> = (props) => {
     const {
         customClass, label, clickHandler,
-        width, height
+        width, height, disabled
     } = props;
 
     return (
@@ -28,6 +29,7 @@ const Button: FC<IButtonProps> = (props) => {
                 <button
                     className={cn(styles.button, customClass)}
                     onClick={clickHandler}
+                    disabled={disabled}
                 >
                     {label}
                 </button>
