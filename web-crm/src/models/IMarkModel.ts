@@ -4,3 +4,9 @@ export interface IMarkModel {
   lng?: number;
   location?: string;
 }
+
+export interface IMark {
+  lat: number;
+  lng: number;
+  location: string;
+}

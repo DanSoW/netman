@@ -8,9 +8,11 @@
 }
 
 .questList {
-    @include flex-block(row, 16px);
+    @include flex-block(row, 18px);
     flex-wrap: wrap;
+    align-items: center;
     width: 100%;
+    justify-content: center;
 }
 
 .controls {

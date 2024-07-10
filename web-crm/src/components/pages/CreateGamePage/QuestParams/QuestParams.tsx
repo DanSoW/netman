@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react";
+import { FC, forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import styles from "./QuestParams.module.css";
 import Input from "src/components/UI/Input";
 import TextArea from "src/components/UI/TextArea";
@@ -21,13 +21,23 @@ export interface IQuestParamsProps {
     clearDataQuest: FunctionVOID;
 }
 
-const QuestParams: FC<IQuestParamsProps> = (props) => {
+export type QuestParamsHandle = {
+    scrollToElement: () => void;
+};
+
+/**
+ * Функциональный компонент параметров квеста
+ */
+const QuestParams = forwardRef<QuestParamsHandle, IQuestParamsProps>((props, ref) => {
     const {
         selectMark, dataQuest, setDataQuest,
         clearSelectMark, clearDataQuest
     } = props;
+
     const iCreatorSelector = useAppSelector((s) => s.iCreatorReducer);
     const dispatch = useAppDispatch();
+
+    const containerRef = useRef<HTMLDivElement>(null);
 
     const inputChangeHandler = (type: string) => {
         return (value: InputValueType) => {
@@ -38,9 +48,25 @@ const QuestParams: FC<IQuestParamsProps> = (props) => {
         };
     };
 
+    const checkDataQuest = () => {
+        return !selectMark.id || !dataQuest.hint.trim().length
+            || !dataQuest.action.trim().length || dataQuest.radius <= 0;
+    };
+
+    useImperativeHandle(ref, () => {
+        return {
+            scrollToElement: () => {
+                containerRef.current && containerRef.current.scrollIntoView({ block: 'start', behavior: 'smooth' });
+            }
+        }
+    });
+
     return (
         <>
-            <div className={styles.container}>
+            <div
+                ref={containerRef}
+                className={styles.container}
+            >
                 <div className={styles.content}>
                     <Input
                         label="Местоположение"
@@ -98,7 +124,7 @@ const QuestParams: FC<IQuestParamsProps> = (props) => {
                                 return value.id === selectMark.id
                             });
 
-                            if (index >= 0) {
+                            if (index >= 0 && !dataQuest.id) {
                                 dispatch(messageQueueAction.addMessage(null, "error", "Квест с данной меткой уже добавлен!"));
                                 return;
                             }
@@ -109,18 +135,44 @@ const QuestParams: FC<IQuestParamsProps> = (props) => {
                                 id: selectMark.id
                             };
 
-                            dispatch(ICreatorAction.addQuest(data, () => {
-                                clearSelectMark();
-                                clearDataQuest();
+                            if (!data.id) {
+                                dispatch(messageQueueAction.addMessage(null, "error", "Необходимо выбрать метку!"));
+                                return;
+                            } else if (!data.hint.trim().length) {
+                                dispatch(messageQueueAction.addMessage(null, "error", "Необходимо добавить подсказку!"));
+                                return;
+                            } else if (!data.action.trim().length) {
+                                dispatch(messageQueueAction.addMessage(null, "error", "Необходимо добавить действие!"));
+                                return;
+                            } else if (data.radius <= 0) {
+                                dispatch(messageQueueAction.addMessage(null, "error", "Необходимо добавить действие!"));
+                                return;
+                            }
 
-                                dispatch(messageQueueAction.addMessage(null, "success", "Квест добавлен!"));
-                            }));
+
+                            if (dataQuest.id) {
+                                // Обновляем существующую запись
+                                dispatch(ICreatorAction.updateQuest(data, () => {
+                                    clearSelectMark();
+                                    clearDataQuest();
+
+                                    dispatch(messageQueueAction.addMessage(null, "success", "Квест изменён!"));
+                                }));
+                            } else {
+                                // Создаём новую запись
+                                dispatch(ICreatorAction.addQuest(data, () => {
+                                    clearSelectMark();
+                                    clearDataQuest();
+
+                                    dispatch(messageQueueAction.addMessage(null, "success", "Квест добавлен!"));
+                                }));
+                            }
                         }}
                     />
                 </div>
             </div>
         </>
     );
-};
+});
 
 export default QuestParams;

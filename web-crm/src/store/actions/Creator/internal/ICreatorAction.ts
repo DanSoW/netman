@@ -4,11 +4,18 @@ import { iCreatorSlice } from "src/store/reducers/Creator/internal/ICreatorSlice
 /* Константы */
 import { FunctionVOID } from "src/types/function";
 import { IQuestData } from "src/models/IQuestModel";
-import { isVoidNull } from "src/types/void_null";
+import { isUndefinedOrNull } from "src/types/void_null";
 
 function addQuest(data: IQuestData, cb?: FunctionVOID) {
   return async function (dispatch: any) {
     dispatch(iCreatorSlice.actions.addQuest(data));
+    cb && cb();
+  };
+}
+
+function updateQuest(data: IQuestData, cb?: FunctionVOID) {
+  return async function (dispatch: any) {
+    dispatch(iCreatorSlice.actions.updateQuest(data));
     cb && cb();
   };
 }
@@ -22,6 +29,7 @@ function removeQuest(id: number, cb?: FunctionVOID) {
 
 const ICreatorAction = {
   addQuest,
+  updateQuest,
   removeQuest,
 };
 

@@ -1,6 +1,6 @@
 import { FC, useEffect, useRef, useState } from "react";
 import styles from "./TextArea.module.scss";
-import { VOID_NULL, isVoidNull } from "src/types/void_null";
+import { VOID_NULL, isUndefinedOrNull } from "src/types/void_null";
 import { InputValueType } from "src/types/input";
 import cn from "classnames";
 
@@ -27,7 +27,7 @@ const TextArea: FC<ITextAreaProps> = (props) => {
     const timerChange = useRef<NodeJS.Timeout | VOID_NULL>(null);
 
     useEffect(() => {
-        if (!isVoidNull(defaultValue)) {
+        if (!isUndefinedOrNull(defaultValue)) {
             setValue(defaultValue);
         }
     }, [defaultValue]);
@@ -37,7 +37,7 @@ const TextArea: FC<ITextAreaProps> = (props) => {
         timerChange.current && clearTimeout(timerChange.current);
 
         timerChange.current = setTimeout(() => {
-            if (!isVoidNull(value)) {
+            if (!isUndefinedOrNull(value)) {
                 changeHandler && changeHandler(value);
             }
             timerChange.current && clearTimeout(timerChange.current);

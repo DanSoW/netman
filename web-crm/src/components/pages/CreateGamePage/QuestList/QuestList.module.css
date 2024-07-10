@@ -9,9 +9,11 @@
 .questList {
   display: flex;
   flex-direction: row;
-  gap: 16px;
+  gap: 18px;
   flex-wrap: wrap;
+  align-items: center;
   width: 100%;
+  justify-content: center;
 }
 
 .controls {

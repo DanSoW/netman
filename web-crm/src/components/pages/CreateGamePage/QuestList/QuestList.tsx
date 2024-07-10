@@ -9,18 +9,24 @@ import InputRange from "src/components/UI/InputRange";
 import ICreatorAction from "src/store/actions/Creator/internal/ICreatorAction";
 import messageQueueAction from "src/store/actions/MessageQueueAction";
 
+export interface IQuestListProps {
+    updateQuestId: number;
+    setUpdateQuestId: React.Dispatch<React.SetStateAction<number>>;
+    setEventScroll: React.Dispatch<React.SetStateAction<number>>;
+}
+
 /**
  * Функциональный компонент для демонстрации созданных на странице квестов
  * @returns 
  */
-const QuestList: FC<any> = () => {
+const QuestList: FC<IQuestListProps> = (props) => {
     const iCreatorSlice = useAppSelector((s) => s.iCreatorReducer);
     const dispatch = useAppDispatch();
 
     return (
         <>
             <div className={styles.container}>
-                <h2>Созданные квесты</h2>
+                <h2>Добавленные квесты</h2>
                 <div className={styles.questList}>
                     {iCreatorSlice.quests !== null &&
                         iCreatorSlice.quests.map((item) => (
@@ -74,6 +80,11 @@ const QuestList: FC<any> = () => {
                                     <Button
                                         label="Изменить"
                                         clickHandler={() => {
+                                            if (item.id) {
+                                                props.setUpdateQuestId(item.id);
+                                                props.setEventScroll(Math.random() + 1);
+                                            }
+
                                             /*let marker = getMarkerState(dataMarks, {
                                                 lat: parseFloat(item.lat),
                                                 lng: parseFloat(item.lng),

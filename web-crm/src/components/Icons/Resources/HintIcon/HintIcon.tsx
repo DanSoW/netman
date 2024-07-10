@@ -1,12 +1,12 @@
 import { FC } from "react";
 import styles from "./HintIcon.module.scss";
 
-export interface IHintIconsProps {
+export interface IHintIconProps {
     width?: number;
     height?: number;
 }
 
-const HintIcon: FC<IHintIconsProps> = (props) => {
+const HintIcon: FC<IHintIconProps> = (props) => {
     const { width = 32, height = 32 } = props;
 
     return (

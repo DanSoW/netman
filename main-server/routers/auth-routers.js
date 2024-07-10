@@ -135,7 +135,7 @@ router.post(
 router.post(
     AuthRoute.refreshToken,
     [
-        check('refresh_token', 'Некорректные данные для обновления токена доступа').isEmpty()
+        check('refresh_token', 'Некорректные данные для обновления токена доступа').isString().isLength({ min: 1 })
     ],
     authController.refreshToken
 );

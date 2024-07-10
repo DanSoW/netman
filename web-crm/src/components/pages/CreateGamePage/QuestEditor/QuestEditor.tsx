@@ -1,4 +1,4 @@
-import { FC, Fragment, useEffect, useState } from "react";
+import { FC, Fragment, useEffect, useRef, useState } from "react";
 import Map, { Marker, Source, Layer } from 'react-map-gl';
 import styles from "./QuestEditor.module.scss";
 import ConfigApp from "src/config/config.app";
@@ -9,13 +9,23 @@ import { IMarkModel } from "src/models/IMarkModel";
 import { IQuestDataModel, IQuestModel } from "src/models/IQuestModel";
 import Loader from "src/components/UI/Loader";
 import QuestParams from "../QuestParams";
+import { QuestParamsHandle } from "../QuestParams/QuestParams";
+import { isUndefinedOrNull } from "src/types/void_null";
 
 const scaleFactor = 0.5;
 
-const QuestEditor: FC<any> = () => {
+export interface IQuestEditorProps {
+    eventScroll: number;
+    updateQuestId: number;
+    setUpdateQuestId: React.Dispatch<React.SetStateAction<number>>;
+}
+
+const QuestEditor: FC<IQuestEditorProps> = (props) => {
     const iCreatorSelector = useAppSelector((s) => s.iCreatorReducer);
     const markSelector = useAppSelector((s) => s.markReducer);
     const dispatch = useAppDispatch();
+
+    const questEditorRef = useRef<QuestParamsHandle>(null);
 
     const [selectMark, setSelectMark] = useState<IMarkModel>({
         location: "Выберите метку на карте",
@@ -112,10 +122,6 @@ const QuestEditor: FC<any> = () => {
                 hint: quest.hint,
                 id: quest.id
             });
-
-            /*setBlockEditQuest({
-                display: "grid",
-            });*/
         } else {
             clearDataQuest();
         }
@@ -130,10 +136,38 @@ const QuestEditor: FC<any> = () => {
         dispatch(messageQueueAction.addMessage(null, "success", "Метка выбрана"));
     };
 
+    useEffect(() => {
+        if (props.eventScroll > 0) {
+            questEditorRef.current && questEditorRef.current.scrollToElement();
+        }
+    }, [props.eventScroll]);
+
+    useEffect(() => {
+        const { updateQuestId } = props;
+
+        if (updateQuestId >= 0) {
+            const index = iCreatorSelector.quests.findIndex((value) => {
+                return value.id === updateQuestId;
+            });
+
+            const quest = iCreatorSelector.quests[index];
+
+            setDataQuest({
+                task: quest.task,
+                action: quest.action,
+                radius: quest.radius,
+                hint: quest.hint,
+                id: quest.id
+            });
+
+            setSelectMark(quest.mark);
+        }
+    }, [props.updateQuestId]);
+
     return (
         <>
             <div className={styles.container}>
-                <h2>Создание квеста</h2>
+                <h2>Добавление квеста</h2>
                 <div className={styles.quest}>
                     <div className={styles.map}>
                         <Map
@@ -294,6 +328,7 @@ const QuestEditor: FC<any> = () => {
                         </Map>
                     </div>
                     <QuestParams
+                        ref={questEditorRef}
                         dataQuest={dataQuest}
                         setDataQuest={setDataQuest}
                         selectMark={selectMark}
