@@ -7,9 +7,8 @@ class InfoGamesIdDto{
     info_games_id;
 
     constructor(model){
-        for(const key in model){
-            this[key] = model[key];
-        }
+        this.users_id = model.users_id;
+        this.info_games_id = model.info_games_id;
     }
 }
 

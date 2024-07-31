@@ -1,7 +1,8 @@
+import TableName from "../../constants/table/table-name.js";
 import { genForeignKey } from "../../utils/db.js";
 
 const Tokens = (sequelize, DataTypes) => {
-    const model = sequelize.define('tokens', {
+    const model = sequelize.define(TableName.Tokens, {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,

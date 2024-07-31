@@ -1,7 +1,6 @@
 package com.main.netman.containers.game.fragments
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,9 +11,7 @@ import com.main.netman.R
 import com.main.netman.containers.base.BaseFragment
 import com.main.netman.containers.game.adapters.TeamViewPagerAdapter
 import com.main.netman.containers.game.models.GameTeamViewModel
-import com.main.netman.databinding.FragmentLeadTeamBinding
 import com.main.netman.databinding.FragmentMemberTeamBinding
-import com.main.netman.databinding.FragmentViewTeamBinding
 import com.main.netman.models.command.CommandItemResponse
 import com.main.netman.models.command.CommandStatusModel
 import com.main.netman.models.command.CommandsIdModel
@@ -87,7 +84,7 @@ class MemberTeamFragment :
             when (it) {
                 // Обработка успешного сетевого взаимодействия
                 is Resource.Success -> {
-                    navigation(R.id.action_memberTeamFragment_to_navigateTeamFragment)
+                    navigation(R.id.action_memberTeamFragment_to_navigateGameFragment)
                 }
 
                 // Обработка ошибок связанные с сетью

@@ -10,6 +10,9 @@ import store from "src/store/store";
 const apiMainServer = axios.create({
   withCredentials: true,
   baseURL: MainApi.MAIN_SERVER,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 apiMainServer.interceptors.request.use((config) => {

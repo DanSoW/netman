@@ -21,13 +21,32 @@ class MapService {
                 throw ApiError.BadRequest("Попытка удаления заданий неавторизованным пользователем");
             }
 
-            const modules = await db.UsersModules.findOne({ where: { users_id: users_id } });
+            // Поиск прав доступа для создания метки
+            const userRoles = await db.UsersRoles.findAll({
+                where: {
+                    users_id: users_id
+                },
+                include: {
+                    model: db.Roles,
+                    where: {
+                        priority: { [db.Sequelize.Op.gt]: 1 }
+                    },
+                },
+            });
 
-            // Добавление меток осуществляет только администратор или супер-администратор
-            if ((modules.dataValues.admin === false)
-                && (modules.dataValues.super_admin === false)
-            ) {
+            if (userRoles.length === 0) {
                 throw ApiError.Forbidden("Нет доступа");
+            }
+
+            const mark = await db.Marks.findOne({
+                where: {
+                    lat: lat,
+                    lng: lng
+                }
+            });
+
+            if (mark) {
+                throw ApiError.BadRequest("Метка по данным координатам уже существует!");
             }
 
             await db.Marks.create({
@@ -38,7 +57,7 @@ class MapService {
             }, { transaction: t });
 
             await t.commit();
-            
+
             return data;
         } catch (e) {
             await t.rollback();
@@ -77,47 +96,8 @@ class MapService {
     async marksFree(data) {
         try {
             const { users_id } = data;
-            const user = await db.Users.findOne({ where: { id: users_id } });
 
-            if (!user) {
-                throw ApiError.BadRequest("Попытка удаления заданий неавторизованным пользователем");
-            }
-
-            const allGames = await db.InfoGames.findAll({
-                where: {
-                    date_end: {
-                        [db.Sequelize.Op.gt]: new Date()
-                    }
-                },
-                include: {
-                    model: db.GamesQuests
-                }
-            });
-
-            const busyMarks = [];
-            for (let i = 0; i < allGames.length; i++) {
-                let dataQuests = await db.Quests.findAll({
-                    where: {
-                        id: {
-                            [db.Sequelize.Op.in]: allGames[i].dataValues.games_quests.map(item => {
-                                return item.dataValues.quests_id;
-                            })
-                        }
-                    }
-                });
-
-                for (let j = 0; j < dataQuests.length; j++) {
-                    busyMarks.push(dataQuests[j].dataValues.marks_id);
-                }
-            }
-
-            const freeMarks = await db.Marks.findAll({
-                where: {
-                    id: {
-                        [db.Sequelize.Op.notIn]: busyMarks
-                    }
-                }
-            });
+            const freeMarks = await db.Marks.findAll();
 
             return freeMarks;
         } catch (e) {

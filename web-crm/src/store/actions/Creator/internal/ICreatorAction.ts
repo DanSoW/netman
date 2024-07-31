@@ -27,10 +27,17 @@ function removeQuest(id: number, cb?: FunctionVOID) {
   };
 }
 
+function clearAll() {
+  return async function (dispatch: any) {
+    dispatch(iCreatorSlice.actions.clear());
+  };
+}
+
 const ICreatorAction = {
   addQuest,
   updateQuest,
   removeQuest,
+  clearAll
 };
 
 export default ICreatorAction;

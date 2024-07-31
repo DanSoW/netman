@@ -16,4 +16,7 @@ object PlayerApiConstants {
     const val PLAYER_COMMAND_REGISTER_GAME = "${BASE}/command/register/game"
     const val PLAYER_COMMAND_CURRENT_GAME = "${BASE}/command/current/game"
     const val PLAYER_COMMAND_GAMES = "${BASE}/command/games"
+
+    const val PLAYER_GAME_INFO = "${BASE}/game/info"
+    const val PLAYER_DETACH_GAME = "${BASE}/detach/game"
 }

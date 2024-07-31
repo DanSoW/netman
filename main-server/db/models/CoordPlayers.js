@@ -1,7 +1,8 @@
+import TableName from "../../constants/table/table-name.js";
 import { genForeignKey } from "../../utils/db.js";
 
 const CoordPlayers = (sequelize, DataTypes) => {
-    const model = sequelize.define('coord_players', {
+    const model = sequelize.define(TableName.CoordPlayers, {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,

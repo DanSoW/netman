@@ -100,4 +100,16 @@ interface PlayerApi {
      */
     @POST(PlayerApiConstants.PLAYER_COMMAND_GAMES)
     suspend fun playerCommandGames(@Body requestBody: RequestBody): Response<ResponseBody>
+
+    /**
+     * Получение информации о текущей игре, к которой присоединился пользователь
+     */
+    @GET(PlayerApiConstants.PLAYER_GAME_INFO)
+    suspend fun playerGameInfo(): Response<ResponseBody>
+
+    /**
+     * Выход из текущей игры пользователя
+     */
+    @POST(PlayerApiConstants.PLAYER_DETACH_GAME)
+    suspend fun playerDetachGame(@Body requestBody: RequestBody): Response<ResponseBody>
 }

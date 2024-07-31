@@ -1,6 +1,5 @@
 package com.main.netman.network
 
-import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.google.gson.reflect.TypeToken

@@ -14,6 +14,8 @@ import QuestsIdDto from "../dtos/player/quests-id-dto.js";
 import CommandAddResultDto from "../dtos/player/command-add-result-dto.js";
 import JudgeGetInfoDto from "../dtos/player/judge-get-info-dto.js";
 import JudgeSetScoreDto from "../dtos/player/judge-set-score-dto.js";
+import PlayerJoinGameDto from "../dtos/player/player-join-game-dto.js";
+import PlayerDetachGameDto from "../dtos/player/player-detach-game-dto.js";
 
 /* Контроллер игрока */
 class PlayerController {
@@ -416,6 +418,57 @@ class PlayerController {
 
             const body = new JudgeSetScoreDto(req.body);
             const data = await judgeService.judgeSetScore(body);
+
+            return res.status(201).json(data);
+        }catch(e){
+            next(e);
+        }
+    }
+
+    async playerJoinGame(req, res, next){
+        try{
+            const errors = validationResult(req);
+
+            if (!errors.isEmpty()){
+                return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
+            }
+
+            const body = new PlayerJoinGameDto(req.body);
+            const data = await playerService.playerJoinGame(body);
+
+            return res.status(201).json(data);
+        }catch(e){
+            next(e);
+        }
+    }
+
+    async playerGameInfo(req, res, next){
+        try{
+            const errors = validationResult(req);
+
+            if (!errors.isEmpty()){
+                return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
+            }
+
+            const body = req.body;
+            const data = await playerService.playerGameInfo(body);
+
+            return res.status(201).json(data);
+        }catch(e){
+            next(e);
+        }
+    }
+
+    async playerDetachGame(req, res, next){
+        try{
+            const errors = validationResult(req);
+
+            if (!errors.isEmpty()){
+                return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
+            }
+
+            const body = new PlayerDetachGameDto(req.body);
+            const data = await playerService.playerDetachGame(body);
 
             return res.status(201).json(data);
         }catch(e){

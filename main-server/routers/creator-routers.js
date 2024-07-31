@@ -43,12 +43,8 @@ router.post(
     CreatorRoute.gameCreate,
     [
         authMiddleware,
-        check('location', 'Максимальная длина местоположение не может быть меньше 3 символов')
-            .isLength({ min: 3 }),
         check('users_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 }),
-        check('min_score', 'Некорректные получаемые минимальные очки').isInt({ min: 1 }),
-        check('count_commands', 'Некорректное значения количества команд').isInt({ min: 1 }),
-        check('rating', 'Некорректное значение получаемого рейтинга').isInt({ min: 1 }),
+        check('title', 'Наименование игры не может быть пустым').isLength({ min: 1 }),
         check('quests', "Для создания игры необходимо добавить квесты").isArray({ min: 1 })
     ],
     creatorController.gameCreate

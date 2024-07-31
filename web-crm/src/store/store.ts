@@ -17,6 +17,7 @@ import messageQueueReducer from "./reducers/MessageQueueSlice";
 import authReducer from "./reducers/AuthSlice";
 import markReducer from "./reducers/Map/MarkSlice";
 import iCreatorReducer from "./reducers/Creator/internal/ICreatorSlice";
+import eCreatorReducer from "./reducers/Creator/external/ECreatorSlice";
 
 /* Константы */
 import ConfigApp from "src/config/config.app";
@@ -26,7 +27,8 @@ const rootReducer = combineReducers({
   messageQueueReducer,
   authReducer,
   markReducer,
-  iCreatorReducer
+  iCreatorReducer,
+  eCreatorReducer
 });
 
 // Конфигурация Persist
@@ -36,7 +38,8 @@ const persistConfig = {
   blacklist: [
     "messageQueueReducer",
     "markReducer",
-    "iCreatorReducer"
+    "iCreatorReducer",
+    "eCreatorReducer"
   ],
 };
 

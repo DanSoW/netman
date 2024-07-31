@@ -1,13 +1,14 @@
+import TableName from "../../constants/table/table-name.js";
 import { genForeignKey } from "../../utils/db.js";
 
 const GameQuests = (sequelize, DataTypes) => {
-    const model = sequelize.define('games_quests', {
+    const model = sequelize.define(TableName.GamesQuests, {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             allowNull: false,
             autoIncrement: true
-        }
+        },
     });
 
     model.associate = (models) => {

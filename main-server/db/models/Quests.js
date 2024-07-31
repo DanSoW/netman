@@ -1,7 +1,8 @@
+import TableName from "../../constants/table/table-name.js";
 import { genForeignKey } from "../../utils/db.js";
 
 const Quests = (sequelize, DataTypes) => {
-    const model = sequelize.define('quests', {
+    const model = sequelize.define(TableName.Quests, {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
@@ -35,6 +36,9 @@ const Quests = (sequelize, DataTypes) => {
 
         // Создание отношений один (quests) ко многим (games_quests)
         model.hasMany(models.GamesQuests, genForeignKey('quests_id'));
+
+        // Создание отношений один (quests) ко многим (exec_quests)
+        model.hasMany(models.ExecQuests, genForeignKey('quests_id'));
     };
 
     return model;

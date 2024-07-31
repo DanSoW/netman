@@ -3,10 +3,11 @@ dotenv.config({ path: `.${process.env.NODE_ENV}.env` });
 import config from 'config';
 import ApiError from '../../exceptions/api-error.js';
 import db from '../../db/index.js';
-import FlagDto from '../../dtos/response/flag-dto.js';
 import "../../utils/array.js";
 import fs from 'fs';
-import { isUndefinedOrNull } from '../../utils/objector.js';
+import GameStatus from '../../constants/status/game-status.js';
+import { v4 } from 'uuid';
+
 
 /* Сервис управления картами */
 class PlayerService {
@@ -112,7 +113,7 @@ class PlayerService {
      */
     async playerInfo(data) {
         try {
-            const { users_id } = data;
+            const { users_id, context_user_data } = data;
 
             const dataUser = await db.DataUsers.findOne({ where: { users_id: users_id } });
             dataUser.dataValues.data_players = (await db.DataPlayers.findOne({
@@ -121,12 +122,13 @@ class PlayerService {
                 }
             }));
 
-            dataUser.dataValues.email = user.email;
+            dataUser.dataValues.email = context_user_data.email;
 
             return {
                 ...dataUser.dataValues
             };
         } catch (e) {
+            console.log(e);
             throw ApiError.BadRequest(e.message);
         }
     }
@@ -323,6 +325,222 @@ class PlayerService {
 
             return freePlayers;
         } catch (e) {
+            throw ApiError.BadRequest(e.message);
+        }
+    }
+
+    /**
+     * Присоединение игрока к конкретной игре
+     * @param {*} data Данные запроса
+     * @returns Результат связывания игрока с конкретной игрой
+     */
+    async playerJoinGame(data) {
+        const t = await db.sequelize.transaction();
+
+        try {
+            const { users_id, info_games_id } = data;
+
+            const usersGames = await db.UsersGames.findAll({
+                where: {
+                    users_id: users_id,
+                    status: GameStatus.ACTIVE
+                }
+            });
+
+            if (usersGames && usersGames.length > 0) {
+                throw ApiError.BadRequest("Одновременно нельзя зарегистрироваться на несколько игр");
+            }
+
+            const infoGame = await db.InfoGames.findOne({
+                where: {
+                    id: info_games_id
+                }
+            });
+
+            if (!infoGame) {
+                throw ApiError.BadRequest("Данной игры не существует");
+            }
+
+            // Идентификатор сессии
+            const sessionId = v4();
+
+            // Создание связи между пользователем и игрой
+            const createUserGame = await db.UsersGames.create({
+                users_id: users_id,
+                info_games_id: info_games_id,
+                session_id: sessionId,
+                status: GameStatus.ACTIVE
+            }, { transaction: t });
+
+            // Определение игровых квестов
+            const quests = await db.GamesQuests.findAll({
+                where: {
+                    info_games_id: info_games_id
+                }
+            });
+
+            let quest = null;
+
+            if (quests.length > 0) {
+                quest = await db.Quests.findOne({
+                    where: {
+                        id: quests[0].quests_id
+                    }
+                });
+
+                // Определение текущего квеста для игрока
+                const createExecQuest = await db.ExecQuests.create({
+                    users_games_id: createUserGame.id,
+                    quests_id: quest.id,
+                    status: GameStatus.ACTIVE
+                }, { transaction: t });
+            } else {
+                throw ApiError.BadRequest("У текущей игры отсутствуют квесты");
+            }
+
+
+            await t.commit();
+
+            return {
+                game: infoGame.dataValues,
+                quest: quest.dataValues
+            };
+        } catch (e) {
+            await t.rollback();
+            throw ApiError.BadRequest(e.message);
+        }
+    }
+
+    /**
+     * Получение информации об игре
+     * @param {*} data Данные запроса
+     * @returns Результат выполнения запроса
+     */
+    async playerGameInfo(data) {
+        try {
+            const { users_id } = data;
+
+            const userGame = await db.UsersGames.findOne({
+                where: {
+                    users_id: users_id,
+                    status: GameStatus.ACTIVE
+                }
+            });
+
+            if (!userGame) {
+                // Обработка ситуации, когда у пользователя нет текущей игры
+                return {
+                    joined_game: false
+                };
+            }
+
+            const game = await db.InfoGames.findOne({
+                where: {
+                    id: userGame.info_games_id
+                }
+            });
+
+            if (!game) {
+                return {
+                    joined_game: false
+                };
+            }
+
+            const execQuests = await db.ExecQuests.findOne({
+                where: {
+                    users_games_id: userGame.id,
+                    status: GameStatus.ACTIVE
+                }
+            });
+
+            if (!execQuests) {
+                return {
+                    joined_game: false
+                };
+            }
+
+            // Формирование информации о всех квестах текущей игры
+            const quest = await db.Quests.findOne({
+                where: {
+                    id: execQuests.quests_id
+                }
+            });
+
+            /*const quests = [];
+            for(let i = 0; i < execQuests.length; i++) {
+                const item = execQuests[i];
+
+                const quest = await db.Quests.findOne({
+                    where: {
+                        id: item.quests_id,
+                    }
+                });
+
+                if(quest) {
+                    const questInfo = {
+                        ...quest.dataValues,
+                        status: item.status
+                    };
+
+                    quests.push(questInfo);
+                }
+            }*/
+
+            const result = {
+                ...game.dataValues,
+                session_id: userGame.session_id,
+                quest: quest.dataValues,
+                joined_game: true
+            };
+
+            return result;
+        } catch (e) {
+            throw ApiError.BadRequest(e.message);
+        }
+    }
+
+    /**
+     * Выход пользователя из игры
+     * @param {*} data Данные запроса
+     * @returns Результат выполнения запроса
+     */
+    async playerDetachGame(data) {
+        const t = await db.sequelize.transaction();
+
+        try {
+            const { users_id, session_id } = data;
+
+            const userGame = await db.UsersGames.findOne({
+                where: {
+                    users_id: users_id,
+                    session_id: session_id
+                }
+            });
+
+            if (!userGame) {
+                throw ApiError.BadRequest(`Игровой сессии с идентификатором "${session_id}" не найдено`);
+            }
+
+            const execQuests = await db.ExecQuests.findAll({
+                where: {
+                    users_games_id: userGame.id
+                }
+            });
+
+            // Отвязывание текущей игры и квестов от игрока
+            for (let i = 0; i < execQuests.length; i++) {
+                await execQuests[i].destroy({ transaction: t });
+            }
+
+            await userGame.destroy({ transaction: t });
+
+            await t.commit();
+
+            return {
+                completed: true
+            };
+        } catch (e) {
+            await t.rollback();
             throw ApiError.BadRequest(e.message);
         }
     }

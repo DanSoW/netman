@@ -5,6 +5,7 @@ import com.main.netman.models.command.CommandInfoModel
 import com.main.netman.models.command.CommandsIdModel
 import com.main.netman.models.command.TeamCreateModel
 import com.main.netman.models.game.GameIdModel
+import com.main.netman.models.game.GameSessionIdModel
 import com.main.netman.models.user.UserInfoUpdateModel
 import com.main.netman.network.apis.PlayerApi
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -117,6 +118,13 @@ class PlayerRepository(
     }
 
     /**
+     * Получение информации о текущей игре
+     */
+    suspend fun playerGameInfo() = safeApiCall {
+        api.playerGameInfo()
+    }
+
+    /**
      * Регистрация команды на игру
      */
     suspend fun playerCommandRegisterGame(body: GameIdModel) = safeApiCall {
@@ -141,5 +149,14 @@ class PlayerRepository(
         val requestBody = Gson().toJson(body).toRequestBody("application/json".toMediaTypeOrNull())
 
         api.playerCommandGames(requestBody)
+    }
+
+    /**
+     * Выход пользователя из определённой игры
+     */
+    suspend fun playerDetachGame(body: GameSessionIdModel) = safeApiCall {
+        val requestBody = Gson().toJson(body).toRequestBody("application/json".toMediaTypeOrNull())
+
+        api.playerDetachGame(requestBody)
     }
 }

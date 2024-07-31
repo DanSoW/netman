@@ -1,7 +1,6 @@
 package com.main.netman.containers.game.fragments
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,7 +23,6 @@ import com.main.netman.network.apis.PlayerApi
 import com.main.netman.repositories.PlayerRepository
 import com.main.netman.utils.handleApiError
 import com.main.netman.utils.handleErrorMessage
-import com.main.netman.utils.handleSuccessMessage
 import com.main.netman.utils.hideKeyboard
 import com.main.netman.utils.navigation
 import com.main.netman.utils.visible
@@ -99,7 +97,7 @@ class FindTeamFragment :
                             it.value.body()?.string(),
                             TeamCreateRequestModel::class.java
                         )
-                        navigation(R.id.action_findTeamFragment_to_navigateTeamFragment)
+                        navigation(R.id.action_findTeamFragment_to_navigateGameFragment)
                     } else {
                         val error = Gson().fromJson(
                             it.value.errorBody()?.string().toString(), ErrorModel::class.java

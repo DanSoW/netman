@@ -1,7 +1,8 @@
+import TableName from "../../constants/table/table-name.js";
 import { genForeignKey } from "../../utils/db.js";
 
 const Users = (sequelize, DataTypes) => {
-    const model = sequelize.define('users', {
+    const model = sequelize.define(TableName.Users, {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
@@ -22,6 +23,9 @@ const Users = (sequelize, DataTypes) => {
     model.associate = (models) => {
         // Создание отношения одного (users) ко многим (activations)
         model.hasMany(models.Activations, genForeignKey('users_id'));
+
+        // Создание отношения одного (users) ко многим (users_games)
+        //model.hasMany(models.UsersGames, genForeignKey('users_id'));
 
         // Создание отношения одного (users) ко многим (auth_types)
         model.hasMany(models.AuthTypes, genForeignKey('users_id'));

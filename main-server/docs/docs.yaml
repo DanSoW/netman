@@ -911,6 +911,34 @@
         security: 
           - 
             JWT: []
+    /player/game/info: 
+      get: 
+        description: "Получение информации о текущей игре"
+        tags: 
+          - "Игрок"
+        responses: 
+          200: 
+            description: "Флаг"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/FlagDto"
+              application/xml: 
+                schema: 
+                  $ref: "#/components/schemas/FlagDto"
+          default: 
+            description: "Ошибка запроса"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/ApiError"
+              application/xml: 
+                schema: 
+                  $ref: "#/components/schemas/ApiError"
+        operationId: "playerGameStatus"
+        security: 
+          - 
+            JWT: []
     /player/games: 
       get: 
         description: "Получение информации обо всех играх, которые существуют в настоящее время"
@@ -1668,6 +1696,76 @@
         security: 
           - 
             JWT: []
+    /player/join/game: 
+      post: 
+        requestBody: 
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/PlayerJoinGameDto"
+          description: "Информация для получения данных об игре"
+          required: true
+        description: "Присоединение игрока к конкретной игре"
+        tags: 
+          - "Игрок"
+        responses: 
+          200: 
+            description: "Флаг"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/FlagDto"
+              application/xml: 
+                schema: 
+                  $ref: "#/components/schemas/FlagDto"
+          default: 
+            description: "Ошибка запроса"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/ApiError"
+              application/xml: 
+                schema: 
+                  $ref: "#/components/schemas/ApiError"
+        operationId: "playerJoinGame"
+        security: 
+          - 
+            JWT: []
+    /player/detach/game: 
+      post: 
+        requestBody: 
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/PlayerDetachGameDto"
+          description: "Информация для получения данных об игре"
+          required: true
+        description: "Выход игрока из текущей игры"
+        tags: 
+          - "Игрок"
+        responses: 
+          200: 
+            description: "Флаг"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/FlagDto"
+              application/xml: 
+                schema: 
+                  $ref: "#/components/schemas/FlagDto"
+          default: 
+            description: "Ошибка запроса"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/ApiError"
+              application/xml: 
+                schema: 
+                  $ref: "#/components/schemas/ApiError"
+        operationId: "playerJoinGame"
+        security: 
+          - 
+            JWT: []
     /security/access: 
       post: 
         requestBody: 
@@ -1925,42 +2023,14 @@
             description: ""
       GameCreateDto: 
         required: 
+          - "title"
           - "location"
-          - "date_begin"
-          - "date_end"
-          - "type"
-          - "rating"
-          - "count_commands"
-          - "min_score"
-          - "age_limit"
-          - "name"
           - "quests"
         properties: 
+          title: 
+            type: "string"
+            description: ""
           location: 
-            type: "string"
-            description: ""
-          date_begin: 
-            type: "string"
-            description: ""
-          date_end: 
-            type: "string"
-            description: ""
-          type: 
-            type: "number"
-            description: ""
-          rating: 
-            type: "number"
-            description: ""
-          count_commands: 
-            type: "number"
-            description: ""
-          min_score: 
-            type: "number"
-            description: ""
-          age_limit: 
-            type: "number"
-            description: ""
-          name: 
             type: "string"
             description: ""
           quests: 
@@ -2590,6 +2660,17 @@
           finished_games_id: 
             type: "number"
             description: ""
+      PlayerDetachGameDto: 
+        required: 
+          - "users_id"
+          - "session_id"
+        properties: 
+          users_id: 
+            type: "number"
+            description: ""
+          session_id: 
+            type: "string"
+            description: ""
       PlayerInfoDto: 
         properties: 
           id: 
@@ -2666,6 +2747,17 @@
             description: ""
           nickname: 
             type: "string"
+            description: ""
+      PlayerJoinGameDto: 
+        required: 
+          - "users_id"
+          - "info_games_id"
+        properties: 
+          users_id: 
+            type: "number"
+            description: ""
+          info_games_id: 
+            type: "number"
             description: ""
       PlayerStatisticsDto: 
         properties: 
@@ -2761,6 +2853,9 @@
         properties: 
           users_id: 
             type: "number"
+            description: ""
+          context_user_data: 
+            type: "Object"
             description: ""
       ApiError: 
         properties: 

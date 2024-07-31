@@ -1,3 +1,7 @@
 package com.main.netman.models.response
 
-data class CompletedResponse()
+import com.google.gson.annotations.SerializedName
+
+data class CompletedResponse(
+    @SerializedName("completed") var completed: Boolean? = null
+)

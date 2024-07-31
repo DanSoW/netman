@@ -1,4 +1,6 @@
 package com.main.netman.constants.game
 
-class GameStatusConstants {
+object GameStatusConstants {
+    const val ACTIVE = 1
+    const val FINISH = 0
 }

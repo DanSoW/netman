@@ -103,7 +103,7 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
      */
     private val onIndicatorPositionChangedListener = OnIndicatorPositionChangedListener {
         // Point.fromLngLat(104.287895, 52.288865)
-        val point = it //Point.fromLngLat(104.288432, 52.286057) // Point.fromLngLat(104.287895, 52.282865)
+        val point = /*it*/ Point.fromLngLat(104.288432, 52.286057) // Point.fromLngLat(104.287895, 52.282865)
 
         if (!isInit) {
             binding.mapView.getMapboxMap().setCamera(CameraOptions.Builder().center(point).build())

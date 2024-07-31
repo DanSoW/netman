@@ -1,10 +1,11 @@
 // Импорт функции для генерации настроек внешнего ключа
+import TableName from "../../constants/table/table-name.js";
 import { genForeignKey } from "../../utils/db.js";
 
 // Модель Activations
 const Activations = (sequelize, DataTypes) => {
     // Определение модели
-    const model = sequelize.define('activations', {
+    const model = sequelize.define(TableName.Activations, {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,

@@ -1,43 +1,22 @@
+import TableName from "../../constants/table/table-name.js";
 import { genForeignKey } from "../../utils/db.js";
 
+/**
+ * Сборка модели для взаимодействия с таблицей InfoGames
+ * @param {*} sequelize Экземпляр ORM Sequelize
+ * @param {*} DataTypes Типы данных
+ * @returns Собранная модель для взаимодействия с таблицей InfoGames
+ */
 const InfoGames = (sequelize, DataTypes) => {
-    const model = sequelize.define('info_games', {
+    const model = sequelize.define(TableName.InfoGames, {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             allowNull: false,
             autoIncrement: true
         },
-        name: {
+        title: {
             type: DataTypes.TEXT,
-            allowNull: false
-        },
-        max_count_commands: {
-            type: DataTypes.INTEGER,
-            allowNull: false
-        },
-        date_begin: {
-            type: DataTypes.DATE,
-            allowNull: false
-        },
-        date_end: {
-            type: DataTypes.DATE,
-            allowNull: false
-        },
-        age_limit: {
-            type: DataTypes.SMALLINT,
-            allowNull: false
-        },
-        type: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false
-        },
-        rating: {
-            type: DataTypes.SMALLINT,
-            allowNull: false
-        },
-        min_score: {
-            type: DataTypes.SMALLINT,
             allowNull: false
         },
         location: {

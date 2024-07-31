@@ -1,60 +1,153 @@
 package com.main.netman.containers.game.fragments
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.gson.Gson
 import com.main.netman.R
+import com.main.netman.constants.keys.GameRouterKeys
+import com.main.netman.containers.base.BaseFragment
+import com.main.netman.containers.game.models.GameViewModel
+import com.main.netman.databinding.FragmentGameBinding
+import com.main.netman.models.command.CommandInfoModel
+import com.main.netman.models.command.CommandItemResponse
+import com.main.netman.models.error.ErrorModel
+import com.main.netman.models.game.GameModel
+import com.main.netman.models.game.GameSessionIdModel
+import com.main.netman.models.response.CompletedResponse
+import com.main.netman.network.Resource
+import com.main.netman.network.apis.PlayerApi
+import com.main.netman.repositories.PlayerRepository
+import com.main.netman.utils.handleApiError
+import com.main.netman.utils.handleErrorMessage
+import com.main.netman.utils.handleMessage
+import com.main.netman.utils.hideKeyboard
+import com.main.netman.utils.visible
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+class GameFragment :
+    BaseFragment<GameViewModel, FragmentGameBinding, PlayerRepository>() {
 
-/**
- * A simple [Fragment] subclass.
- * Use the [GameFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class GameFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+        // Получение информации об игре
+        val args = arguments
+        val gameInfo = args?.getString(GameRouterKeys.GAME_INFO)
+
+        gameInfo?.let { item ->
+            val game = Gson().fromJson(
+                item,
+                GameModel::class.java
+            )
+
+            if(!game.joinedGame) {
+                return@let
+            }
+
+            binding.txtTitleGame.text = game.title
+            binding.txtLocationGame.text = game.location
+
+            game.quest?.let { quest ->
+                binding.txtTask.text = quest.task
+                binding.txtHint.text = quest.hint
+                binding.txtAction.text = quest.action
+            }
+
+            // Обработка нажатия на кнопку выхода из игры
+            binding.btnLeaveGame.setOnClickListener {
+                // Создание диалогового окна
+                val dialogBuilder = MaterialAlertDialogBuilder(requireContext())
+                val viewDialog = layoutInflater.inflate(R.layout.dialog_game_leave, null)
+
+                // Добавление view диалоговому окну
+                dialogBuilder.setView(viewDialog)
+                // Открытие диалогового окна
+                val dialog: androidx.appcompat.app.AlertDialog? = dialogBuilder.show()
+
+                // Обработка отмены создания команды
+                viewDialog.findViewById<Button>(R.id.cancel_join_game_command)
+                    .setOnClickListener(View.OnClickListener {
+                        dialog?.dismiss()
+                    })
+
+                // Создание команды
+                viewDialog.findViewById<Button>(R.id.accept_join_game_command)
+                    .setOnClickListener(View.OnClickListener {
+                        game.sessionId?.let { value ->
+                            detachGame(value)
+                        }
+
+                        dialog?.dismiss()
+                    })
+            }
+
+            viewModel.detachGame.observe(viewLifecycleOwner) {
+                when (it) {
+                    // Обработка успешного сетевого взаимодействия
+                    is Resource.Success -> {
+                        val response = it.value.body()?.string()
+
+                        if (it.value.isSuccessful && response !== null) {
+                            val body = Gson().fromJson(
+                                response,
+                                CompletedResponse::class.java
+                            )
+
+                            if(body.completed !== null && body.completed == true) {
+                                handleMessage("Вы успешно покинули игру")
+                            }
+                        } else {
+                            val error = Gson().fromJson(
+                                it.value.errorBody()?.string().toString(), ErrorModel::class.java
+                            )
+                            handleErrorMessage(
+                                if (error.errors != null && error.errors!!.isNotEmpty()) error.errors?.first()!!.msg
+                                else error.message!!
+                            )
+                        }
+                    }
+
+                    // Обработка ошибок связанные с сетью
+                    is Resource.Failure -> {
+                        handleApiError(it) { }
+                    }
+
+                    else -> {}
+                }
+            }
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_game, container, false)
-    }
+    /**
+     * Метод получения ViewModel текущего фрагмента
+     */
+    override fun getViewModel() = GameViewModel::class.java
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment GameFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            GameFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+    /**
+     * Метод получения экземпляра фрагмента
+     */
+    override fun getFragmentBinding(
+        inflater: LayoutInflater,
+        container: ViewGroup?
+    ) = FragmentGameBinding.inflate(inflater, container, false)
+
+    /**
+     * Метод получения репозитория данного фрагмента
+     */
+    override fun getFragmentRepository() =
+        PlayerRepository(
+            remoteDataSource.buildApi(
+                PlayerApi::class.java,
+                userPreferences,
+                cookiePreferences
+            )
+        )
+
+    private fun detachGame(sessionId: String) {
+        val data = GameSessionIdModel(sessionId)
+        viewModel.detachGame(data)
     }
 }

@@ -1,8 +1,6 @@
 package com.main.netman.containers.game.fragments
 
 import android.os.Bundle
-import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,21 +11,17 @@ import com.main.netman.R
 import com.main.netman.containers.base.BaseFragment
 import com.main.netman.containers.game.adapters.TeamViewPagerAdapter
 import com.main.netman.containers.game.models.GameTeamViewModel
-import com.main.netman.databinding.FragmentLeadTeamBinding
 import com.main.netman.databinding.FragmentViewTeamBinding
 import com.main.netman.models.command.CommandItemResponse
 import com.main.netman.models.command.CommandStatusModel
 import com.main.netman.models.command.CommandsIdModel
-import com.main.netman.models.command.TeamCreateRequestModel
 import com.main.netman.models.error.ErrorModel
 import com.main.netman.network.Resource
 import com.main.netman.network.apis.PlayerApi
 import com.main.netman.repositories.PlayerRepository
 import com.main.netman.utils.handleApiError
 import com.main.netman.utils.handleErrorMessage
-import com.main.netman.utils.hideKeyboard
 import com.main.netman.utils.navigation
-import com.main.netman.utils.visible
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
@@ -92,7 +86,7 @@ class ViewTeamFragment :
             when (it) {
                 // Обработка успешного сетевого взаимодействия
                 is Resource.Success -> {
-                    navigation(R.id.action_viewTeamFragment_to_navigateTeamFragment)
+                    navigation(R.id.action_viewTeamFragment_to_navigateGameFragment)
                 }
 
                 // Обработка ошибок связанные с сетью

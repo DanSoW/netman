@@ -12,7 +12,7 @@
         "user": "ssl.net@mail.ru"
     },
     "url": {
-        "client": "http://localhost:3000",
+        "client": "http://localhost:4000",
         "management": "http://localhost:3000",
         "api": "http://10.0.2.2:5000"
     },

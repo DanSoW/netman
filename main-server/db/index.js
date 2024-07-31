@@ -46,6 +46,8 @@ import VideoShooters from './models/VideoShooters.js';
 import Warnings from './models/Warnings.js';
 import TestMarks from './models/TestMarks.js';
 import initRoles from './default/roles/init-roles.js';
+import ExecQuests from './models/ExecQuests.js';
+import UsersGames from './models/UsersGames.js';
 
 // Глобальный объект для работы с Sequelize ORM
 const db = {};
@@ -104,6 +106,8 @@ db.UsersRoles = UsersRoles(sequelize, Sequelize.DataTypes);
 db.VideoShooters = VideoShooters(sequelize, Sequelize.DataTypes);
 db.Warnings = Warnings(sequelize, Sequelize.DataTypes);
 db.TestMarks = TestMarks(sequelize, Sequelize.DataTypes);
+db.UsersGames = UsersGames(sequelize, Sequelize.DataTypes);
+db.ExecQuests = ExecQuests(sequelize, Sequelize.DataTypes);
 
 // Установка взаимосвязей между моделями (таблицами базы данных)
 Object.keys(db).forEach(modelName => {

@@ -24,6 +24,8 @@ import TagUserInfoDto from '../dtos/player/tag-user-info-dto.js';
 import UrlDto from '../dtos/player/url-dto.js';
 import { v4 as uuid } from 'uuid';
 import multer from 'multer';
+import PlayerJoinGameDto from '../dtos/player/player-join-game-dto.js';
+import PlayerDetachGameDto from '../dtos/player/player-detach-game-dto.js';
 
 // Конфигурирование файлового хранилища multer
 const storage = multer.diskStorage({
@@ -58,6 +60,24 @@ router.get(
     ],
     playerController.gameStatus
 );
+
+/**
+ * Получение информации о текущей игре
+ * @route GET /player/game/info
+ * @group Игрок - Функции для взаимодействия с игровой механикой
+ * @operationId playerGameStatus
+ * @returns {FlagDto.model} 200 - Флаг
+ * @returns {ApiError.model} default - Ошибка запроса
+ * @security JWT
+ */
+router.get(
+    PlayerRoute.gameInfo,
+    [
+        authMiddleware,
+        check('users_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 })
+    ],
+    playerController.playerGameInfo
+)
 
 /**
  * Получение информации обо всех играх, которые существуют в настоящее время
@@ -513,5 +533,46 @@ router.post(
     ],
     playerController.judgeSetScore
 );
+
+/**
+ * Присоединение игрока к конкретной игре
+ * @route POST /player/join/game
+ * @group Игрок - Функции для взаимодействия с игровой механикой
+ * @operationId playerJoinGame
+ * @param {PlayerJoinGameDto.model} input.body.required - Информация для получения данных об игре
+ * @returns {FlagDto.model} 200 - Флаг
+ * @returns {ApiError.model} default - Ошибка запроса
+ * @security JWT
+ */
+router.post(
+    PlayerRoute.joinGame,
+    [
+        authMiddleware,
+        check('users_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 }),
+        check('info_games_id', 'Некорректный идентификатор игры').isInt({ min: 1 }),
+    ],
+    playerController.playerJoinGame
+);
+
+/**
+ * Выход игрока из текущей игры
+ * @route POST /player/detach/game
+ * @group Игрок - Функции для взаимодействия с игровой механикой
+ * @operationId playerJoinGame
+ * @param {PlayerDetachGameDto.model} input.body.required - Информация для получения данных об игре
+ * @returns {FlagDto.model} 200 - Флаг
+ * @returns {ApiError.model} default - Ошибка запроса
+ * @security JWT
+ */
+router.post(
+    PlayerRoute.detachGame,
+    [
+        authMiddleware,
+        check('users_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 }),
+        check('session_id', 'Некорректный идентификатор игровой сессии').isUUID("4"),
+    ],
+    playerController.playerDetachGame
+);
+
 
 export default router;

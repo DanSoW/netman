@@ -23,3 +23,11 @@ export interface IQuestDataModel {
 export interface IQuestData extends IQuestDataModel {
   mark: IMarkModel;
 }
+
+export interface IQuestGameModel {
+  task: string;
+  action: string;
+  radius: number;
+  hint: string;
+  marks_id: number;
+}

@@ -23,45 +23,39 @@ class CreatorService {
         const t = await db.sequelize.transaction();
 
         try {
-            const { location, date_begin, date_end,
-                type, rating, count_commands,
-                min_score, age_limit, name, quests, users_id } = data;
+            const { location, title, quests, users_id } = data;
 
-            const user = await db.Users.findOne({ where: { id: users_id } });
+            // Поиск прав доступа для создания игры
+            const userRoles = await db.UsersRoles.findAll({
+                where: {
+                    users_id: users_id
+                },
+                include: {
+                    model: db.Roles,
+                    where: {
+                        priority: { [db.Sequelize.Op.gt]: 1 }
+                    },
+                },
+            });
 
-            if (!user) {
-                throw ApiError.NotFound("Пользователя с данным идентификатором не существует");
+            if (userRoles.length === 0) {
+                throw ApiError.Forbidden("Нет доступа");
             }
 
-            // Проверка доступа пользователя к функионалу создателя
-            const modules = await securityService.checkAccessModule(users_id, NameModules.creator);
-            if (!modules) {
-                throw ApiError.Forbidden('Нет доступа');
-            }
+            const exists = await db.InfoGames.findOne({
+                where: {
+                    title: title.trim()
+                }
+            });
 
-            // Получение даты начала игры и завершения
-            const dateBegin = new Date(date_begin);
-            const dateEnd = new Date(date_end);
-
-            if (dateBegin > dateEnd) {
-                throw ApiError.BadRequest('Дата завершения игры не может быть раньше даты начала игры');
-            }
-
-            if (quests.length === 0) {
-                throw ApiError.BadRequest('Для создания игры необходимо добавить квесты');
+            if(exists) {
+                throw ApiError.BadRequest("Игра с таким названием уже существует!");
             }
 
             // Создание новой игры
-            const game = await db.InfoGames.create({
-                name: name,
-                max_count_commands: count_commands,
-                date_begin: date_begin,
-                date_end: date_end,
-                age_limit: age_limit,
-                type: type,
-                rating: rating,
-                min_score: min_score,
+            const infoGame = await db.InfoGames.create({
                 users_id: users_id,
+                title: title,
                 location: location
             }, { transaction: t });
 
@@ -79,22 +73,9 @@ class CreatorService {
                 // Создание связки игры с квестом
                 await db.GamesQuests.create({
                     quests_id: quest.dataValues.id,
-                    info_games_id: game.dataValues.id
+                    info_games_id: infoGame.dataValues.id
                 }, { transaction: t });
             }
-
-            // Добавление игры в очередь проверки модераторами
-            /*await db.QueueGames.create({
-                info_games_id: game.id,
-                date: new Date()
-            }, { transaction: t });*/
-
-            // Добавление игры в проверку (пропуск механизма модерации)
-            await db.CheckedGames.create({
-                info_games_id: game.id,
-                accepted: true,
-                users_id: null
-            }, { transaction: t });
 
             await t.commit();
 
@@ -358,7 +339,7 @@ class CreatorService {
                 // Удаление старого изображения
                 fs.unlinkSync(mark.ref_img);
             }
-            
+
             await db.TestMarks.update({ ref_img: filedata.path }, { where: { id: test_marks_id }, transaction: t });
 
             await t.commit();
