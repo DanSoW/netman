@@ -7,6 +7,7 @@ import "../../utils/array.js";
 import fs from 'fs';
 import GameStatus from '../../constants/status/game-status.js';
 import { v4 } from 'uuid';
+import QuestStatus from '../../constants/status/quest-status.js';
 
 
 /* Сервис управления картами */
@@ -382,22 +383,33 @@ class PlayerService {
             let quest = null;
 
             if (quests.length > 0) {
-                quest = await db.Quests.findOne({
-                    where: {
-                        id: quests[0].quests_id
-                    }
-                });
+                for(let i = 0; i < quests.length; i++) {
+                    const item = quests[i];
+                    const questItem = await db.Quests.findOne({
+                        where: {
+                            id: item.quests_id
+                        }
+                    });
 
-                // Определение текущего квеста для игрока
-                const createExecQuest = await db.ExecQuests.create({
-                    users_games_id: createUserGame.id,
-                    quests_id: quest.id,
-                    status: GameStatus.ACTIVE
-                }, { transaction: t });
+                    if(i == 0 && questItem) {
+                        quest = questItem;
+
+                        await db.ExecQuests.create({
+                            users_games_id: createUserGame.id,
+                            quests_id: quest.id,
+                            status: QuestStatus.ACTIVE
+                        }, { transaction: t });
+                    } else if(questItem) {
+                        await db.ExecQuests.create({
+                            users_games_id: createUserGame.id,
+                            quests_id: questItem.id,
+                            status: QuestStatus.NON_ACTIVE
+                        }, { transaction: t });
+                    }
+                }
             } else {
                 throw ApiError.BadRequest("У текущей игры отсутствуют квесты");
             }
-
 
             await t.commit();
 
@@ -417,20 +429,72 @@ class PlayerService {
      * @returns Результат выполнения запроса
      */
     async playerGameInfo(data) {
+        const t = await db.sequelize.transaction();
+
+        // Формирование списка текущих квестов
+        const findGameList = async () => {
+            const data = await db.InfoGames.findAll();
+            const games = [];
+
+            // Обход данных всех найденных игр
+            for (let i = 0; i < data.length; i++) {
+                const itemI = data[i];
+
+                const gamesQuests = await db.GamesQuests.findAll({
+                    where: {
+                        info_games_id: itemI.id
+                    }
+                });
+
+                // Поиск квестов для текущей игры
+                const quests = [];
+                for (let j = 0; j < gamesQuests.length; j++) {
+                    const itemJ = gamesQuests[j];
+
+                    const quest = await db.Quests.findOne({
+                        where: {
+                            id: itemJ.quests_id
+                        }
+                    });
+
+                    if (quest) {
+                        quests.push({
+                            ...quest.dataValues,
+                            status: itemJ.status,
+                            view: itemJ.view
+                        });
+                    }
+                }
+
+                games.push({
+                    ...itemI.dataValues,
+                    quests: quests
+                });
+            }
+
+            return games;
+        };
+
         try {
             const { users_id } = data;
 
+            // Поиск записи регистрации игрока за определённой игрой
             const userGame = await db.UsersGames.findOne({
                 where: {
                     users_id: users_id,
-                    status: GameStatus.ACTIVE
+                    status: {
+                        [db.Sequelize.Op.in]: [GameStatus.ACTIVE, GameStatus.COMPLETED]
+                    }
                 }
             });
 
             if (!userGame) {
-                // Обработка ситуации, когда у пользователя нет текущей игры
+                // Обработка ситуации, когда у пользователя нет текущей игры (значит нужно сформировать список доступных игр)
+                const games = await findGameList();
+
                 return {
-                    joined_game: false
+                    joined_game: false,
+                    games: games
                 };
             }
 
@@ -441,8 +505,15 @@ class PlayerService {
             });
 
             if (!game) {
+                // Удаляем зарегистрированную запись в таблице
+                await userGame.destroy({ transaction: t });
+                const games = await findGameList();
+
+                await t.commit();
+
                 return {
-                    joined_game: false
+                    joined_game: false,
+                    games: games
                 };
             }
 
@@ -453,48 +524,28 @@ class PlayerService {
                 }
             });
 
-            if (!execQuests) {
-                return {
-                    joined_game: false
-                };
-            }
+            // Формирование информации о текущем квесте
+            let quest = null;
 
-            // Формирование информации о всех квестах текущей игры
-            const quest = await db.Quests.findOne({
-                where: {
-                    id: execQuests.quests_id
-                }
-            });
-
-            /*const quests = [];
-            for(let i = 0; i < execQuests.length; i++) {
-                const item = execQuests[i];
-
-                const quest = await db.Quests.findOne({
+            if (execQuests) {
+                quest = await db.Quests.findOne({
                     where: {
-                        id: item.quests_id,
+                        id: execQuests.quests_id
                     }
                 });
-
-                if(quest) {
-                    const questInfo = {
-                        ...quest.dataValues,
-                        status: item.status
-                    };
-
-                    quests.push(questInfo);
-                }
-            }*/
+            }
 
             const result = {
                 ...game.dataValues,
                 session_id: userGame.session_id,
-                quest: quest.dataValues,
+                status: userGame.status,
+                quest: quest && quest.dataValues || null,
                 joined_game: true
             };
 
             return result;
         } catch (e) {
+            await t.rollback();
             throw ApiError.BadRequest(e.message);
         }
     }
@@ -533,6 +584,48 @@ class PlayerService {
             }
 
             await userGame.destroy({ transaction: t });
+
+            await t.commit();
+
+            return {
+                completed: true
+            };
+        } catch (e) {
+            await t.rollback();
+            throw ApiError.BadRequest(e.message);
+        }
+    }
+
+    /**
+     * Ручное завершение пользователем конкретной игры
+     * @param {*} data Данные запроса
+     * @returns Результат выполнения запроса
+     */
+    async playerCompletedGame(data) {
+        const t = await db.sequelize.transaction();
+
+        try {
+            const { users_id, session_id } = data;
+
+            const userGame = await db.UsersGames.findOne({
+                where: {
+                    users_id: users_id,
+                    session_id: session_id
+                }
+            });
+
+            if (!userGame) {
+                throw ApiError.BadRequest(`Игровой сессии с идентификатором "${session_id}" не найдено`);
+            }
+
+            if(userGame.dataValues.status !== GameStatus.COMPLETED) {
+                throw ApiError.BadRequest(`Игровая сессия с идентификатором "${session_id}" не завершена`);
+            }
+
+            // Обновление состояния игры
+            await userGame.update({
+                status: GameStatus.FINISH
+            }, { transaction: t });
 
             await t.commit();
 

@@ -186,6 +186,10 @@ class TokenService {
      * @returns {boolean} Результат проверки токена
      */
     async checkAccessToken(token) {
+        if(!token) {
+            return false;
+        }
+        
         try {
             // Попытка верифицировать токен JWT
             jwt.verify(token, process.env.JWT_ACCESS_SECRET);

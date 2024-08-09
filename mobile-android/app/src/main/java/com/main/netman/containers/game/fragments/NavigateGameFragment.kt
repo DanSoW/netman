@@ -59,14 +59,15 @@ class NavigateGameFragment :
                             GameModel::class.java
                         )
 
+                        val args = Bundle()
+                        args.putString(GameRouterKeys.GAME_INFO, Gson().toJson(body))
+
                         // Информация о текущей игре присутствует
                         if(body.joinedGame) {
-                            val args = Bundle()
-                            args.putString(GameRouterKeys.GAME_INFO, Gson().toJson(body))
-
                             navigation(R.id.action_navigateGameFragment_to_gameFragment, args)
                         } else {
                             // Информации о текущей игре нет
+                            navigation(R.id.action_navigateGameFragment_to_searchGameFragment, args)
                         }
                     } else {
                         val error = Gson().fromJson(

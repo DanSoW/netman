@@ -3,7 +3,7 @@
  * @property {number} users_id.required
  * @property {string} session_id.required
  */
-class PlayerDetachGameDto {
+class PlayerSessionGameDto {
     users_id;
     session_id;
 
@@ -13,4 +13,4 @@ class PlayerDetachGameDto {
     }
 }
 
-export default PlayerDetachGameDto;
+export default PlayerSessionGameDto;

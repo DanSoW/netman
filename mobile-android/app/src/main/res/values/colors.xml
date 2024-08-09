@@ -17,4 +17,5 @@
     <color name="warning_color">#FFC700</color>
     <color name="blue">#461498</color>
     <color name="gray">#B7B7B7</color>
+    <color name="success">#4CAF50</color>
 </resources>

@@ -22,6 +22,9 @@
         <action
             android:id="@+id/action_navigateGameFragment_to_gameFragment"
             app:destination="@id/gameFragment" />
+        <action
+            android:id="@+id/action_navigateGameFragment_to_searchGameFragment"
+            app:destination="@id/searchGameFragment" />
     </fragment>
     <fragment
         android:id="@+id/findTeamFragment"
@@ -81,6 +84,15 @@
         android:label="GameFragment" >
         <action
             android:id="@+id/action_gameFragment_to_navigateGameFragment"
+            app:destination="@id/navigateGameFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/searchGameFragment"
+        android:name="com.main.netman.containers.game.fragments.SearchGameFragment"
+        android:label="fragment_search_game"
+        tools:layout="@layout/fragment_search_game" >
+        <action
+            android:id="@+id/action_searchGameFragment_to_navigateGameFragment"
             app:destination="@id/navigateGameFragment" />
     </fragment>
 </navigation>

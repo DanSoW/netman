@@ -7,6 +7,8 @@ object SocketHandlerConstants {
 
     const val STATUS = "status"
     const val STATUS_ON = "status_on"
+    const val STATUS_OFF = "status_off"
+    const val STATUS_COMPLETED = "status_completed"
 
     const val COMMAND_STATUS = "command_status"
     const val COMMAND_STATUS_ON = "command_status_on"
@@ -26,8 +28,10 @@ object SocketHandlerConstants {
     const val FINISHED_QUEST = "finished_quest"
     const val FINISHED_QUEST_SUCCESS = "finished_quest_success"
 
-    const val REPEAT_STATUS_REQUEST = "repeat_status_request";
+    const val REPEAT_STATUS_REQUEST = "repeat_status_request"
     const val GAME_OVER = "game_over"
     const val GAME_OVER_DISCONNECT = "game_over_disconnect"
     const val GAME_OVER_DISCONNECT_SUCCESS = "game_over_disconnect_success"
+
+    const val VIEW_CURRENT_QUEST = "view_current_quest"
 }

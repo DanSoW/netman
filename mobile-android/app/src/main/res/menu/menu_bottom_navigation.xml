@@ -25,7 +25,7 @@
 
     <item
         android:id="@+id/itemMapMenu"
-        android:icon="@drawable/ic_menu_item_map"
+        android:icon="@drawable/ic_map_icon_1"
         android:title="@string/map_text" />
 
     <item

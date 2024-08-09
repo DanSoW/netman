@@ -1,5 +1,8 @@
 package com.main.netman.event
 
-data class ViewMarkerEvent(
-    var marker:
+import com.main.netman.models.game.QuestMarkModel
+
+data class ViewMarkEvent(
+    var questId: Int? = null,
+    var mark: QuestMarkModel? = null
 )

@@ -112,4 +112,16 @@ interface PlayerApi {
      */
     @POST(PlayerApiConstants.PLAYER_DETACH_GAME)
     suspend fun playerDetachGame(@Body requestBody: RequestBody): Response<ResponseBody>
+
+    /**
+     * Присоединение к определённой игре
+     */
+    @POST(PlayerApiConstants.PLAYER_JOIN_GAME)
+    suspend fun playerJoinGame(@Body requestBody: RequestBody): Response<ResponseBody>
+
+    /**
+     * Завершение игровой сессии
+     */
+    @POST(PlayerApiConstants.PLAYER_COMPLETED_GAME)
+    suspend fun playerCompletedGame(@Body requestBody: RequestBody): Response<ResponseBody>
 }

@@ -36,6 +36,10 @@ import fs from 'fs';
 /* Добавление поддержки require в ES Modules */
 import { createRequire } from "module";
 import jwtService from './services/token/jwt-service.js';
+import tokenService from './services/token/token-service.js';
+import GameStatus from './constants/status/game-status.js';
+import ViewStatus from './constants/status/view-status.js';
+import QuestStatus from './constants/status/quest-status.js';
 const require = createRequire(import.meta.url);
 const socket = require('socket.io');
 
@@ -272,13 +276,23 @@ io.on("connection", (socket) => {
         try {
             // Аутентификация пользователя и занесение его в глобальный объект
             const dataEx = JSON.parse(data);
+
+            const tokenValid = tokenService.checkAccessToken(dataEx.access_token);
+            if (!tokenValid) {
+                socket.emit("authentication_failed");
+                return;
+            }
+
+            // Декодированные по токену данные о пользователе
             const usersData = jwtService.decode(dataEx.access_token);
+            const findUser = await tokenService.findTokenByAccessToken(usersData.users_id, dataEx.access_token);
 
-            let checks = {
-                token: false,
-                exists: false
-            };
+            if (!usersData.users_id || !findUser) {
+                socket.emit("authentication_failed");
+                return;
+            }
 
+            // Фактические (в БД) данные о пользователе
             const user = await db.Users.findOne({
                 where: {
                     id: usersData.users_id
@@ -286,14 +300,6 @@ io.on("connection", (socket) => {
             });
 
             if (!user) {
-                socket.emit("authentication_failed");
-                return;
-            }
-
-            checks.exists = true; //await token_access.checkTokenAccess(user_data.users_email);
-            checks.token = true; //await token_access.checkToken(user_data.token);
-
-            if ((!checks.token) || (!checks.exists)) {
                 socket.emit("authentication_failed");
                 return;
             }
@@ -308,7 +314,7 @@ io.on("connection", (socket) => {
                 return;
             }
 
-            // Иначе добавляем нового пользователя во временную БД
+            // Иначе добавляем нового пользователя во временную БД (заменить на Redis)
             dataUsers.push({
                 users_id: usersData.users_id,
                 socket_id: socket.id,
@@ -323,6 +329,8 @@ io.on("connection", (socket) => {
 
     // Обработка события - "Получение текущего статуса игрока"
     socket.on("status", async () => {
+        const t = await db.sequelize.transaction();
+
         try {
             // Поиск пользователя из списка подключенных
             let index = duExistsValueIndex(dataUsers, socket.id);
@@ -330,303 +338,312 @@ io.on("connection", (socket) => {
                 return;
             }
 
-            // Обработка определения судейский прав
-            const judge = await db.FixJudges.findAll({
+            const dataUser = dataUsers[index];
+
+            // Поиск игры, на который в данный момент пользователь зарегистрирован
+            const userGame = await db.UsersGames.findOne({
                 where: {
-                    users_id: dataUsers[index].users_id
+                    users_id: dataUser.users_id,
+                    status: {
+                        [db.Sequelize.Op.in]: [GameStatus.ACTIVE, GameStatus.COMPLETED]
+                    }
                 }
             });
 
-            // Отсеивание тех судейских записей, которые в данный момент не актуальны
-            await judge.removeIfAsync(async (item) => {
-                // Получение информации о завершённой игре
-                const isCompleted = await db.CompleteGames.findOne({
-                    where: {
-                        info_games_id: item.info_games_id,
-                        commands_id: item.commands_id
-                    }
-                });
-
-                // Получение информации об игре
-                const isGameEnding = await db.InfoGames.findOne({
-                    where: {
-                        id: item.info_games_id,
-                        date_end: {
-                            [db.Sequelize.Op.lt]: (new Date())
-                        }
-                    }
-                });
-
-                // Если игра была завершена командой или завершена фактически (из-за её времени), то удаляем информацию о судействе
-                return (isCompleted || isGameEnding);
-            });
-
-            // Если игрок судья
-            if (judge.length > 0) {
-                // то, возвращаем игроку статус судьи
-                socket.emit("status_on", JSON.stringify({
-                    player: false,
-                    judge: true,
-                    player_status: 0
-                }),
-                    JSON.stringify({
-                        ...judge[0].dataValues
-                    })
-                );
-
-                // Отправка сообщения пользователю - "Очисти все игровые метки на карте"
-                // socket.emit("clear_games_marks");
-
-                // Завершение определения статуса игрока (судья)
+            if (!userGame) {
+                socket.emit("status_off");
+                return;
+            } else if (userGame.status === GameStatus.COMPLETED) {
+                socket.emit("status_completed");
                 return;
             }
 
-            // Получение информации об игроке
-            const dataPlayers = await db.DataPlayers.findOne({
+            const infoGame = await db.InfoGames.findOne({
                 where: {
-                    users_id: dataUsers[index].users_id
+                    id: userGame.info_games_id
                 }
             });
 
-            // Если данных об игроке нет
-            if (!dataPlayers) {
-                // то, отправляем статус - "Отсутствие статуса"
-                socket.emit(
-                    "status_off",
-                    JSON.stringify({
-                        player: false,
-                        judge: false,
-                        player_status: 0
-                    })
-                );
-
-                // Завершение определения статуса игрока (пользователь)
+            if (!infoGame) {
+                // Пользователь не зарегистрирован ни на одну игру
+                socket.emit("status_off");
                 return;
             }
 
-            // Если данные об игроке есть, но команды у пользователя нет
-            if (!dataPlayers.commands_id) {
-                // то, отправляем статус - "Обычный пользователь"
-                socket.emit(
-                    "status_on",
-                    JSON.stringify({
-                        player: false,
-                        judge: false,
-                        player_status: 0
-                    })
-                );
-
-                // Очистка игровых меток на карте
-                // socket.emit("clear_games_marks");
-
-                // Завершение определения статуса игрока (пользователь)
-                return;
-            }
-
-            // Установка статуса пользователя как игрока (по умолчанию)
-            let playerStatus = 1;
-
-            // Получение информации об операторе квеста
-            /*const video = await db.VideoShooters.findOne({
+            // Пользователь зарегистрирован на какую-то игру, теперь необходимо понять его текущий выполняемый квест
+            const currentExecQuest = await db.ExecQuests.findOne({
                 where: {
-                    data_players_id: dataPlayers.id
-                }
-            });*/
-
-            const command = await db.Commands.findOne({
-                where: {
-                    id: dataPlayers.commands_id
+                    users_games_id: userGame.id,
+                    status: GameStatus.ACTIVE
                 }
             });
 
-            // Если игрок оператор
-            if (command && command.users_id === dataPlayers.users_id) {
-                // то, устанавливаем ему статус оператора
-                playerStatus = 2;
-            }
-
-            // Получаем информацию о текущей игре
-            const currentGames = await db.CurrentGames.findOne({
-                where: {
-                    commands_id: dataPlayers.commands_id,
-                }
-            });
-
-            // Если текущая игра отсутствует
-            if (!currentGames) {
-                // то, отправляем статус - "Обычный пользователь"
-                socket.emit(
-                    "status_on",
-                    JSON.stringify({
-                        player: false,
-                        judge: false,
-                        player_status: 0
-                    })
-                );
-
-                // Если текущей игры нет, то нет необходимости быть закреплённым за определённую комнату
-                if (!(socket.rooms.has(dataPlayers.commands_id))) {
-                    // Для каждой команды создаётся своя комната, в которую посылается множество событий
-                    // для команды, а если текущей игры нет и пользователь находится в командной комнате
-                    // то есть смысл удалить его из этой комнаты (всех пользователей удаляем)
-                    socket.leave(dataPlayers.commands_id);
-                }
-
-                // Событие "очистить все игровые метки"
-                // socket.emit("clear_games_marks");
-
-                // Завершение определения статуса игрока (пользователь)
-                return;
-            } else {
-                // Если текущая игра присутствует - продолжаем определение конечной роли пользователя
-                // Поиск регистрационной записи
-                let registerGame = await db.RegisterCommands.findOne({
+            if (!currentExecQuest) {
+                // Игры нет, проверяем прошёл ли пользователь всю игру
+                const finishedQuests = await db.ExecQuests.findAll({
                     where: {
-                        info_games_id: currentGames.info_games_id,
-                        commands_id: currentGames.commands_id
+                        users_games_id: userGame.id,
+                        status: GameStatus.FINISH
                     }
                 });
 
-                // Поиск всех игр команды
-                let games = await db.Games.findAll({
-                    where: {
-                        register_commands_id: registerGame.id,
-                    }
-                });
+                if (finishedQuests.length == 0) {
+                    // На всякий случай завершаем игру, для целостности данных в БД
+                    await userGame.update({
+                        status: GameStatus.FINISH
+                    }, { transaction: t });
 
-                // Поиск всех завершённых игр команды
-                let gamesFinisheds = await db.FinishedGames.findAll({
-                    where: {
-                        games_id: {
-                            [db.Sequelize.Op.in]: games.map((item) => item.id)
-                        }
-                    }
-                });
+                    await t.commit();
 
-                // Подсчёт количества игр в рамках одного квеста
-                let countQuests = (await db.GamesQuests.findAll({
-                    where: {
-                        info_games_id: currentGames.info_games_id
-                    }
-                })).length;
-
-                // Количество квестов в игре соответствует количеству пройденных квестов (вся игра выполнена командой)
-                if (gamesFinisheds.length === countQuests) {
-                    // Обработка обстоятельства, в котором игра находится
-                    // на этапе судейской проверки
-                    socket.emit(
-                        "status_on",
-                        JSON.stringify({
-                            player: false,
-                            judge: false,
-                            player_status: 0
-                        })
-                    );
-
-                    // Завершение определения статуса игрока (пользователь)
+                    socket.emit("status_off");
                     return;
                 } else {
-                    // Иначе - игры ещё не завершены, а значит игра продолжается
-                    // Перезаписываем список игр, которые ещё не были пройдены (вдруг к этому моменту что-то поменялось)
-                    games = await db.Games.findAll({
-                        where: {
-                            id: {
-                                [db.Sequelize.Op.and]: [
-                                    { [db.Sequelize.Op.notIn]: gamesFinisheds.map((item) => item.games_id) },
-                                    { [db.Sequelize.Op.in]: games.map((item) => item.id) }
-                                ]
-                            }
-                        }
-                    });
+                    await userGame.update({
+                        status: GameStatus.COMPLETED
+                    }, { transaction: t });
 
-                    // Если игра ещё не была поставлена на очередь
-                    if (games.length === 0) {
-                        // то, отправляем игроку пустой статус (без ухода из групповой комнаты)
-                        socket.emit(
-                            "status_on",
-                            JSON.stringify({
-                                player: false,
-                                judge: false,
-                                player_status: 0
-                            })
-                        );
+                    await t.commit();
 
-                        // Отправив повторный статус пользователь узнает прошёл ли он игру или находится игра
-                        // на этапе судейской оценки
-
-                        // Завершение определения статуса игрока (пользователь)
-                        return;
-                    } else {
-                        // Теперь известно, что games[0] - текущая игра за которой закреплена команда
-                        const currentGameQuest = games[0];
-
-                        // Получаем информацию о квесте текущей игры (с геолокацией)
-                        const currentGameQuestInfo = await db.Quests.findOne({
-                            where: {
-                                id: currentGameQuest.quests_id
-                            },
-                            include: {
-                                model: db.Marks
-                            }
-                        });
-
-                        // Подключение на прослушивание игровых сообщений внутри команды
-                        if (!(socket.rooms.has(currentGames.commands_id))) {
-                            // Добавление игрока в комнату команды (название команды уникально)
-                            socket.join(currentGames.commands_id);
-                        }
-
-                        // Отправка игроку информации, о текущем задании
-                        socket.emit(
-                            "status_on",
-                            JSON.stringify({
-                                player: true,
-                                judge: false,
-                                player_status: playerStatus
-                            }),
-                            JSON.stringify({
-                                task: currentGameQuestInfo.task,
-                                action: currentGameQuestInfo.action,
-                                hint: currentGameQuestInfo.hint,
-                                number: ((await db.Games.findAll({
-                                    where: {
-                                        id: {
-                                            [db.Sequelize.Op.in]: gamesFinisheds.map((item) => item.games_id)
-                                        }
-                                    }
-                                })).length + 1),
-                                ...currentGameQuest.dataValues,
-                                current_games_id: currentGames.id
-                            })
-                        );
-
-                        // Если данный квест видим
-                        if (currentGameQuest.view) {
-                            // То отправляем сообщение пользователям - "Визуализируй видимый квест"
-                            socket.emit(
-                                "set_view_current_quest",
-                                JSON.stringify({
-                                    games_id: currentGameQuest.id,
-                                    radius: currentGameQuestInfo.radius,
-                                    lat: currentGameQuestInfo.dataValues.mark.dataValues.lat,
-                                    lng: currentGameQuestInfo.dataValues.mark.dataValues.lng
-                                })
-                            );
-
-                            // Отправка сообщения всем игрокам команды о том, 
-                            // что необходимо загрузить медиафайл с инструкцией
-                            socket.emit("load_media_instructions");
-                        } else {
-                            // Очистка меток
-                            // socket.emit("clear_games_marks");
-
-                            // Не загружаем медиафайл с инструкцией
-                            socket.emit("not_load_media_instructions");
-                        }
-                    }
+                    // Игра пройдена с вероятностью 90%
+                    socket.emit("status_completed");
+                    return;
                 }
             }
+
+            // Присутствует текущий квест, необходимо отправить статус с информацией о текущем квесте
+            const currentQuest = await db.Quests.findOne({
+                where: {
+                    id: currentExecQuest.quests_id
+                }
+            });
+
+            if (!currentQuest) {
+                // Пользователь не зарегистрирован ни на одну игру
+                await userGame.update({
+                    status: GameStatus.FINISH
+                }, { transaction: t });
+
+                await t.commit();
+
+                socket.emit("status_off");
+                return;
+            }
+
+            const currentMark = await db.Marks.findOne({
+                where: {
+                    id: currentQuest.marks_id
+                }
+            });
+
+            if (!currentMark) {
+                // Пользователь не зарегистрирован ни на одну игру
+                await userGame.update({
+                    status: GameStatus.FINISH
+                }, { transaction: t });
+
+                await t.commit();
+
+                socket.emit("status_off");
+                return;
+            }
+
+            // Отправляем статус о текущем квесте
+            socket.emit(
+                "status_on",
+                JSON.stringify({
+                    ...currentQuest.dataValues,
+                    mark: currentMark.dataValues,
+                    status: currentExecQuest.status,
+                    view: currentExecQuest.view,
+                    users_games_id: userGame.id
+                })
+            );
         } catch (e) {
+            await t.rollback();
+            console.log(e);
+        }
+    });
+
+    // Обработка события - "Текущий квест найден, необходимо его визуализировать"
+    socket.on("view_current_quest", async (data) => {
+        const t = await db.sequelize.transaction();
+
+        try {
+            // Поиск пользователя из списка подключенных
+            let index = duExistsValueIndex(dataUsers, socket.id);
+            if (index < 0) {
+                return;
+            }
+
+            const dataUser = dataUsers[index];
+            if (!dataUser.users_id) {
+                return;
+            }
+
+            if (!data) {
+                return;
+            }
+
+            const parseData = JSON.parse(data);
+            const userGame = await db.UsersGames.findOne({
+                where: {
+                    id: parseData.users_games_id,
+                    users_id: dataUser.users_id
+                }
+            });
+
+            if (!userGame) {
+                return;
+            }
+
+            const execQuest = await db.ExecQuests.findOne({
+                where: {
+                    users_games_id: userGame.id,
+                    quests_id: parseData.id,
+                    view: ViewStatus.INVISIBLE
+                }
+            });
+
+            if (!execQuest) {
+                return;
+            }
+
+            // Обновление данных в БД по текущему квесту
+            await execQuest.update({
+                view: ViewStatus.VISIBLE
+            }, { transaction: t });
+
+            await t.commit();
+
+            // Изменяем полученные данные
+            parseData.view = ViewStatus.VISIBLE;
+
+            // Отправляем новый статус текущему пользователю
+            socket.emit(
+                "status_on",
+                JSON.stringify(parseData)
+            );
+        } catch (e) {
+            await t.rollback();
+            console.log(e);
+        }
+    });
+
+    // Обработка события - "Текущий игровой квест завершён"
+    socket.on("finished_quest", async (data) => {
+        const t = await db.sequelize.transaction();
+        try {
+            let index = duExistsValueIndex(dataUsers, socket.id);
+
+            if (index < 0) {
+                return;
+            }
+
+            const dataUser = dataUsers[index];
+            if (!dataUser.users_id) {
+                return;
+            }
+
+            const parseData = JSON.parse(data);
+            const userGame = await db.UsersGames.findOne({
+                where: {
+                    id: parseData.users_games_id,
+                    users_id: dataUser.users_id
+                }
+            });
+
+            if (!userGame) {
+                return;
+            }
+
+            const execQuest = await db.ExecQuests.findOne({
+                where: {
+                    users_games_id: userGame.id,
+                    quests_id: parseData.id,
+                    view: ViewStatus.VISIBLE // Нельзя завершить квест, который не виден пользователю
+                }
+            });
+
+            if (!execQuest) {
+                return;
+            }
+
+            // Обновление данных в БД по текущему квесту (квест завершён)
+            await execQuest.update({
+                status: QuestStatus.FINISH,
+            }, { transaction: t });
+
+            const nonActiveQuest = await db.ExecQuests.findOne({
+                where: {
+                    users_games_id: userGame.id,
+                    status: QuestStatus.NON_ACTIVE
+                }
+            });
+
+            // Формируем следующий квест на очередь
+            if(nonActiveQuest) {
+                await nonActiveQuest.update({
+                    status: QuestStatus.ACTIVE,
+                }, { transaction: t });
+            }
+
+            await t.commit();
+
+            // Отправляем сообщение "Запусти процесс получения повторного состояния" (корневая функция игрового статуса)
+            socket.emit("repeat_status_request");
+        } catch (e) {
+            await t.rollback();
+            console.log(e);
+        }
+    });
+
+
+
+
+
+
+    // Обработка события - "Запись текущих координат игрока в базу данных"
+    socket.on("set_current_coordinates", async (data) => {
+        const t = await db.sequelize.transaction();
+        try {
+            const location = JSON.parse(data);
+
+            let index = duExistsValueIndex(dataUsers, socket.id);
+
+            if (index < 0) {
+                return;
+            }
+
+            const user = dataUsers[index];
+            if (!user.users_id) {
+                return;
+            }
+
+            const coordPlayers = await db.CoordPlayers.findOne({
+                where: {
+                    users_id: user.users_id
+                }
+            });
+
+            if (!coordPlayers) {
+                await db.CoordPlayers.create({
+                    users_id: user.userd_id,
+                    lat: location.lat,
+                    lng: location.lng
+                }, { transaction: t });
+
+                await t.commit();
+                return;
+            }
+
+            await coordPlayers.update({
+                lat: location.lat,
+                lng: location.lng
+            }, { transaction: t });
+
+            await t.commit();
+        } catch (e) {
+            await t.rollback();
             console.log(e);
         }
     });
@@ -743,52 +760,6 @@ io.on("connection", (socket) => {
         }
     });
 
-    // Обработка события - "Запись текущих координат игрока в базу данных"
-    socket.on("set_current_coordinates", async (data) => {
-        const t = await db.sequelize.transaction();
-        try {
-            const location = JSON.parse(data);
-
-            let index = duExistsValueIndex(dataUsers, socket.id);
-
-            if (index < 0) {
-                return;
-            }
-
-            const user = dataUsers[index];
-            if (!user.users_id) {
-                return;
-            }
-
-            const coordPlayers = await db.CoordPlayers.findOne({
-                where: {
-                    users_id: user.users_id
-                }
-            });
-
-            if (!coordPlayers) {
-                await db.CoordPlayers.create({
-                    users_id: user.userd_id,
-                    lat: location.lat,
-                    lng: location.lng
-                }, { transaction: t });
-
-                await t.commit();
-                return;
-            }
-
-            await coordPlayers.update({
-                lat: location.lat,
-                lng: location.lng
-            }, { transaction: t });
-
-            await t.commit();
-        } catch (e) {
-            await t.rollback();
-            console.log(e);
-        }
-    });
-
     // Обработка события - "Получение координат пользователя из базы данных"
     socket.on("get_my_coordinates", async () => {
         try {
@@ -816,54 +787,6 @@ io.on("connection", (socket) => {
         }
     });
 
-    // Обработка события - "Текущий игровой квест завершён"
-    socket.on("finished_quest", async (data) => {
-        const t = await db.sequelize.transaction();
-        try {
-            const questInfo = JSON.parse(data);
-
-            let index = duExistsValueIndex(dataUsers, socket.id);
-
-            if (index < 0) {
-                return;
-            }
-
-            const user = dataUsers[index];
-            if (!user.users_id) {
-                return;
-            }
-
-            const command = await db.Commands.findOne({
-                where: {
-                    users_id: user.users_id
-                }
-            });
-
-            if (!command) {
-                return;
-            }
-
-            // Добавление завершённой игры команды
-            await db.FinishedGames.create({
-                games_id: questInfo.games_id,
-                ref_image: ''
-            }, { transaction: t });
-
-            await t.commit();
-
-            // Отправка всем членам команды сообщения о завершении игры
-            io.to(command.id).emit(
-                "finished_quest_success",
-                JSON.stringify({
-                    games_id: questInfo.games_id
-                })
-            );
-        } catch (e) {
-            await t.rollback();
-            console.log(e);
-        }
-    });
-
     socket.on("game_over_disconnect", async () => {
         try {
             let index = duExistsValueIndex(dataUsers, socket.id);
@@ -882,7 +805,7 @@ io.on("connection", (socket) => {
                 }
             }
 
-            if(room && socket.rooms.has(room)) {
+            if (room && socket.rooms.has(room)) {
                 socket.leave(room);
             }
 
@@ -921,224 +844,6 @@ io.on("connection", (socket) => {
     });
 });
 
-// Механизм определения судей для команды
-/*timerJudge = setInterval(async () => {
-    if (!gameProcess) {
-        return;
-    }
-
-    while (lockJudge && gameProcess) {
-        if (!gameProcess) {
-            return;
-        }
-
-        await sleep(10);
-    }
-
-    if (!gameProcess) {
-        return;
-    }
-
-    lockJudge = true;
-    const t = await db.sequelize.transaction();
-
-    try {
-        // Получение списка всех игр
-        const games = await db.CurrentGames.findAll();
-
-        // Фильтруем список игр таким образом, что остаются 
-        // только те текущие игры, которые остались без судьи
-        await games.removeIfAsync(async (item) => {
-            const fixJudges = await db.FixJudges.findOne({
-                where: {
-                    commands_id: item.commands_id,
-                    info_games_id: item.info_games_id
-                }
-            });
-
-            return (fixJudges) ? true : false;
-        });
-
-        // Формирование списка идентификаторов всех команд, которые в
-        // данный момент имеют текущую игру
-        const allCommandsId = games.map((item) => {
-            return item.commands_id
-        });
-
-        for (let i = 0; i < games.length; i++) {
-            // Алгоритм закрепления судьи за определённой командой
-            // Описание:
-            // Проихсодит получение всех игроков, которые не принадлежат командам,
-            // которые имеют в настоящий момент текущую игру (чтобы не отвлекать других игроков от судейской роли),
-            // в случае, если таких игроков нет, то происходит рандомный выбор игрока судьи из всех имеющихся игроков [NOT CORRECT]
-
-            // Выбор всех игроков, которые не принадлежат ни одной команде
-            let players = await db.DataPlayers.findAll({
-                where: {
-                    commands_id: {
-                        [db.Sequelize.Op.notIn]: allCommandsId
-                    }
-                }
-            });
-
-            // Если таких игроков нет, то выбираем судью из всех имеющихся игроков (рандомным образом)
-            if (players.length == 0) {
-                players = await db.DataPlayers.findAll();
-            }
-
-            // Отсеивание игроков, которые уже являются судьями для текущих игр
-            await players.removeIfAsync(async (item) => {
-                // Считывание судейской статистики данного игрока
-                const fixJudges = await db.FixJudges.findAll({
-                    where: {
-                        users_id: item.users_id
-                    }
-                });
-
-                // Фильтрация судейской статистики данного игрока
-                await fixJudges.removeIfAsync(async (item) => {
-                    const isCompleted = await db.CompleteGames.findOne({
-                        where: {
-                            info_games_id: item.info_games_id,
-                            commands_id: item.commands_id
-                        }
-                    });
-
-                    const isGameEnding = await db.InfoGames.findOne({
-                        where: {
-                            id: item.info_games_id,
-                            date_end: {
-                                [db.Sequelize.Op.lt]: (new Date())
-                            }
-                        }
-                    });
-
-                    return (isCompleted || isGameEnding);
-                });
-
-                return (fixJudges.length > 0) ? true : false;
-            });
-
-            if (players.length > 0) {
-                // Выбор рандомного игрока
-                const index = getRandomInt(0, (players.length - 1));
-
-                // Добавление выбранного игрока за текущей игрой в качестве судьи
-                await db.FixJudges.create(
-                    {
-                        users_id: players[index].users_id,
-                        commands_id: games[i].commands_id,
-                        info_games_id: games[i].info_games_id
-                    },
-                    { transaction: t }
-                );
-            }
-        }
-
-        await t.commit();
-    } catch (e) {
-        await t.rollback();
-        console.log(e);
-    }
-
-    lockJudge = false;
-}, 5000);*/
-
-timerGame = setInterval(async () => {
-    if (!gameProcess) {
-        return;
-    }
-
-    while (lockGame && gameProcess) {
-        if (!gameProcess) {
-            return;
-        }
-
-        await sleep(10);
-    }
-
-    if (!gameProcess) {
-        return;
-    }
-
-    lockGame = true;
-    const t = await db.sequelize.transaction();
-
-    try {
-        // Выбор всех команд, у которых имеются текущие игры
-        const teamsHaveGames = await db.CurrentGames.findAll();
-
-        // Выбор всех команд, у которых текущих игр не имеется
-        const commands = await db.Commands.findAll({
-            where: {
-                id: {
-                    [db.Sequelize.Op.notIn]: teamsHaveGames.map((item) => item.commands_id)
-                }
-            }
-        });
-
-        if (commands.length > 0) {
-            // Выбор всех записей в таблице регистрации, которые определяют регистрацию команды на игру
-            const registers = await db.RegisterCommands.findAll({
-                where: {
-                    commands_id: {
-                        [db.Sequelize.Op.in]: commands.map((item) => item.id)
-                    }
-                }
-            });
-
-            // Фильтрация данных в таблице регистрации: нужны только те записи регистрации для
-            // команд, которые не были пройдены командами, а также записи, где игры,
-            // на которые были зарегистрированы команды ещё не закончились
-            await registers.removeIfAsync(async (item) => {
-                const value1 = await db.CompleteGames.findOne({
-                    where: {
-                        commands_id: item.commands_id,
-                        info_games_id: item.info_games_id
-                    }
-                });
-
-                // Поиск игры, которая уже началась по данной записи в таблице регистрации
-                const value2 = await db.InfoGames.findOne({
-                    where: {
-                        id: item.info_games_id,
-                        // Дата начала игры меньше текущей даты (или равна ей)
-                        date_begin: {
-                            [db.Sequelize.Op.lte]: (new Date())
-                        },
-                        // И дата завершения игры больше текущей даты
-                        date_end: {
-                            [db.Sequelize.Op.gt]: (new Date())
-                        }
-                    }
-                });
-
-                // Если игра завершена или нет такой игры, которая началась, но ещё не завершалась,
-                // то удаляем данную запись из таблицы регистрации
-                return ((value1) || (!value2));
-            });
-
-            // Перебираем все записи, по которым необходимо добавить новую текущую игру
-            // для каждой команды, которая на такую игру зарегистрировалась
-            for (let i = 0; i < registers.length; i++) {
-                await db.CurrentGames.create(
-                    {
-                        commands_id: registers[i].commands_id,
-                        info_games_id: registers[i].info_games_id
-                    },
-                    { transaction: t }
-                );
-            }
-        }
-
-        await t.commit();
-    } catch (e) {
-        await t.rollback();
-        console.log(e);
-    }
-
-    lockGame = false;
-}, 5000);
 
 // Данная функция просматривает текущие игры и определяет
 // на каком этапе находятся игроки, которые её проходят

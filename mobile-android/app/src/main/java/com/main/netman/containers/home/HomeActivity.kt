@@ -6,7 +6,6 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Button
 import androidx.core.app.ActivityCompat
@@ -15,25 +14,23 @@ import androidx.lifecycle.MutableLiveData
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.gson.Gson
 import com.main.netman.R
+import com.main.netman.constants.game.ViewStatusConstants
 import com.main.netman.constants.socket.SocketHandlerConstants
 import com.main.netman.containers.game.GameActivity
 import com.main.netman.containers.profile.ProfileActivity
 import com.main.netman.databinding.ActivityHomeBinding
 import com.main.netman.event.CurrentGameEvent
-import com.main.netman.event.CurrentQuestEvent
+import com.main.netman.event.RemoveMarkEvent
+import com.main.netman.event.ViewMarkEvent
 import com.main.netman.models.auth.AuthModel
 import com.main.netman.models.game.CurrentGameModel
-import com.main.netman.models.quest.GamesIdModel
-import com.main.netman.models.quest.QuestActionModel
-import com.main.netman.models.quest.QuestIdModel
-import com.main.netman.models.user.GameStatusModel
+import com.main.netman.models.game.GameQuestModel
 import com.main.netman.network.handlers.SCSocketHandler
 import com.main.netman.store.CurrentQuestPreferences
 import com.main.netman.store.UserPreferences
 import com.main.netman.store.currentQuestDataStore
 import com.main.netman.store.userDataStore
 import com.main.netman.utils.handleErrorMessage
-import com.main.netman.utils.handleSuccessMessage
 import com.main.netman.utils.startStdActivity
 import com.main.netman.utils.visible
 import io.socket.client.Socket
@@ -96,6 +93,11 @@ class HomeActivity : AppCompatActivity() {
         userPreferences = UserPreferences(userDataStore)
         currentQuestPreferences = CurrentQuestPreferences(currentQuestDataStore)
 
+        // Предварительная очистка всех данных о старом квесте (если таковой имеется)
+        runBlocking {
+            // currentQuestPreferences.clear()
+        }
+
         val data = Gson().fromJson(runBlocking {
             userPreferences.auth.first()
         }, AuthModel::class.java)
@@ -107,7 +109,7 @@ class HomeActivity : AppCompatActivity() {
 
         binding.icArrow.setOnClickListener {
             // Поворот view элемента на 180 градусов
-            binding.icArrow.rotation = binding.icArrow.rotation + 180f
+            binding.icArrow.rotation += 180f
             if (binding.descriptionScrollView.visibility == View.VISIBLE) {
                 binding.descriptionScrollView.visibility = View.GONE
             } else {
@@ -116,8 +118,8 @@ class HomeActivity : AppCompatActivity() {
         }
 
         binding.icArrowAction.setOnClickListener {
-            binding.icArrowAction.rotation = binding.icArrowAction.rotation + 180f
-            if(binding.actionScrollView.visibility == View.VISIBLE){
+            binding.icArrowAction.rotation += 180f
+            if (binding.actionScrollView.visibility == View.VISIBLE) {
                 binding.actionScrollView.visibility = View.GONE
             } else {
                 binding.actionScrollView.visibility = View.VISIBLE
@@ -144,147 +146,40 @@ class HomeActivity : AppCompatActivity() {
                     return@on
                 }
 
-                // Получение статуса игрока в текущий момент времени
-                val status = Gson().fromJson(itLocal.first() as String, GameStatusModel::class.java)
-
-                if (status.player) {
-                    if (itLocal.size > 1 && itLocal[1] != null) {
-                        runOnUiThread {
-                            binding.cardTask.visibility = View.VISIBLE
-                            binding.cardAction.visibility = View.GONE
-                            binding.cardHint.visibility = View.VISIBLE
-                            binding.descriptionScrollView.visibility = View.GONE
-                            binding.actionScrollView.visibility = View.GONE
-
-                            val dataJson = itLocal[1].toString()
-
-                            val task = Gson().fromJson(dataJson, CurrentGameModel::class.java)
-                            if(task.view == true) {
-                                binding.cardAction.visibility = View.VISIBLE
-                            }
-
-                            binding.tvTaskDescription.text = task.task
-                            binding.tvNumberQuest.text = "№ ${task.number}"
-                            binding.tvGameHint.text = task.hint
-                            binding.tvActionDescription.text = task.action
-
-                            binding.icCameraOn.visibility = View.GONE
-                            binding.icCameraOff.visibility = View.GONE
-
-                            if ((status.playerStatus == 2) && (task.view == true)) {
-                                binding.icCameraOn.visibility = View.VISIBLE
-                            } else if (status.playerStatus == 2) {
-                                binding.icCameraOff.visibility = View.VISIBLE
-                            }
-
-                            // Закрепление текущей игры в локальном хранилище
-                            runBlocking {
-                                currentQuestPreferences.saveData(dataJson)
-                            }
-                        }
-                    }
-                } else {
-                    runOnUiThread {
-                        binding.cardTask.visibility = View.GONE
-                        binding.cardAction.visibility = View.GONE
-                        binding.cardHint.visibility = View.GONE
-                        binding.descriptionScrollView.visibility = View.GONE
-                        binding.actionScrollView.visibility = View.GONE
-                        binding.icCameraOn.visibility = View.GONE
-                        binding.icCameraOff.visibility = View.GONE
-                    }
-                }
-            }
-
-            if(it.hasListeners(SocketHandlerConstants.SET_VIEW_CURRENT_ACTION)) {
-                it.off(SocketHandlerConstants.SET_VIEW_CURRENT_ACTION)
-            }
-
-            it.on(SocketHandlerConstants.SET_VIEW_CURRENT_ACTION) {itLocal ->
-                if (itLocal.isEmpty()) {
-                    return@on
-                }
+                // Данные о статусе в виде строке
+                val statusStr = itLocal.first() as String
 
                 // Получение статуса игрока в текущий момент времени
-                val quest = Gson().fromJson(itLocal.first() as String, QuestActionModel::class.java)
-                    ?: return@on
+                val status = Gson().fromJson(statusStr, GameQuestModel::class.java)
 
+                // Запуск инструкций в UI-потоке
                 runOnUiThread {
-                    binding.cardAction.visibility = View.VISIBLE
-                    binding.tvActionDescription.text = quest.action
-                }
-            }
+                    binding.cardTask.visibility = View.VISIBLE
+                    binding.tvTaskDescription.text = status.task
 
-            if (it.hasListeners(SocketHandlerConstants.SET_VIDEO_TEAM_LEAD)) {
-                it.off(SocketHandlerConstants.SET_VIDEO_TEAM_LEAD)
-            }
-
-            it.on(SocketHandlerConstants.SET_VIDEO_TEAM_LEAD) { _ ->
-                runOnUiThread {
-                    binding.icCameraOff.visibility = View.GONE
-                    binding.icCameraOn.visibility = View.VISIBLE
-                }
-            }
-
-            if (it.hasListeners(SocketHandlerConstants.FINISHED_QUEST_SUCCESS)) {
-                it.off(SocketHandlerConstants.FINISHED_QUEST_SUCCESS)
-            }
-
-            it.on(SocketHandlerConstants.FINISHED_QUEST_SUCCESS) { itLocal ->
-                if (itLocal.isEmpty()) {
-                    return@on
-                }
-
-                // Данных о пройденном квесте
-                val status = Gson().fromJson(itLocal.first() as String, GamesIdModel::class.java)
-
-                val currentQuest = Gson().fromJson(runBlocking {
-                    currentQuestPreferences.data.first()
-                }, CurrentGameModel::class.java)
-
-                // Удаляем маркер текущего квеста
-                if (currentQuest != null && currentQuest.id == status.gamesId) {
-                    EventBus.getDefault().post(CurrentQuestEvent(gamesId = status.gamesId))
-                }
-
-                // Закрытие информационных блоков о текущей игре
-                runOnUiThread {
-                    binding.cardTask.visibility = View.GONE
-                    binding.cardAction.visibility = View.GONE
-                    binding.cardHint.visibility = View.GONE
-                    binding.descriptionScrollView.visibility = View.GONE
-                    binding.actionScrollView.visibility = View.GONE
                     binding.icCameraOn.visibility = View.GONE
                     binding.icCameraOff.visibility = View.GONE
 
-                    binding.tvTaskDescription.text = ""
-                    binding.tvNumberQuest.text = ""
-                    binding.tvGameHint.text = ""
-                    binding.tvActionDescription.text = ""
+                    if (status.view == ViewStatusConstants.VISIBLE) {
+                        binding.icCameraOn.visibility = View.VISIBLE
+
+                        binding.tvNumberQuest.text = "Действие"
+                        binding.tvTaskDescription.text = status.action
+
+                        // Отправляем на шину данных информацию о текущем квесте для визуализации
+                        EventBus.getDefault().post(
+                            ViewMarkEvent(
+                                questId = status.id,
+                                mark = status.mark
+                            )
+                        )
+                    }
+
+                    // Сохранение данных о квесте в локальном хранилище
+                    runBlocking {
+                        currentQuestPreferences.saveData(statusStr)
+                    }
                 }
-
-                runBlocking {
-                    currentQuestPreferences.clear()
-                }
-            }
-
-            if(it.hasListeners(SocketHandlerConstants.GAME_OVER)){
-                it.off(SocketHandlerConstants.GAME_OVER)
-            }
-
-            it.on(SocketHandlerConstants.GAME_OVER) { _ ->
-                // Отправляем сообщение о том, чтобы отключиться от текущей командной комнаты
-                it.emit(SocketHandlerConstants.GAME_OVER_DISCONNECT)
-            }
-
-            if(it.hasListeners(SocketHandlerConstants.GAME_OVER_DISCONNECT_SUCCESS)){
-                it.off(SocketHandlerConstants.GAME_OVER_DISCONNECT_SUCCESS)
-            }
-
-            // Обработка "полного" завершения игрового процесса
-            it.on(SocketHandlerConstants.GAME_OVER_DISCONNECT_SUCCESS) { _ ->
-                // Очистка карты от других игроков
-                EventBus.getDefault().post(CurrentGameEvent())
             }
 
             if (it.hasListeners(SocketHandlerConstants.REPEAT_STATUS_REQUEST)) {
@@ -293,6 +188,40 @@ class HomeActivity : AppCompatActivity() {
 
             it.on(SocketHandlerConstants.REPEAT_STATUS_REQUEST) { _ ->
                 it.emit(SocketHandlerConstants.STATUS)
+            }
+
+            if (it.hasListeners(SocketHandlerConstants.STATUS_COMPLETED)) {
+                it.off(SocketHandlerConstants.STATUS_COMPLETED)
+            }
+
+            it.on(SocketHandlerConstants.STATUS_COMPLETED) { itLocal ->
+                runOnUiThread {
+                    binding.cardTask.visibility = View.GONE
+                    binding.icCameraOn.visibility = View.GONE
+                    binding.icCameraOff.visibility = View.GONE
+
+                    binding.cardStatusSuccess.visibility = View.VISIBLE
+                    binding.tvStatus.text = "Все квесты пройдены!"
+                }
+            }
+
+            if (it.hasListeners(SocketHandlerConstants.GAME_OVER)) {
+                it.off(SocketHandlerConstants.GAME_OVER)
+            }
+
+            it.on(SocketHandlerConstants.GAME_OVER) { _ ->
+                // Отправляем сообщение о том, чтобы отключиться от текущей командной комнаты
+                it.emit(SocketHandlerConstants.GAME_OVER_DISCONNECT)
+            }
+
+            if (it.hasListeners(SocketHandlerConstants.GAME_OVER_DISCONNECT_SUCCESS)) {
+                it.off(SocketHandlerConstants.GAME_OVER_DISCONNECT_SUCCESS)
+            }
+
+            // Обработка "полного" завершения игрового процесса
+            it.on(SocketHandlerConstants.GAME_OVER_DISCONNECT_SUCCESS) { _ ->
+                // Очистка карты от других игроков
+                EventBus.getDefault().post(CurrentGameEvent())
             }
 
             it.on(SocketHandlerConstants.AUTH_SUCCESS) { _ ->
@@ -327,22 +256,24 @@ class HomeActivity : AppCompatActivity() {
             // Отправка результата на прохождение квеста
             viewDialog.findViewById<Button>(R.id.accept_captured_video)
                 .setOnClickListener(View.OnClickListener {
-                    val currentQuest = Gson().fromJson(runBlocking {
+                    val strQuest = runBlocking {
                         currentQuestPreferences.data.first()
-                    }, CurrentGameModel::class.java)
-
-                    if ((socket.value != null) && (currentQuest != null)) {
-                        val questId =
-                            Gson().toJson(GamesIdModel(gamesId = currentQuest.id))
-                        socket.value!!.emit(SocketHandlerConstants.FINISHED_QUEST, questId)
-                    } else {
-                        handleErrorMessage(
-                            binding.root,
-                            "Возникла ошибка при записи в локальное хранилище данных о " +
-                                    "текущей игре. Свяжитесь с разработчиком и сообщите о проблеме.",
-                            10000
-                        )
                     }
+
+                    if (strQuest == null) {
+                        return@OnClickListener
+                    }
+
+                    val dataQuest = Gson().fromJson(strQuest, GameQuestModel::class.java)
+                    socket.value?.emit(SocketHandlerConstants.FINISHED_QUEST, strQuest)
+
+                    // Удаляем маркер текущего квеста
+                    EventBus.getDefault().post(
+                        RemoveMarkEvent(
+                            questId = dataQuest.id,
+                            mark = dataQuest.mark
+                        )
+                    )
 
                     dialog?.dismiss()
                 })

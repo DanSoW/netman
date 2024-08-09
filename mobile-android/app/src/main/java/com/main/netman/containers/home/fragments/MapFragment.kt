@@ -10,20 +10,28 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.lifecycle.MutableLiveData
 import com.google.gson.Gson
 import com.main.netman.R
+import com.main.netman.constants.game.ViewStatusConstants
 import com.main.netman.constants.socket.SocketHandlerConstants
 import com.main.netman.containers.base.BaseFragment
 import com.main.netman.containers.home.models.MapViewModel
 import com.main.netman.databinding.FragmentMapBinding
 import com.main.netman.event.CurrentGameEvent
 import com.main.netman.event.CurrentQuestEvent
+import com.main.netman.event.RemoveMarkEvent
+import com.main.netman.event.ViewMarkEvent
 import com.main.netman.models.PointD
+import com.main.netman.models.game.GameQuestModel
+import com.main.netman.models.game.QuestMarkModel
 import com.main.netman.models.quest.QuestDataModel
 import com.main.netman.models.user.GamePlayerCoordinatesModel
 import com.main.netman.models.user.UserCoordsModel
 import com.main.netman.models.user.UserIdModel
 import com.main.netman.network.handlers.SCSocketHandler
 import com.main.netman.repositories.MapRepository
+import com.main.netman.store.CurrentQuestPreferences
+import com.main.netman.store.currentQuestDataStore
 import com.main.netman.utils.DrawableToBitmap
+import com.main.netman.utils.GeoMath
 import com.main.netman.utils.LocationPermissionHelper
 import com.main.netman.utils.handleSuccessMessage
 import com.mapbox.android.gestures.MoveGestureDetector
@@ -51,7 +59,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.subscribe
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
@@ -62,6 +74,8 @@ import java.lang.ref.WeakReference
  * Фрагмент с игровой картой
  */
 class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository>(), Observer {
+    // Локальное хранилище текущего квеста
+    private lateinit var currentQuestPreferences: CurrentQuestPreferences
 
     // Mock point
     private lateinit var point: PointD
@@ -103,7 +117,8 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
      */
     private val onIndicatorPositionChangedListener = OnIndicatorPositionChangedListener {
         // Point.fromLngLat(104.287895, 52.288865)
-        val point = /*it*/ Point.fromLngLat(104.288432, 52.286057) // Point.fromLngLat(104.287895, 52.282865)
+        val point = /*it*/
+            Point.fromLngLat(104.281385, 52.285909) // Point.fromLngLat(104.287895, 52.282865)
 
         if (!isInit) {
             binding.mapView.getMapboxMap().setCamera(CameraOptions.Builder().center(point).build())
@@ -141,6 +156,9 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
         super.onActivityCreated(savedInstanceState)
         point = PointD(52.290365, 104.287895)
 
+        // Проведение доступа к локальному хранилищу данных текущего квеста
+        currentQuestPreferences = CurrentQuestPreferences(requireContext().currentQuestDataStore)
+
         // Регистрация подписчика для шины данных
         EventBus.getDefault().register(this@MapFragment)
 
@@ -171,6 +189,35 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
                 } else {
                     // Добавление нового элемента на карту
                     addElementToMap(R.drawable.mapbox_user_puck_icon, PointD(it.first, it.second))
+                }
+            }
+
+            val data = runBlocking {
+                currentQuestPreferences.data.first()
+            }
+
+            data?.let { it1 ->
+                val quest = Gson().fromJson(it1, GameQuestModel::class.java)
+
+                quest.mark?.let { it2 ->
+                    val lat = it2.lat
+                    val lng = it2.lng
+                    val radius = quest.radius
+
+                    if((lat != null && lng != null && radius != null && quest.view != null)
+                        && quest.view == ViewStatusConstants.INVISIBLE) {
+                        if(GeoMath.intersectionCircles(
+                            it.first,
+                            it.second,
+                            lat,
+                            lng,
+                            GeoMath.radiusLatLng(100.0),
+                            GeoMath.radiusLatLng(radius.toDouble() + 100)
+                        )) {
+                            // Отправка сообщения на сервер о том, что необходимо отобразить текущий квест
+                            _socket.value?.emit(SocketHandlerConstants.VIEW_CURRENT_QUEST, it1)
+                        }
+                    }
                 }
             }
         }
@@ -695,13 +742,6 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
             deleteMapElement(coordTasks[event.gamesId]!!)
             coordTasks.remove(event.gamesId)
         }
-
-        // Отправка сообщения о завершении текущего квеста
-        handleSuccessMessage(
-            "Вы успешно прошли квест! Не забудьте сохранить записанное видео " +
-                    "для подтверждения прохождения квеста вашей командой!",
-            5000
-        )
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -712,5 +752,59 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
         }
 
         commandPlayers.clear()
+    }
+
+    /**
+     * Обработка события удаления маркера с карты
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onRemoveMarkEvent(event: RemoveMarkEvent) {
+        event.mark?.let {
+            val questId = event.questId
+
+            if (questId != null && coordTasks.containsKey(questId)) {
+                coordTasks[questId]?.let { it1 ->
+                    deleteMapElement(it1)
+                }
+
+                coordTasks.remove(questId)
+            }
+        }
+    }
+
+    /**
+     * Обработка события отрисовки маркера на карте
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onViewMarkEvent(event: ViewMarkEvent) {
+        event.mark?.let {
+            val questId = event.questId
+            val lat = it.lat
+            val lng = it.lng
+
+            if (lat != null && lng != null && questId !== null) {
+                if (!(coordTasks.contains(questId))) {
+                    val value = addElementToMap(
+                        R.drawable.ic_map_icon,
+                        PointD(lat, lng)
+                    )
+
+                    if (value != null) {
+                        coordTasks[questId] = value
+                    }
+                } else {
+                    val annotation = coordTasks[questId]
+
+                    if (annotation != null) {
+                        val value =
+                            updateMapElement(annotation, PointD(lat, lng))
+
+                        if (value != null) {
+                            coordTasks[questId] = value
+                        }
+                    }
+                }
+            }
+        }
     }
 }

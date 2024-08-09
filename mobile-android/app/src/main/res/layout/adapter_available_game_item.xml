@@ -42,7 +42,7 @@
             app:layout_constraintTop_toBottomOf="@+id/tvGameName" />
 
         <ImageView
-            android:id="@+id/imageView_RegOnGame"
+            android:id="@+id/imgLocation"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="15dp"
@@ -62,7 +62,7 @@
             android:textColor="#FFFFFF"
             android:textSize="16sp"
             app:layout_constraintBottom_toBottomOf="@+id/time_choiceGame"
-            app:layout_constraintStart_toEndOf="@+id/imageView_RegOnGame"
+            app:layout_constraintStart_toEndOf="@+id/imgLocation"
             app:layout_constraintTop_toTopOf="@+id/time_choiceGame" />
 
         <TextView

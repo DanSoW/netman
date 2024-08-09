@@ -1,4 +1,8 @@
 package com.main.netman.event
 
-class RemoveMarkEvent {
-}
+import com.main.netman.models.game.QuestMarkModel
+
+data class RemoveMarkEvent(
+    var questId: Int? = null,
+    var mark: QuestMarkModel? = null
+)

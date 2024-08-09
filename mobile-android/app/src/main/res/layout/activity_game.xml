@@ -21,12 +21,9 @@
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/bnvActivityGame"
         android:layout_width="0dp"
-        android:layout_height="75dp"
+        android:layout_height="54dp"
         android:layout_alignParentBottom="true"
         android:layout_gravity="bottom"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="8dp"
         android:background="@drawable/shape_bottom_navigation"
         app:itemIconSize="24dp"
         app:itemIconTint="@drawable/nav_item_colour_selected"

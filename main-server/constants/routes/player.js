@@ -33,6 +33,7 @@ const PlayerRoute = {
     judgeSetScore: '/judge/set/score',
     joinGame: '/join/game',
     detachGame: '/detach/game',
+    completedGame: '/completed/game',
     games: '/games',
 };
 

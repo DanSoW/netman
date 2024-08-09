@@ -697,25 +697,6 @@
         security: 
           - 
             JWT: []
-    /player/game/info: 
-      get: 
-        parameters: []
-        description: "Получение информации о текущей игре"
-        tags: 
-          - "Игрок"
-        responses: 
-          200: 
-            description: "Флаг"
-            schema: 
-              $ref: "#/definitions/FlagDto"
-          default: 
-            description: "Ошибка запроса"
-            schema: 
-              $ref: "#/definitions/ApiError"
-        operationId: "playerGameStatus"
-        security: 
-          - 
-            JWT: []
     /player/games: 
       get: 
         parameters: []
@@ -1274,6 +1255,25 @@
         security: 
           - 
             JWT: []
+    /player/game/info: 
+      get: 
+        parameters: []
+        description: "Получение информации о текущей игре"
+        tags: 
+          - "Игрок"
+        responses: 
+          200: 
+            description: "Флаг"
+            schema: 
+              $ref: "#/definitions/FlagDto"
+          default: 
+            description: "Ошибка запроса"
+            schema: 
+              $ref: "#/definitions/ApiError"
+        operationId: "playerGameStatus"
+        security: 
+          - 
+            JWT: []
     /player/join/game: 
       post: 
         parameters: 
@@ -1309,8 +1309,34 @@
             description: "Информация для получения данных об игре"
             required: true
             schema: 
-              $ref: "#/definitions/PlayerDetachGameDto"
+              $ref: "#/definitions/PlayerSessionGameDto"
         description: "Выход игрока из текущей игры"
+        tags: 
+          - "Игрок"
+        responses: 
+          200: 
+            description: "Флаг"
+            schema: 
+              $ref: "#/definitions/FlagDto"
+          default: 
+            description: "Ошибка запроса"
+            schema: 
+              $ref: "#/definitions/ApiError"
+        operationId: "playerJoinGame"
+        security: 
+          - 
+            JWT: []
+    /player/completed/game: 
+      post: 
+        parameters: 
+          - 
+            name: "input"
+            in: "body"
+            description: "Информация для получения данных об игре"
+            required: true
+            schema: 
+              $ref: "#/definitions/PlayerDetachGameDto"
+        description: "Завершение определённой игры по игровой сессии"
         tags: 
           - "Игрок"
         responses: 
@@ -2119,17 +2145,6 @@
         finished_games_id: 
           type: "number"
           description: ""
-    PlayerDetachGameDto: 
-      required: 
-        - "users_id"
-        - "session_id"
-      properties: 
-        users_id: 
-          type: "number"
-          description: ""
-        session_id: 
-          type: "string"
-          description: ""
     PlayerInfoDto: 
       properties: 
         id: 
@@ -2217,6 +2232,17 @@
           description: ""
         info_games_id: 
           type: "number"
+          description: ""
+    PlayerDetachGameDto: 
+      required: 
+        - "users_id"
+        - "session_id"
+      properties: 
+        users_id: 
+          type: "number"
+          description: ""
+        session_id: 
+          type: "string"
           description: ""
     PlayerStatisticsDto: 
       properties: 

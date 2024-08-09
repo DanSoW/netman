@@ -15,7 +15,7 @@ import CommandAddResultDto from "../dtos/player/command-add-result-dto.js";
 import JudgeGetInfoDto from "../dtos/player/judge-get-info-dto.js";
 import JudgeSetScoreDto from "../dtos/player/judge-set-score-dto.js";
 import PlayerJoinGameDto from "../dtos/player/player-join-game-dto.js";
-import PlayerDetachGameDto from "../dtos/player/player-detach-game-dto.js";
+import PlayerSessionGameDto from "../dtos/player/player-session-game-dto.js";
 
 /* Контроллер игрока */
 class PlayerController {
@@ -467,8 +467,25 @@ class PlayerController {
                 return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
             }
 
-            const body = new PlayerDetachGameDto(req.body);
+            const body = new PlayerSessionGameDto(req.body);
             const data = await playerService.playerDetachGame(body);
+
+            return res.status(201).json(data);
+        }catch(e){
+            next(e);
+        }
+    }
+
+    async playerCompletedGame(req, res, next){
+        try{
+            const errors = validationResult(req);
+
+            if (!errors.isEmpty()){
+                return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
+            }
+
+            const body = new PlayerSessionGameDto(req.body);
+            const data = await playerService.playerCompletedGame(body);
 
             return res.status(201).json(data);
         }catch(e){

@@ -11,5 +11,8 @@ data class GameQuestModel(
     @SerializedName("marks_id") var marksId: Int? = null,
     @SerializedName("created_at") var createdAt: String? = null,
     @SerializedName("updated_at") var updatedAt: String? = null,
-    // @SerializedName("status") var status: Int? = null,
+    @SerializedName("status") var status: Int? = null,
+    @SerializedName("view") var view: Int? = null,
+    @SerializedName("mark") var mark: QuestMarkModel? = null,
+    @SerializedName("users_games_id") var usersGamesId: Int? = null
 )

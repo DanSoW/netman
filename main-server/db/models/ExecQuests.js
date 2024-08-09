@@ -1,3 +1,5 @@
+import GameStatus from "../../constants/status/game-status.js";
+import ViewStatus from "../../constants/status/view-status.js";
 import TableName from "../../constants/table/table-name.js";
 import { genForeignKey } from "../../utils/db.js";
 
@@ -17,8 +19,14 @@ const ExecQuests = (sequelize, DataTypes) => {
         },
         status: {
             type: DataTypes.INTEGER,
+            defaultValue: GameStatus.ACTIVE,
             allowNull: false
         },
+        view: {
+            type: DataTypes.INTEGER,
+            defaultValue: ViewStatus.INVISIBLE,
+            allowNull: false
+        }
     });
 
     model.associate = (models) => {

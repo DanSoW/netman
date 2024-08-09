@@ -911,34 +911,6 @@
         security: 
           - 
             JWT: []
-    /player/game/info: 
-      get: 
-        description: "Получение информации о текущей игре"
-        tags: 
-          - "Игрок"
-        responses: 
-          200: 
-            description: "Флаг"
-            content: 
-              application/json: 
-                schema: 
-                  $ref: "#/components/schemas/FlagDto"
-              application/xml: 
-                schema: 
-                  $ref: "#/components/schemas/FlagDto"
-          default: 
-            description: "Ошибка запроса"
-            content: 
-              application/json: 
-                schema: 
-                  $ref: "#/components/schemas/ApiError"
-              application/xml: 
-                schema: 
-                  $ref: "#/components/schemas/ApiError"
-        operationId: "playerGameStatus"
-        security: 
-          - 
-            JWT: []
     /player/games: 
       get: 
         description: "Получение информации обо всех играх, которые существуют в настоящее время"
@@ -1693,6 +1665,34 @@
                 schema: 
                   $ref: "#/components/schemas/ApiError"
         operationId: "playerJudgeGetInfo"
+        security: 
+          - 
+            JWT: []
+    /player/game/info: 
+      get: 
+        description: "Получение информации о текущей игре"
+        tags: 
+          - "Игрок"
+        responses: 
+          200: 
+            description: "Флаг"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/FlagDto"
+              application/xml: 
+                schema: 
+                  $ref: "#/components/schemas/FlagDto"
+          default: 
+            description: "Ошибка запроса"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/ApiError"
+              application/xml: 
+                schema: 
+                  $ref: "#/components/schemas/ApiError"
+        operationId: "playerGameStatus"
         security: 
           - 
             JWT: []
@@ -2660,17 +2660,6 @@
           finished_games_id: 
             type: "number"
             description: ""
-      PlayerDetachGameDto: 
-        required: 
-          - "users_id"
-          - "session_id"
-        properties: 
-          users_id: 
-            type: "number"
-            description: ""
-          session_id: 
-            type: "string"
-            description: ""
       PlayerInfoDto: 
         properties: 
           id: 
@@ -2758,6 +2747,17 @@
             description: ""
           info_games_id: 
             type: "number"
+            description: ""
+      PlayerDetachGameDto: 
+        required: 
+          - "users_id"
+          - "session_id"
+        properties: 
+          users_id: 
+            type: "number"
+            description: ""
+          session_id: 
+            type: "string"
             description: ""
       PlayerStatisticsDto: 
         properties: 

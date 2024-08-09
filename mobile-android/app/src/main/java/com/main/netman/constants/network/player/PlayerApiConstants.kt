@@ -19,4 +19,6 @@ object PlayerApiConstants {
 
     const val PLAYER_GAME_INFO = "${BASE}/game/info"
     const val PLAYER_DETACH_GAME = "${BASE}/detach/game"
+    const val PLAYER_JOIN_GAME = "${BASE}/join/game"
+    const val PLAYER_COMPLETED_GAME = "${BASE}/completed/game"
 }

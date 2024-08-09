@@ -159,4 +159,21 @@ class PlayerRepository(
 
         api.playerDetachGame(requestBody)
     }
+
+    /**
+     * Регистрация пользователя на определённую игру
+     */
+    suspend fun playerJoinGame(body: GameIdModel) = safeApiCall {
+        val requestBody = Gson().toJson(body).toRequestBody("application/json".toMediaTypeOrNull())
+
+        api.playerJoinGame(requestBody)
+    }
+
+    /**
+     * Завершение игровой сессии
+     */
+    suspend fun playerCompletedGame(body: GameSessionIdModel) = safeApiCall {
+        val requestBody = Gson().toJson(body).toRequestBody("application/json".toMediaTypeOrNull())
+        api.playerCompletedGame(requestBody)
+    }
 }

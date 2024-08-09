@@ -11,5 +11,7 @@ data class GameModel(
     @SerializedName("created_at") var createdAt: String? = null,
     @SerializedName("updated_at") var updatedAt: String? = null,
     @SerializedName("quest") var quest: GameQuestModel? = null,
-    @SerializedName("joined_game") var joinedGame: Boolean = false
+    @SerializedName("games") var games: ArrayList<InfoGameModel> = arrayListOf(),
+    @SerializedName("status") var status: Int? = null,
+    @SerializedName("joined_game") var joinedGame: Boolean = false,
 )
