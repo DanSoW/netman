@@ -7,25 +7,36 @@ import io.socket.client.IO
 import io.socket.client.Socket
 
 /**
- * Описание глобального объекта для работы с сокетом,
+ * Описание глобального Singleton для работы с сокетом,
  * который взаимодействует с основным сервером
  */
-object SCSocketHandler {
+class SCSocketHandler private constructor() {
+    @Volatile
     private var mSocket: Socket? = null
 
     // Идентификатор авторизации пользователя в рамках системы
+    @Volatile
     private var auth: Boolean = false
 
     @Synchronized
-    fun setSocket(){
-        try{
+    fun setSocket(cb: (() -> Unit)? = null) {
+        disconnection()
+
+        try {
             mSocket = IO.socket(MainNetworkConstants.MAIN_API)
+
+            // Обработка ситуации подключения к серверу
+            mSocket?.on(SocketHandlerConstants.CONNECT) {
+                if(cb != null) {
+                    cb()
+                }
+            }
 
             // Обработка ситуации отключения от сервера
             mSocket?.on(SocketHandlerConstants.DISCONNECT) {
                 disconnection()
             }
-        }catch (e: Exception) {
+        } catch (e: Exception) {
             Log.e("SOCKET", e.message.toString())
         }
     }
@@ -58,8 +69,20 @@ object SCSocketHandler {
         return auth
     }
 
-    @Synchronized
-    fun setSocketValue(socket: Socket?) {
-        mSocket = socket
+    companion object {
+        @Volatile
+        private var instance: SCSocketHandler? = null
+
+        fun getInstance(): SCSocketHandler {
+            if (instance == null) {
+                synchronized(this) {
+                    if (instance == null) {
+                        instance = SCSocketHandler()
+                    }
+                }
+            }
+
+            return instance!!
+        }
     }
 }

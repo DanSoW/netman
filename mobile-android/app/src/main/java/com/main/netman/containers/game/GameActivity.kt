@@ -57,37 +57,28 @@ class GameActivity : AppCompatActivity() {
 
         val data = getActivity(R.id.itemMapMenu)
 
-        if(data != null) {
+        if (data != null) {
             startStdActivity(data)
         }
     }
 
-    private fun <A : Activity> loadActivity(activity: Class<A>?){
-        if(activity != null){
+    private fun <A : Activity> loadActivity(activity: Class<A>?) {
+        if (activity != null) {
             startStdActivity(activity)
-            overridePendingTransition(0,0)
+            overridePendingTransition(0, 0)
         }
     }
 
     private fun getActivity(menuId: Int): Class<out Activity>? {
-        binding.pbActivityGame.visible(true)
-        binding.bnvActivityGame.menu.findItem(menuId).isChecked = true
+        if (menuId != R.id.itemGameMenu) {
+            binding.pbActivityGame.visible(true)
+            binding.bnvActivityGame.menu.findItem(menuId).isChecked = true
+        } else {
+            return null
+        }
 
-        when(menuId){
-            /*
-            R.id.itemMessengerMenu -> {
-                return MessengerActivity::class.java
-            }
-             */
-
-            R.id.itemGameMenu -> {
-                return null
-            }
-
-            /*R.id.itemCreatorMenu -> {
-                return CreatorActivity::class.java
-            }*/
-
+        // Маршрутизация
+        when (menuId) {
             R.id.itemMapMenu -> {
                 return HomeActivity::class.java
             }
@@ -100,7 +91,7 @@ class GameActivity : AppCompatActivity() {
         return null
     }
 
-    private fun setupBottomNavigationView(){
+    private fun setupBottomNavigationView() {
         binding.bnvActivityGame.setOnItemSelectedListener {
             /*if(idDeque.contains(it.itemId)){
                 if(it.itemId == R.id.itemMapMenu){

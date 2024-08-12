@@ -78,22 +78,22 @@ class ProfileActivity : AppCompatActivity() {
         }
     }*/
 
-    private fun <A : Activity> loadActivity(activity: Class<A>?){
-        if(activity != null){
+    private fun <A : Activity> loadActivity(activity: Class<A>?) {
+        if (activity != null) {
             startStdActivity(activity)
-            overridePendingTransition(0,0)
+            overridePendingTransition(0, 0)
         }
     }
 
     private fun getActivity(menuId: Int): Class<out Activity>? {
-        binding.pbActivityProfile.visible(true)
-        binding.bnvActivityProfile.menu.findItem(menuId).isChecked = true
+        if (menuId != R.id.itemProfileMenu) {
+            binding.pbActivityProfile.visible(true)
+            binding.bnvActivityProfile.menu.findItem(menuId).isChecked = true
+        } else {
+            return null
+        }
 
-        when(menuId){
-            /*R.id.itemMessengerMenu -> {
-                return MessengerActivity::class.java
-            }*/
-
+        when (menuId) {
             R.id.itemGameMenu -> {
                 return GameActivity::class.java
             }
@@ -101,25 +101,17 @@ class ProfileActivity : AppCompatActivity() {
             R.id.itemMapMenu -> {
                 return HomeActivity::class.java
             }
-
-            R.id.itemProfileMenu -> {
-                return null
-            }
-
-            /*R.id.itemCreatorMenu -> {
-                return CreatorActivity::class.java
-            }*/
         }
 
         return null
     }
 
-    private fun setupBottomNavigationView(){
+    private fun setupBottomNavigationView() {
         binding.bnvActivityProfile.setOnItemSelectedListener {
-            if(idDeque.contains(it.itemId)){
-                if(it.itemId == R.id.itemMapMenu){
-                    if(idDeque.size != 1){
-                        if(flag){
+            if (idDeque.contains(it.itemId)) {
+                if (it.itemId == R.id.itemMapMenu) {
+                    if (idDeque.size != 1) {
+                        if (flag) {
                             idDeque.addFirst(R.id.itemMapMenu)
                             flag = false
                         }

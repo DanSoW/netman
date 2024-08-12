@@ -39,7 +39,7 @@ import kotlinx.coroutines.withContext
 class NavigateGameFragment :
     BaseFragment<GameViewModel, FragmentNavigateGameBinding, PlayerRepository>() {
     // Socket
-    private val _socket: MutableLiveData<Socket?> = MutableLiveData(SCSocketHandler.getSocket())
+    private val _socket: MutableLiveData<Socket?> = MutableLiveData(SCSocketHandler.getInstance().getSocket())
     private val socket: LiveData<Socket?>
         get() = _socket
 
@@ -89,11 +89,6 @@ class NavigateGameFragment :
             }
 
             binding.nftProgressBar.visibility = View.GONE
-        }
-
-        if (socket.value == null) {
-            // Подключение к основному серверу
-            socketConnection()
         }
 
         _socket.observe(viewLifecycleOwner) {
@@ -181,21 +176,6 @@ class NavigateGameFragment :
                 cookiePreferences
             )
         )
-
-    private fun socketConnection() {
-        CoroutineScope(Dispatchers.IO).launch {
-            withContext(Dispatchers.Main) {
-                _socket.value = null
-            }
-
-            SCSocketHandler.setSocket()
-            SCSocketHandler.connection()
-
-            withContext(Dispatchers.Main) {
-                _socket.value = SCSocketHandler.getSocket()
-            }
-        }
-    }
 
     /**
      * Получение информации о текущей игре

@@ -2,6 +2,7 @@ package com.main.netman.constants.socket
 
 object SocketHandlerConstants {
     // Standard events:
+    const val CONNECT = "connect"
     const val DISCONNECT = "disconnect"
 
     // Custom events:

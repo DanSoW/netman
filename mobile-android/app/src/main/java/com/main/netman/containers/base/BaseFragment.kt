@@ -128,7 +128,7 @@ abstract class BaseFragment<VM: BaseViewModel, B: ViewBinding, R: BaseRepository
         userPreferences.clear()
 
         // Прерывание подключения по веб-сокету
-        SCSocketHandler.disconnection()
+        SCSocketHandler.getInstance().disconnection()
 
         // Открытие новой активности авторизации
         // requireActivity().startNewActivity(AuthActivity::class.java)

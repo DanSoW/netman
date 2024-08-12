@@ -18,6 +18,7 @@ import com.main.netman.databinding.FragmentMapBinding
 import com.main.netman.event.CurrentGameEvent
 import com.main.netman.event.CurrentQuestEvent
 import com.main.netman.event.RemoveMarkEvent
+import com.main.netman.event.UpdateSocketEvent
 import com.main.netman.event.ViewMarkEvent
 import com.main.netman.models.PointD
 import com.main.netman.models.game.GameQuestModel
@@ -84,7 +85,8 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
     private var isInit: Boolean = false
 
     // Socket
-    private val _socket: MutableLiveData<Socket?> = MutableLiveData(SCSocketHandler.getSocket())
+    private val _socket: MutableLiveData<Socket?> =
+        MutableLiveData(SCSocketHandler.getInstance().getSocket())
 
     // Помощник для определения разрешения на получения доступа к геолокации пользователя
     private lateinit var locationPermissionHelper: LocationPermissionHelper
@@ -175,7 +177,7 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
                 return@observe
             }
 
-            if (_socket.value != null && SCSocketHandler.getAuth()) {
+            if (_socket.value != null && SCSocketHandler.getInstance().getAuth()) {
                 _socket.value?.emit(
                     SocketHandlerConstants.SET_CURRENT_COORDINATES,
                     Gson().toJson(UserCoordsModel(lat = it.first, lng = it.second))
@@ -204,16 +206,18 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
                     val lng = it2.lng
                     val radius = quest.radius
 
-                    if((lat != null && lng != null && radius != null && quest.view != null)
-                        && quest.view == ViewStatusConstants.INVISIBLE) {
-                        if(GeoMath.intersectionCircles(
-                            it.first,
-                            it.second,
-                            lat,
-                            lng,
-                            GeoMath.radiusLatLng(100.0),
-                            GeoMath.radiusLatLng(radius.toDouble() + 100)
-                        )) {
+                    if ((lat != null && lng != null && radius != null && quest.view != null)
+                        && quest.view == ViewStatusConstants.INVISIBLE
+                    ) {
+                        if (GeoMath.intersectionCircles(
+                                it.first,
+                                it.second,
+                                lat,
+                                lng,
+                                GeoMath.radiusLatLng(100.0),
+                                GeoMath.radiusLatLng(radius.toDouble() + 100)
+                            )
+                        ) {
                             // Отправка сообщения на сервер о том, что необходимо отобразить текущий квест
                             _socket.value?.emit(SocketHandlerConstants.VIEW_CURRENT_QUEST, it1)
                         }
@@ -424,8 +428,6 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
                 }
             }
         }
-
-        socketConnection()
     }
 
     /**
@@ -675,19 +677,6 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
         pointAnnotationManager!!.delete(annotation)
     }
 
-    private fun socketConnection() {
-        CoroutineScope(Dispatchers.IO).launch {
-            while (SCSocketHandler.getSocket() == null ||
-                (!(SCSocketHandler.getSocket()?.connected()!!))
-            ) {
-                withContext(Dispatchers.Main) {
-                    _socket.value = SCSocketHandler.getSocket()
-                }
-                delay(5000)
-            }
-        }
-    }
-
     /**
      * Обработка события "Загрузка карты"
      */
@@ -726,7 +715,9 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
             }
 
             // Получение состояния игрока
-            if (SCSocketHandler.getAuth() && _socket.isInitialized && _socket.value != null) {
+            if (SCSocketHandler.getInstance()
+                    .getAuth() && _socket.isInitialized && _socket.value != null
+            ) {
                 _socket.value?.emit(SocketHandlerConstants.STATUS)
             }
         }
@@ -783,6 +774,23 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * Обработка события обновления сокета подключения
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onUpdateSocket(event: UpdateSocketEvent) {
+        _socket.value = event.socket
+
+        // Очистка карты, в случае, если подключение к серверу отсутствует
+        if (_socket.value == null) {
+            for (item in coordTasks) {
+                deleteMapElement(item.value)
+            }
+
+            coordTasks.clear()
         }
     }
 }

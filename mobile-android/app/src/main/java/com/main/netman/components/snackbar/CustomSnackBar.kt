@@ -10,7 +10,9 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.BaseTransientBottomBar
 
-
+/**
+ * Кастомный класс для вывода сообщений
+ */
 class CustomSnackBar (
     parent: ViewGroup,
     content: CustomSnackBarView
@@ -18,13 +20,13 @@ class CustomSnackBar (
 
     init {
         getView().setBackgroundColor(ContextCompat.getColor(view.context, android.R.color.transparent))
-        getView().setPadding(0, 0, 0, 0)
+        getView().setPadding(0, 0, 0, 132)
     }
 
     companion object {
         fun make(view: View,
                  message : String, duration : Int,
-                 listener : View.OnClickListener?, icon : Int?, actionLabel : String?, bg_color : Int): CustomSnackBar? {
+                 listener : View.OnClickListener?, icon : Int?, actionLabel : String?, bgColor : Int): CustomSnackBar? {
 
             // First we find a suitable parent for our custom view
             val parent = view.findSuitableParent() ?: throw IllegalArgumentException(
@@ -40,6 +42,8 @@ class CustomSnackBar (
                 ) as CustomSnackBarView
                 // We create and return our Snackbar
                 customView.tvMsg.text = message
+                customView.tvMsg.textSize = 16.0f
+
                 actionLabel?.let {
                     customView.tvAction.text = actionLabel
                     customView.tvAction.setOnClickListener {
@@ -53,7 +57,7 @@ class CustomSnackBar (
                     customView.imLeft.visibility = View.INVISIBLE
                 }
 
-                customView.layRoot.setBackgroundColor(bg_color)
+                customView.layRoot.setBackgroundColor(bgColor)
 
 
                 return CustomSnackBar(

@@ -13,6 +13,7 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.main.netman.R
 import com.main.netman.constants.game.ViewStatusConstants
@@ -22,6 +23,7 @@ import com.main.netman.containers.profile.ProfileActivity
 import com.main.netman.databinding.ActivityHomeBinding
 import com.main.netman.event.CurrentGameEvent
 import com.main.netman.event.RemoveMarkEvent
+import com.main.netman.event.UpdateSocketEvent
 import com.main.netman.event.ViewMarkEvent
 import com.main.netman.models.auth.AuthModel
 import com.main.netman.models.game.CurrentGameModel
@@ -61,8 +63,9 @@ class HomeActivity : AppCompatActivity() {
     private var socketConnectionJob: Job? = null
 
     // Socket
-    private val _socket: MutableLiveData<Socket?> = MutableLiveData(SCSocketHandler.getSocket())
-    val socket: LiveData<Socket?>
+    private val _socket: MutableLiveData<Socket?> =
+        MutableLiveData(SCSocketHandler.getInstance().getSocket())
+    private val socket: LiveData<Socket?>
         get() = _socket
 
     // Информация о текущей игре (RAM Storage)
@@ -108,7 +111,7 @@ class HomeActivity : AppCompatActivity() {
 
         if (socket.value == null) {
             // Подключение к основному серверу
-            socketConnection()
+            socketConnectionJob = socketConnection()
         }
 
         binding.icArrow.setOnClickListener {
@@ -123,6 +126,11 @@ class HomeActivity : AppCompatActivity() {
 
         // Определение обработчиков для сокета после подключения
         socket.observe(this) {
+            // Отправка на шину событий сообщения об обновлении данных подключения
+            EventBus.getDefault().post(
+                UpdateSocketEvent(SCSocketHandler.getInstance().getSocket())
+            )
+
             if (it == null) {
                 return@observe
             }
@@ -140,7 +148,9 @@ class HomeActivity : AppCompatActivity() {
                     // Отключаем адаптер сокета явно
                     _socket.value = null
 
-                    socketConnection()
+                    socketConnectionJob = socketConnection {
+                        showMessage(binding.root, "Соединение с сервером восстановлено", "success")
+                    }
                 }
             }
 
@@ -150,7 +160,7 @@ class HomeActivity : AppCompatActivity() {
             }
 
             it.on(SocketHandlerConstants.AUTH_SUCCESS) { _ ->
-                SCSocketHandler.setAuth(true)
+                SCSocketHandler.getInstance().setAuth(true)
                 it.emit(SocketHandlerConstants.STATUS)
             }
 
@@ -174,6 +184,7 @@ class HomeActivity : AppCompatActivity() {
                 runOnUiThread {
                     binding.cardTask.visibility = View.VISIBLE
                     binding.tvTaskDescription.text = status.task
+                    binding.tvNumberQuest.text = "Задача"
 
                     binding.icCameraOn.visibility = View.GONE
                     binding.icCameraOff.visibility = View.GONE
@@ -226,13 +237,13 @@ class HomeActivity : AppCompatActivity() {
             }
 
             // Если пользователь не авторизован
-            if (!SCSocketHandler.getAuth()) {
+            if (!SCSocketHandler.getInstance().getAuth()) {
                 // Отправить запрос на авторизацию
                 it.emit(SocketHandlerConstants.AUTH, Gson().toJson(data))
             }
 
             // Иначе - отправить запрос о получении статуса
-            if (SCSocketHandler.getAuth()) {
+            if (SCSocketHandler.getInstance().getAuth()) {
                 it.emit(SocketHandlerConstants.STATUS)
             }
         }
@@ -274,6 +285,13 @@ class HomeActivity : AppCompatActivity() {
                         )
                     )
 
+                    showMessage(
+                        binding.root,
+                        "Вы успешно прошли квест!",
+                        "success",
+                        Snackbar.LENGTH_LONG
+                    )
+
                     dialog?.dismiss()
                 })
         }
@@ -285,18 +303,10 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+
+        // Остановка выполнения всех корутин и фоновых задач
+        socketConnectionJob?.cancel()
     }
-
-    /*@Deprecated("Deprecated in Java")
-    override fun onBackPressed() {
-        idDeque.pop()
-
-        if (!idDeque.isEmpty()) {
-            loadActivity(getActivity(idDeque.peek()!!))
-        } else {
-            finish()
-        }
-    }*/
 
     private fun <A : Activity> loadActivity(activity: Class<A>?) {
         if (activity != null) {
@@ -306,25 +316,17 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun getActivity(menuId: Int): Class<out Activity>? {
-        binding.pbActivityHome.visible(true)
-        binding.bnvActivityHome.menu.findItem(menuId).isChecked = true
+        if (menuId != R.id.itemMapMenu) {
+            binding.pbActivityHome.visible(true)
+            binding.bnvActivityHome.menu.findItem(menuId).isChecked = true
+        } else {
+            return null
+        }
 
-        when (menuId) {/*
-            R.id.itemMessengerMenu -> {
-                return MessengerActivity::class.java
-            }
-             */
-
-            /*R.id.itemCreatorMenu -> {
-                return CreatorActivity::class.java
-            }*/
-
+        // Маршрутизация
+        when (menuId) {
             R.id.itemGameMenu -> {
                 return GameActivity::class.java
-            }
-
-            R.id.itemMapMenu -> {
-                return null
             }
 
             R.id.itemProfileMenu -> {
@@ -386,16 +388,16 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    private fun socketConnection() = CoroutineScope(Dispatchers.IO).launch {
+    private fun socketConnection(cb: (() -> Unit)? = null) = CoroutineScope(Dispatchers.IO).launch {
         withContext(Dispatchers.Main) {
             _socket.value = null
         }
 
-        SCSocketHandler.setSocket()
-        SCSocketHandler.connection()
+        SCSocketHandler.getInstance().setSocket(cb)
+        SCSocketHandler.getInstance().connection()
 
         withContext(Dispatchers.Main) {
-            _socket.value = SCSocketHandler.getSocket()
+            _socket.value = SCSocketHandler.getInstance().getSocket()
         }
     }
 

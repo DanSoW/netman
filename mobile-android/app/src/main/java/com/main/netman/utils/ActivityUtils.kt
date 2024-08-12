@@ -16,6 +16,7 @@ import com.main.netman.store.CookiePreferences
 import com.main.netman.store.UserPreferences
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlin.time.Duration
 
 /**
  * Запуск новой активности с определёнными параметрами (с чисткой задач предыдущей активности)
@@ -179,7 +180,12 @@ fun Activity.showMessage(view: View) {
  * @property message Сообщение
  * @property type Тип сообщения
  */
-fun Activity.showMessage(view: View, message: String? = null, type: String? = null) {
+fun Activity.showMessage(
+    view: View,
+    message: String? = null,
+    type: String? = null,
+    duration: Int = Snackbar.LENGTH_SHORT
+) {
     if (message != null) {
         if (type != null) {
             when (type.toString()) {
@@ -192,7 +198,7 @@ fun Activity.showMessage(view: View, message: String? = null, type: String? = nu
                 }
 
                 "success" -> {
-                    handleSuccessMessage(view, message.toString())
+                    handleSuccessMessage(view, message.toString(), duration)
                 }
 
                 else -> {
