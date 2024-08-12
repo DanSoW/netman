@@ -1,8 +1,10 @@
 package com.main.netman.network
 
+import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.google.gson.reflect.TypeToken
+import com.main.netman.config.BuildConfigApp
 import com.main.netman.constants.network.auth.AuthApiConstants
 import com.main.netman.constants.network.main.MainNetworkConstants
 import com.main.netman.models.auth.AuthModel
@@ -43,12 +45,12 @@ class RemoteDataSource {
             .client(
                 // Создание нового клиента
                 OkHttpClient.Builder()
-                    .addInterceptor(AddCookiesInterceptor(cookiePreferences))
-                    .addInterceptor(ReceivedCookiesInterceptor(cookiePreferences))
+                    // .addInterceptor(AddCookiesInterceptor(cookiePreferences))
+                    // .addInterceptor(ReceivedCookiesInterceptor(cookiePreferences))
                     .addInterceptor(AuthorizationInterceptor(userPreferences, authInterceptor))
                     .also { client ->
                         // При режиме debug, происходит логирование интерцептора
-                        if (BuildConfig.DEBUG) {
+                        if (BuildConfigApp.DEBUG) {
                             val logging = HttpLoggingInterceptor()
                             logging.setLevel(HttpLoggingInterceptor.Level.BASIC)
                             client.addInterceptor(logging)

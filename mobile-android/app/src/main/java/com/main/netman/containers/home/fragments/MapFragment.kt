@@ -733,28 +733,6 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
     }
 
     /**
-     * Обработка завершения игрового квеста на карте
-     */
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onCurrentQuestFinished(event: CurrentQuestEvent) {
-        // Удаление маркера задачи с карты
-        if (coordTasks.containsKey(event.gamesId)) {
-            deleteMapElement(coordTasks[event.gamesId]!!)
-            coordTasks.remove(event.gamesId)
-        }
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onCurrentGameFinished(event: CurrentGameEvent) {
-        // Удаление маркеров других игроков с карты
-        for (item in commandPlayers) {
-            deleteMapElement(item.value)
-        }
-
-        commandPlayers.clear()
-    }
-
-    /**
      * Обработка события удаления маркера с карты
      */
     @Subscribe(threadMode = ThreadMode.MAIN)

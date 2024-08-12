@@ -1,6 +1,10 @@
 package com.main.netman.constants.socket
 
 object SocketHandlerConstants {
+    // Standard events:
+    const val DISCONNECT = "disconnect"
+
+    // Custom events:
     const val AUTH = "authentication"
     const val AUTH_FAILED = "authentication_failed"
     const val AUTH_SUCCESS = "authentication_success"

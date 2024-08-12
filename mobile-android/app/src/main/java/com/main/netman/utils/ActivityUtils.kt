@@ -29,7 +29,7 @@ fun <A : Activity> Activity.startNewActivity(
     type: String? = null
 ) {
     Intent(this, activity).also {
-        it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NO_HISTORY
         if (message != null) {
             it.putExtra("message", message)
         }
@@ -189,6 +189,10 @@ fun Activity.showMessage(view: View, message: String? = null, type: String? = nu
 
                 "warning" -> {
                     handleWarningMessage(view, message.toString())
+                }
+
+                "success" -> {
+                    handleSuccessMessage(view, message.toString())
                 }
 
                 else -> {

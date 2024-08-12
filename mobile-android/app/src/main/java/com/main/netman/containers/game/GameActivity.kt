@@ -3,6 +3,7 @@ package com.main.netman.containers.game
 import android.app.Activity
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import com.main.netman.R
 import com.main.netman.containers.creator.CreatorActivity
 import com.main.netman.containers.home.HomeActivity
@@ -11,6 +12,7 @@ import com.main.netman.containers.profile.ProfileActivity
 import com.main.netman.databinding.ActivityGameBinding
 import com.main.netman.utils.handleWarningMessage
 import com.main.netman.utils.showMessage
+import com.main.netman.utils.startNewActivity
 import com.main.netman.utils.startStdActivity
 import com.main.netman.utils.visible
 import java.util.ArrayDeque
@@ -24,7 +26,6 @@ class GameActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityGameBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         showMessage(binding.root)
 
         // Инициализация BottomNavigationView
@@ -46,12 +47,18 @@ class GameActivity : AppCompatActivity() {
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        idDeque.pop()
+        /*idDeque.pop()
 
         if(!idDeque.isEmpty()){
             loadActivity(getActivity(idDeque.peek()!!))
         }else{
             finish()
+        }*/
+
+        val data = getActivity(R.id.itemMapMenu)
+
+        if(data != null) {
+            startStdActivity(data)
         }
     }
 
@@ -95,7 +102,7 @@ class GameActivity : AppCompatActivity() {
 
     private fun setupBottomNavigationView(){
         binding.bnvActivityGame.setOnItemSelectedListener {
-            if(idDeque.contains(it.itemId)){
+            /*if(idDeque.contains(it.itemId)){
                 if(it.itemId == R.id.itemMapMenu){
                     if(idDeque.size != 1){
                         if(flag){
@@ -109,7 +116,7 @@ class GameActivity : AppCompatActivity() {
                 idDeque.remove(it.itemId)
             }
 
-            idDeque.push(it.itemId)
+            idDeque.push(it.itemId)*/
             loadActivity(getActivity(it.itemId))
 
             false

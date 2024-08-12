@@ -102,7 +102,7 @@ class CreatorActivity : AppCompatActivity() {
         }*/
     }
 
-    @Deprecated("Deprecated in Java")
+    /*@Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         idDeque.pop()
 
@@ -111,7 +111,7 @@ class CreatorActivity : AppCompatActivity() {
         } else {
             finish()
         }
-    }
+    }*/
 
     private fun <A : Activity> loadActivity(activity: Class<A>?) {
         if (activity != null) {

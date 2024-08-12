@@ -67,7 +67,7 @@ class ProfileActivity : AppCompatActivity() {
     }
 
 
-    @Deprecated("Deprecated in Java", ReplaceWith("this.finishAndRemoveTask()"))
+    /*@Deprecated("Deprecated in Java", ReplaceWith("this.finishAndRemoveTask()"))
     override fun onBackPressed() {
         idDeque.pop()
 
@@ -76,7 +76,7 @@ class ProfileActivity : AppCompatActivity() {
         }else{
             finish()
         }
-    }
+    }*/
 
     private fun <A : Activity> loadActivity(activity: Class<A>?){
         if(activity != null){

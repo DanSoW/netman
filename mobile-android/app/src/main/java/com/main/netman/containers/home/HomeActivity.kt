@@ -6,6 +6,7 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import androidx.core.app.ActivityCompat
@@ -31,11 +32,14 @@ import com.main.netman.store.UserPreferences
 import com.main.netman.store.currentQuestDataStore
 import com.main.netman.store.userDataStore
 import com.main.netman.utils.handleErrorMessage
+import com.main.netman.utils.showMessage
 import com.main.netman.utils.startStdActivity
 import com.main.netman.utils.visible
 import io.socket.client.Socket
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -54,6 +58,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityHomeBinding
     private lateinit var userPreferences: UserPreferences
     private lateinit var currentQuestPreferences: CurrentQuestPreferences
+    private var socketConnectionJob: Job? = null
 
     // Socket
     private val _socket: MutableLiveData<Socket?> = MutableLiveData(SCSocketHandler.getSocket())
@@ -68,7 +73,6 @@ class HomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        // showMessage(binding.root)
 
         // Инициализация BottomNavigationView
         setupBottomNavigationView()
@@ -117,30 +121,44 @@ class HomeActivity : AppCompatActivity() {
             }
         }
 
-        binding.icArrowAction.setOnClickListener {
-            binding.icArrowAction.rotation += 180f
-            if (binding.actionScrollView.visibility == View.VISIBLE) {
-                binding.actionScrollView.visibility = View.GONE
-            } else {
-                binding.actionScrollView.visibility = View.VISIBLE
-            }
-        }
-
         // Определение обработчиков для сокета после подключения
         socket.observe(this) {
             if (it == null) {
                 return@observe
             }
 
+            // Обработка сообщения от отключении сокета
+            it.on(SocketHandlerConstants.DISCONNECT) {
+                CoroutineScope(Dispatchers.Main).launch {
+                    binding.cardTask.visibility = View.GONE
+                    binding.icCameraOn.visibility = View.GONE
+                    binding.icCameraOff.visibility = View.GONE
+                    binding.tvTaskDescription.text = ""
+
+                    showMessage(binding.root, "Соединение с сервером потеряно", "error")
+
+                    // Отключаем адаптер сокета явно
+                    _socket.value = null
+
+                    socketConnection()
+                }
+            }
+
+            // Обработка сообщения об успешной авторизации пользователя
             if (it.hasListeners(SocketHandlerConstants.AUTH_SUCCESS)) {
                 it.off(SocketHandlerConstants.AUTH_SUCCESS)
             }
 
+            it.on(SocketHandlerConstants.AUTH_SUCCESS) { _ ->
+                SCSocketHandler.setAuth(true)
+                it.emit(SocketHandlerConstants.STATUS)
+            }
+
+            // Обработка сообщения о новом игровом статусе
             if (it.hasListeners(SocketHandlerConstants.STATUS_ON)) {
                 it.off(SocketHandlerConstants.STATUS_ON)
             }
 
-            // Обработка получения статуса пользователя в текущий момент времени
             it.on(SocketHandlerConstants.STATUS_ON) { itLocal ->
                 if (itLocal.isEmpty()) {
                     return@on
@@ -182,6 +200,7 @@ class HomeActivity : AppCompatActivity() {
                 }
             }
 
+            // Обработка сообщения "Отправь запрос на обновление статуса"
             if (it.hasListeners(SocketHandlerConstants.REPEAT_STATUS_REQUEST)) {
                 it.off(SocketHandlerConstants.REPEAT_STATUS_REQUEST)
             }
@@ -190,11 +209,12 @@ class HomeActivity : AppCompatActivity() {
                 it.emit(SocketHandlerConstants.STATUS)
             }
 
+            // Обработка сообщения "Все квесты текущей игры завершены"
             if (it.hasListeners(SocketHandlerConstants.STATUS_COMPLETED)) {
                 it.off(SocketHandlerConstants.STATUS_COMPLETED)
             }
 
-            it.on(SocketHandlerConstants.STATUS_COMPLETED) { itLocal ->
+            it.on(SocketHandlerConstants.STATUS_COMPLETED) { _ ->
                 runOnUiThread {
                     binding.cardTask.visibility = View.GONE
                     binding.icCameraOn.visibility = View.GONE
@@ -205,34 +225,13 @@ class HomeActivity : AppCompatActivity() {
                 }
             }
 
-            if (it.hasListeners(SocketHandlerConstants.GAME_OVER)) {
-                it.off(SocketHandlerConstants.GAME_OVER)
-            }
-
-            it.on(SocketHandlerConstants.GAME_OVER) { _ ->
-                // Отправляем сообщение о том, чтобы отключиться от текущей командной комнаты
-                it.emit(SocketHandlerConstants.GAME_OVER_DISCONNECT)
-            }
-
-            if (it.hasListeners(SocketHandlerConstants.GAME_OVER_DISCONNECT_SUCCESS)) {
-                it.off(SocketHandlerConstants.GAME_OVER_DISCONNECT_SUCCESS)
-            }
-
-            // Обработка "полного" завершения игрового процесса
-            it.on(SocketHandlerConstants.GAME_OVER_DISCONNECT_SUCCESS) { _ ->
-                // Очистка карты от других игроков
-                EventBus.getDefault().post(CurrentGameEvent())
-            }
-
-            it.on(SocketHandlerConstants.AUTH_SUCCESS) { _ ->
-                SCSocketHandler.setAuth(true)
-                it.emit(SocketHandlerConstants.STATUS)
-            }
-
+            // Если пользователь не авторизован
             if (!SCSocketHandler.getAuth()) {
+                // Отправить запрос на авторизацию
                 it.emit(SocketHandlerConstants.AUTH, Gson().toJson(data))
             }
 
+            // Иначе - отправить запрос о получении статуса
             if (SCSocketHandler.getAuth()) {
                 it.emit(SocketHandlerConstants.STATUS)
             }
@@ -288,7 +287,7 @@ class HomeActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    @Deprecated("Deprecated in Java")
+    /*@Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         idDeque.pop()
 
@@ -297,7 +296,7 @@ class HomeActivity : AppCompatActivity() {
         } else {
             finish()
         }
-    }
+    }*/
 
     private fun <A : Activity> loadActivity(activity: Class<A>?) {
         if (activity != null) {
@@ -387,25 +386,16 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    private fun socketConnection() {
-        CoroutineScope(Dispatchers.IO).launch {
-            withContext(Dispatchers.Main) {
-                _socket.value = null
-            }
-            SCSocketHandler.setSocket()
-            SCSocketHandler.connection()
+    private fun socketConnection() = CoroutineScope(Dispatchers.IO).launch {
+        withContext(Dispatchers.Main) {
+            _socket.value = null
+        }
 
-            /*while(SCSocketHandler.getSocket() == null ||
-                (!(SCSocketHandler.getSocket()?.connected()!!))) {
-                SCSocketHandler.setSocket()
-                SCSocketHandler.connection()
+        SCSocketHandler.setSocket()
+        SCSocketHandler.connection()
 
-                delay(5000)
-            }*/
-
-            withContext(Dispatchers.Main) {
-                _socket.value = SCSocketHandler.getSocket()
-            }
+        withContext(Dispatchers.Main) {
+            _socket.value = SCSocketHandler.getSocket()
         }
     }
 

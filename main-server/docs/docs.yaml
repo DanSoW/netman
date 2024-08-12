@@ -1734,13 +1734,38 @@
     /player/detach/game: 
       post: 
         requestBody: 
-          content: 
-            application/json: 
-              schema: 
-                $ref: "#/components/schemas/PlayerDetachGameDto"
-          description: "Информация для получения данных об игре"
-          required: true
+          $ref: "#/components/requestBodies/PlayerDetachGameDto"
         description: "Выход игрока из текущей игры"
+        tags: 
+          - "Игрок"
+        responses: 
+          200: 
+            description: "Флаг"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/FlagDto"
+              application/xml: 
+                schema: 
+                  $ref: "#/components/schemas/FlagDto"
+          default: 
+            description: "Ошибка запроса"
+            content: 
+              application/json: 
+                schema: 
+                  $ref: "#/components/schemas/ApiError"
+              application/xml: 
+                schema: 
+                  $ref: "#/components/schemas/ApiError"
+        operationId: "playerJoinGame"
+        security: 
+          - 
+            JWT: []
+    /player/completed/game: 
+      post: 
+        requestBody: 
+          $ref: "#/components/requestBodies/PlayerDetachGameDto"
+        description: "Завершение определённой игры по игровой сессии"
         tags: 
           - "Игрок"
         responses: 
@@ -1914,6 +1939,13 @@
             schema: 
               $ref: "#/components/schemas/InfoGamesIdDto"
         description: "Входные данные"
+        required: true
+      PlayerDetachGameDto: 
+        content: 
+          application/json: 
+            schema: 
+              $ref: "#/components/schemas/PlayerDetachGameDto"
+        description: "Информация для получения данных об игре"
         required: true
     securitySchemes: 
       JWT: 

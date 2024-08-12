@@ -2,6 +2,7 @@ package com.main.netman.network.handlers
 
 import android.util.Log
 import com.main.netman.constants.network.main.MainNetworkConstants
+import com.main.netman.constants.socket.SocketHandlerConstants
 import io.socket.client.IO
 import io.socket.client.Socket
 
@@ -19,6 +20,11 @@ object SCSocketHandler {
     fun setSocket(){
         try{
             mSocket = IO.socket(MainNetworkConstants.MAIN_API)
+
+            // Обработка ситуации отключения от сервера
+            mSocket?.on(SocketHandlerConstants.DISCONNECT) {
+                disconnection()
+            }
         }catch (e: Exception) {
             Log.e("SOCKET", e.message.toString())
         }
@@ -52,4 +58,8 @@ object SCSocketHandler {
         return auth
     }
 
+    @Synchronized
+    fun setSocketValue(socket: Socket?) {
+        mSocket = socket
+    }
 }

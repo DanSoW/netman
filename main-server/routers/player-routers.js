@@ -25,7 +25,6 @@ import UrlDto from '../dtos/player/url-dto.js';
 import { v4 as uuid } from 'uuid';
 import multer from 'multer';
 import PlayerJoinGameDto from '../dtos/player/player-join-game-dto.js';
-import PlayerSessionGameDto from '../dtos/player/player-session-game-dto.js';
 
 // Конфигурирование файлового хранилища multer
 const storage = multer.diskStorage({
@@ -560,7 +559,7 @@ router.post(
  * @route POST /player/detach/game
  * @group Игрок - Функции для взаимодействия с игровой механикой
  * @operationId playerJoinGame
- * @param {PlayerSessionGameDto.model} input.body.required - Информация для получения данных об игре
+ * @param {PlayerDetachGameDto.model} input.body.required - Информация для получения данных об игре
  * @returns {FlagDto.model} 200 - Флаг
  * @returns {ApiError.model} default - Ошибка запроса
  * @security JWT

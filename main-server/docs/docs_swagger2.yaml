@@ -1309,7 +1309,7 @@
             description: "Информация для получения данных об игре"
             required: true
             schema: 
-              $ref: "#/definitions/PlayerSessionGameDto"
+              $ref: "#/definitions/PlayerDetachGameDto"
         description: "Выход игрока из текущей игры"
         tags: 
           - "Игрок"

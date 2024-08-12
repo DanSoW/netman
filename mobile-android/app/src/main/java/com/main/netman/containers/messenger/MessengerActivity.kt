@@ -46,7 +46,7 @@ class MessengerActivity : AppCompatActivity() {
         //badgeSetup(R.id.itemMessengerMenu,100)
     }
 
-    @Deprecated("Deprecated in Java")
+    /*@Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         idDeque.pop()
 
@@ -55,7 +55,7 @@ class MessengerActivity : AppCompatActivity() {
         }else{
             finish()
         }
-    }
+    }*/
 
     private fun <A : Activity> loadActivity(activity: Class<A>?){
         if(activity != null){
