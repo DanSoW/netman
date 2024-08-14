@@ -34,6 +34,8 @@ import com.main.netman.utils.visible
 
 class ProfileSettingsFragment : BaseFragment<PlayerViewModel, FragmentProfileSettingsBinding, PlayerRepository>() {
 
+    private var _isEditForm: Boolean = false
+
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
@@ -45,9 +47,19 @@ class ProfileSettingsFragment : BaseFragment<PlayerViewModel, FragmentProfileSet
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
                 // Никаких действий при предварительном изменении текста
             }
+
+            /**
+             * Обработка изменения текста
+             */
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                // Действия при изменении текста
-                binding.psPenIcon.setBackgroundResource(R.drawable.ic_pen)
+                if(!_isEditForm) {
+                    binding.psPenIcon.setBackgroundResource(R.drawable.ic_pen)
+                    binding.psPenIcon.setOnClickListener {
+                        playerInfoUpdate()
+                    }
+
+                    _isEditForm = true
+                }
             }
             override fun afterTextChanged(s: Editable?) {
                 // Никаких действий после изменения текста
@@ -66,18 +78,10 @@ class ProfileSettingsFragment : BaseFragment<PlayerViewModel, FragmentProfileSet
                             Gson().fromJson(it.value.body()!!.string(), UserInfoModel::class.java)
 
                         binding.psEmail.setText(body.email)
-                        binding.psSurname.setText(body.surname)
-                        binding.psName.setText(body.name)
                         binding.psNickname.setText(body.nickname)
-                        binding.psPhone.setText(body.phoneNum)
-                        binding.psLocation.setText(body.location)
 
                         binding.psEmail.addTextChangedListener(textWatcher)
-                        binding.psSurname.addTextChangedListener(textWatcher)
-                        binding.psName.addTextChangedListener(textWatcher)
                         binding.psNickname.addTextChangedListener(textWatcher)
-                        binding.psPhone.addTextChangedListener(textWatcher)
-                        binding.psLocation.addTextChangedListener(textWatcher)
 
                     } else {
                         val error = Gson().fromJson(
@@ -109,6 +113,10 @@ class ProfileSettingsFragment : BaseFragment<PlayerViewModel, FragmentProfileSet
                     if (it.value.isSuccessful) {
                         handleSuccessMessage("Информация успешно обновлена!")
 
+                        binding.psPenIcon.setBackgroundResource(R.drawable.ic_none_pen)
+                        binding.psPenIcon.setOnClickListener(null)
+
+                        _isEditForm = false
                     } else {
                         val error = Gson().fromJson(
                             it.value.errorBody()?.string().toString(), ErrorModel::class.java
@@ -131,10 +139,6 @@ class ProfileSettingsFragment : BaseFragment<PlayerViewModel, FragmentProfileSet
 
         // Получение данных о пользователе
         viewModel.playerInfo()
-
-        binding.psPenIcon.setOnClickListener {
-            playerInfoUpdate()
-        }
     }
 
     /**
@@ -157,23 +161,11 @@ class ProfileSettingsFragment : BaseFragment<PlayerViewModel, FragmentProfileSet
         PlayerRepository(remoteDataSource.buildApi(PlayerApi::class.java, userPreferences, cookiePreferences))
 
     private fun playerInfoUpdate(){
-        val email = binding.psEmail.text.toString()
-        val surname = binding.psSurname.text.toString()
-        val name = binding.psName.text.toString()
         val nickname = binding.psNickname.text.toString()
-        val phone = binding.psPhone.text.toString()
-        val location = binding.psLocation.text.toString()
 
         viewModel.playerInfoUpdate(
             UserInfoUpdateModel(
-                newEmail = email,
-                oldEmail = email,
-                surname = surname,
-                name = name,
-                nickname = nickname,
-                phoneNum = phone,
-                location = location,
-                dateBirthday = null
+                nickname = nickname
             )
         )
     }

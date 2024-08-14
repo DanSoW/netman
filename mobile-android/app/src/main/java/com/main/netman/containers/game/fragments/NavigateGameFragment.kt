@@ -62,6 +62,8 @@ class NavigateGameFragment :
                         val args = Bundle()
                         args.putString(GameRouterKeys.GAME_INFO, Gson().toJson(body))
 
+                        binding.nftProgressBar.visibility = View.GONE
+
                         // Информация о текущей игре присутствует
                         if(body.joinedGame) {
                             navigation(R.id.action_navigateGameFragment_to_gameFragment, args)
@@ -87,8 +89,6 @@ class NavigateGameFragment :
 
                 else -> {}
             }
-
-            binding.nftProgressBar.visibility = View.GONE
         }
 
         _socket.observe(viewLifecycleOwner) {

@@ -32,7 +32,7 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
-            android:name=".containers.ar.ArActivity"
+            android:name=".exec.exit.ExitAppActivity"
             android:exported="false" />
         <activity
             android:name=".containers.creator.CreatorActivity"

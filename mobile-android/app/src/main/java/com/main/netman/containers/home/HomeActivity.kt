@@ -3,6 +3,7 @@ package com.main.netman.containers.home
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -25,6 +26,7 @@ import com.main.netman.event.CurrentGameEvent
 import com.main.netman.event.RemoveMarkEvent
 import com.main.netman.event.UpdateSocketEvent
 import com.main.netman.event.ViewMarkEvent
+import com.main.netman.exec.exit.ExitAppActivity
 import com.main.netman.models.auth.AuthModel
 import com.main.netman.models.game.CurrentGameModel
 import com.main.netman.models.game.GameQuestModel
@@ -48,6 +50,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.greenrobot.eventbus.EventBus
 import java.util.ArrayDeque
+import kotlin.system.exitProcess
 
 /**
  * Домашняя страница мобильного приложения (основная активность, которая связывает все остальные
@@ -188,6 +191,9 @@ class HomeActivity : AppCompatActivity() {
 
                     binding.icCameraOn.visibility = View.GONE
                     binding.icCameraOff.visibility = View.GONE
+
+                    binding.icArrow.rotation = 180f
+                    binding.descriptionScrollView.visibility = View.VISIBLE
 
                     if (status.view == ViewStatusConstants.VISIBLE) {
                         binding.icCameraOn.visibility = View.VISIBLE
@@ -399,6 +405,12 @@ class HomeActivity : AppCompatActivity() {
         withContext(Dispatchers.Main) {
             _socket.value = SCSocketHandler.getInstance().getSocket()
         }
+    }
+
+    override fun onBackPressed() {
+        startActivity(Intent(applicationContext, ExitAppActivity::class.java).also {
+            it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        })
     }
 
     companion object {

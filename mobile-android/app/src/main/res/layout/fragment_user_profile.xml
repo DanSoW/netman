@@ -15,30 +15,37 @@
             android:id="@+id/upToolbar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="46dp"
             android:background="@null"
             android:minHeight="?attr/actionBarSize"
             android:theme="?attr/actionBarTheme"
-            app:layout_constraintBottom_toTopOf="@+id/upUserIcon"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
 
             <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="end"
                 tools:layout_editor_absoluteX="371dp"
                 tools:layout_editor_absoluteY="11dp">
+
+                <TextView
+                    android:id="@+id/textView5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Профиль"
+                    android:textColor="@color/purple_200"
+                    android:textSize="32sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
 
                 <View
                     android:id="@+id/upSettingsIcon"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:layout_marginTop="10dp"
-                    android:layout_marginEnd="15dp"
-                    android:layout_marginRight="15dp"
                     android:background="@drawable/ic_settings"
                     android:clickable="true"
                     android:foregroundGravity="bottom"

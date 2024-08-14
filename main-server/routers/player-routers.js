@@ -112,7 +112,6 @@ router.post(
     [
         authMiddleware,
         check('users_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 }),
-        check('email', 'Введите корректный email').isEmail(),
         check('nickname', 'Минимальная длина для никнейма равна 2 символам')
             .isLength({ min: 2 }),
     ],

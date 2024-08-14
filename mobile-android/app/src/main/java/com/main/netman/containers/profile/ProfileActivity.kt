@@ -66,17 +66,10 @@ class ProfileActivity : AppCompatActivity() {
         }
     }
 
-
-    /*@Deprecated("Deprecated in Java", ReplaceWith("this.finishAndRemoveTask()"))
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        idDeque.pop()
-
-        if(!idDeque.isEmpty()){
-            loadActivity(getActivity(idDeque.peek()!!))
-        }else{
-            finish()
-        }
-    }*/
+        startStdActivity(HomeActivity::class.java)
+    }
 
     private fun <A : Activity> loadActivity(activity: Class<A>?) {
         if (activity != null) {
@@ -108,7 +101,7 @@ class ProfileActivity : AppCompatActivity() {
 
     private fun setupBottomNavigationView() {
         binding.bnvActivityProfile.setOnItemSelectedListener {
-            if (idDeque.contains(it.itemId)) {
+            /*if (idDeque.contains(it.itemId)) {
                 if (it.itemId == R.id.itemMapMenu) {
                     if (idDeque.size != 1) {
                         if (flag) {
@@ -122,7 +115,7 @@ class ProfileActivity : AppCompatActivity() {
                 idDeque.remove(it.itemId)
             }
 
-            idDeque.push(it.itemId)
+            idDeque.push(it.itemId)*/
             loadActivity(getActivity(it.itemId))
 
             false

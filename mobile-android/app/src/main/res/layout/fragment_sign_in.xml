@@ -29,7 +29,7 @@
                 android:fontFamily="@font/proxima_soft_medium"
                 android:text="@string/sign_up_title"
                 android:textColor="@color/white"
-                android:textSize="24sp"
+                android:textSize="32sp"
                 app:lineHeight="24sp" />
 
             <LinearLayout
@@ -41,17 +41,17 @@
                     android:id="@+id/txtEmail"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="20dp"
                     android:fontFamily="@font/proxima_soft_regular"
                     android:text="Email"
                     android:textColor="@color/gray"
-                    android:textSize="14sp"
+                    android:textSize="24sp"
                     app:lineHeight="14sp" />
 
                 <EditText
                     android:id="@+id/email"
                     android:layout_width="match_parent"
-                    android:layout_height="42dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:background="@drawable/shape_rect_dark_round"
                     android:ems="10"
@@ -61,6 +61,7 @@
                     android:minHeight="42dp"
                     android:textColor="@color/black"
                     android:textColorHint="#90A4AE"
+                    android:textSize="20sp"
                     tools:ignore="DuplicateSpeakableTextCheck" />
 
                 <TextView
@@ -71,7 +72,7 @@
                     android:fontFamily="@font/proxima_soft_regular"
                     android:text="Пароль"
                     android:textColor="@color/gray"
-                    android:textSize="14sp"
+                    android:textSize="24sp"
                     app:lineHeight="14sp" />
 
                 <com.google.android.material.textfield.TextInputLayout
@@ -85,7 +86,7 @@
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/password"
                         android:layout_width="match_parent"
-                        android:layout_height="42dp"
+                        android:layout_height="wrap_content"
                         android:background="@drawable/shape_rect_dark_round"
                         android:digits="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
                         android:ems="10"
@@ -95,6 +96,7 @@
                         android:minHeight="42dp"
                         android:textColor="@color/black"
                         android:textColorHint="#90A4AE"
+                        android:textSize="20sp"
                         tools:ignore="DuplicateSpeakableTextCheck" />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -102,8 +104,10 @@
                     android:id="@+id/btnAuth"
                     style="@style/ButtonBlueStyle"
                     android:layout_width="match_parent"
+                    android:layout_height="64dp"
                     android:layout_marginTop="48dp"
                     android:text="@string/sign_in_text"
+                    android:textSize="24sp"
                     tools:ignore="DuplicateSpeakableTextCheck" />
 
                 <androidx.constraintlayout.widget.ConstraintLayout
@@ -126,7 +130,7 @@
                             android:fontFamily="@font/proxima_soft_medium"
                             android:text="Нет аккаунта?"
                             android:textColor="@color/white"
-                            android:textSize="14sp"
+                            android:textSize="20sp"
                             app:lineHeight="14sp" />
 
                         <TextView
@@ -137,7 +141,7 @@
                             android:fontFamily="@font/proxima_soft_medium"
                             android:text="Зарегистрироваться"
                             android:textColor="@color/white"
-                            android:textSize="14sp"
+                            android:textSize="20sp"
                             app:lineHeight="14sp" />
                     </LinearLayout>
                 </androidx.constraintlayout.widget.ConstraintLayout>

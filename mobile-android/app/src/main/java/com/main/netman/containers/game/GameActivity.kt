@@ -47,19 +47,7 @@ class GameActivity : AppCompatActivity() {
 
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
-        /*idDeque.pop()
-
-        if(!idDeque.isEmpty()){
-            loadActivity(getActivity(idDeque.peek()!!))
-        }else{
-            finish()
-        }*/
-
-        val data = getActivity(R.id.itemMapMenu)
-
-        if (data != null) {
-            startStdActivity(data)
-        }
+        startStdActivity(HomeActivity::class.java)
     }
 
     private fun <A : Activity> loadActivity(activity: Class<A>?) {

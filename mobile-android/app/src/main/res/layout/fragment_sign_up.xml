@@ -29,28 +29,30 @@
                 android:fontFamily="@font/proxima_soft_medium"
                 android:text="@string/sign_up_title2"
                 android:textColor="@color/white"
-                android:textSize="24sp"
+                android:textSize="32sp"
                 app:lineHeight="24sp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16sp"
                 android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/txtNickname"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="0dp"
                     android:fontFamily="@font/proxima_soft_regular"
                     android:text="Никнейм"
                     android:textColor="@color/gray"
-                    android:textSize="14sp"
+                    android:textSize="24sp"
                     app:lineHeight="14sp" />
 
                 <EditText
                     android:id="@+id/nickname"
                     android:layout_width="match_parent"
-                    android:layout_height="42dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:background="@drawable/shape_rect_dark_round"
                     android:ems="10"
@@ -70,13 +72,13 @@
                     android:fontFamily="@font/proxima_soft_regular"
                     android:text="Email *"
                     android:textColor="@color/gray"
-                    android:textSize="14sp"
+                    android:textSize="24sp"
                     app:lineHeight="14sp" />
 
                 <EditText
                     android:id="@+id/email"
                     android:layout_width="match_parent"
-                    android:layout_height="42dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:background="@drawable/shape_rect_dark_round"
                     android:ems="10"
@@ -96,7 +98,7 @@
                     android:fontFamily="@font/proxima_soft_regular"
                     android:text="Пароль *"
                     android:textColor="@color/gray"
-                    android:textSize="14sp"
+                    android:textSize="24sp"
                     app:lineHeight="14sp" />
 
                 <com.google.android.material.textfield.TextInputLayout
@@ -110,7 +112,7 @@
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/password"
                         android:layout_width="match_parent"
-                        android:layout_height="42dp"
+                        android:layout_height="wrap_content"
                         android:background="@drawable/shape_rect_dark_round"
                         android:digits="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
                         android:ems="10"
@@ -129,6 +131,7 @@
                     android:layout_width="match_parent"
                     android:layout_marginTop="48dp"
                     android:text="Зарегистрироваться"
+                    android:textSize="24sp"
                     tools:ignore="DuplicateSpeakableTextCheck" />
 
                 <androidx.constraintlayout.widget.ConstraintLayout
@@ -151,7 +154,7 @@
                             android:fontFamily="@font/proxima_soft_medium"
                             android:text="Уже есть аккаунт?"
                             android:textColor="@color/white"
-                            android:textSize="14sp"
+                            android:textSize="20sp"
                             app:lineHeight="14sp" />
 
                         <TextView
@@ -162,7 +165,7 @@
                             android:fontFamily="@font/proxima_soft_medium"
                             android:text="Войти"
                             android:textColor="@color/white"
-                            android:textSize="14sp"
+                            android:textSize="20sp"
                             app:lineHeight="14sp" />
                     </LinearLayout>
                 </androidx.constraintlayout.widget.ConstraintLayout>

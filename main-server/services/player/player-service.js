@@ -143,7 +143,7 @@ class PlayerService {
         const t = await db.sequelize.transaction();
 
         try {
-            const { users_id, nickname, email } = data;
+            const { users_id, nickname } = data;
             const user = await db.Users.findOne({
                 where: {
                     id: users_id
@@ -164,39 +164,23 @@ class PlayerService {
                 throw ApiError.NotFound("Данных у пользователя не существует!");
             }
 
-            const userEmail = await db.Users.findOne({
-                where: {
-                    email: email
-                }
-            });
-
-            if (userEmail && (userEmail.id !== user.id)) {
-                throw ApiError.BadRequest(`Пользователь с почтовым адресом ${email} уже существует`);
-            }
-
-            if (email !== user.email) {
-                user.email = email;
-            }
-
             const userNickname = await db.DataUsers.findOne({ where: { nickname: nickname } });
             if (userNickname && (userNickname.users_id !== user.id)) {
                 throw ApiError.BadRequest(`Пользователь с никнеймом ${nickname} уже существует`);
             }
 
             if (nickname !== userData.nickname) {
-                userData.nickname = nickname;
+                await userData.update({
+                    nickname: nickname
+                }, { transaction: t });
             }
-
-            await user.update({ transaction: t });
-            await userData.update({ transaction: t });
 
             await t.commit();
 
             return {
                 users_id: users_id,
-                nickname: nickname,
-                email: email
-            }
+                nickname: nickname
+            };
         } catch (e) {
             await t.rollback();
             throw ApiError.BadRequest(e.message);
@@ -214,14 +198,15 @@ class PlayerService {
                 }
             });
 
-            if ((dataUser) && (dataUser.ref_image) && (dataUser.ref_image.length > 0)) {
-                if (fs.existsSync(dataUser.ref_image)) {
+            if ((dataUser) && (dataUser.photo) && (dataUser.photo.length > 0)) {
+                if (fs.existsSync(dataUser.photo)) {
+
                     // Удаление старого изображения
-                    fs.unlinkSync(dataUser.ref_image);
+                    fs.unlinkSync(dataUser.photo);
                 }
             }
 
-            await db.DataUsers.update({ ref_image: filedata.path }, { where: { users_id: users_id }, transaction: t });
+            await db.DataUsers.update({ photo: filedata.path }, { where: { users_id: users_id }, transaction: t });
 
             await t.commit();
 
@@ -243,10 +228,10 @@ class PlayerService {
                 }
             });
 
-            if ((dataUser) && (dataUser.ref_image) && (dataUser.ref_image.length > 0)) {
-                if (fs.existsSync(dataUser.ref_image)) {
+            if ((dataUser) && (dataUser.photo) && (dataUser.photo.length > 0)) {
+                if (fs.existsSync(dataUser.photo)) {
                     return {
-                        url: `${config.get("url.api")}/${dataUser.ref_image}`
+                        url: `${config.get("url.api")}/${dataUser.photo}`
                     };
                 }
             }
@@ -383,7 +368,7 @@ class PlayerService {
             let quest = null;
 
             if (quests.length > 0) {
-                for(let i = 0; i < quests.length; i++) {
+                for (let i = 0; i < quests.length; i++) {
                     const item = quests[i];
                     const questItem = await db.Quests.findOne({
                         where: {
@@ -391,7 +376,7 @@ class PlayerService {
                         }
                     });
 
-                    if(i == 0 && questItem) {
+                    if (i == 0 && questItem) {
                         quest = questItem;
 
                         await db.ExecQuests.create({
@@ -399,7 +384,7 @@ class PlayerService {
                             quests_id: quest.id,
                             status: QuestStatus.ACTIVE
                         }, { transaction: t });
-                    } else if(questItem) {
+                    } else if (questItem) {
                         await db.ExecQuests.create({
                             users_games_id: createUserGame.id,
                             quests_id: questItem.id,
@@ -433,7 +418,10 @@ class PlayerService {
 
         // Формирование списка текущих квестов
         const findGameList = async () => {
-            const data = await db.InfoGames.findAll();
+            const data = await db.InfoGames.findAll({
+                order: [['created_at', 'DESC']]
+            });
+
             const games = [];
 
             // Обход данных всех найденных игр
@@ -618,7 +606,7 @@ class PlayerService {
                 throw ApiError.BadRequest(`Игровой сессии с идентификатором "${session_id}" не найдено`);
             }
 
-            if(userGame.dataValues.status !== GameStatus.COMPLETED) {
+            if (userGame.dataValues.status !== GameStatus.COMPLETED) {
                 throw ApiError.BadRequest(`Игровая сессия с идентификатором "${session_id}" не завершена`);
             }
 

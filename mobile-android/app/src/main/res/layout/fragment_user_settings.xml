@@ -31,8 +31,8 @@
                 android:layout_gravity="center"
                 android:fontFamily="@font/century_gothic"
                 android:text="Настройки"
-                android:textColor="@android:color/white"
-                android:textSize="18sp"
+                android:textColor="@color/purple_200"
+                android:textSize="32sp"
                 tools:layout_editor_absoluteX="162dp"
                 tools:layout_editor_absoluteY="17dp" />
         </androidx.appcompat.widget.Toolbar>
@@ -56,7 +56,7 @@
                 android:fontFamily="@font/century_gothic"
                 android:text="Аккаунт"
                 android:textColor="#FFFFFF"
-                android:textSize="20sp"
+                android:textSize="28sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -68,7 +68,7 @@
                 android:fontFamily="@font/century_gothic"
                 android:text="Выход"
                 android:textColor="#FFFFFF"
-                android:textSize="20sp"
+                android:textSize="28sp"
                 app:layout_constraintTop_toBottomOf="@+id/usAccountText" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>

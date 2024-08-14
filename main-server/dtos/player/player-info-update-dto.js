@@ -6,8 +6,10 @@
 class PlayerInfoUpdateDto{
     email;
     nickname;
+    users_id;
 
     constructor(model){
+        this.users_id = model.users_id;
         this.email = model.email;
         this.nickname = model.nickname;
     }

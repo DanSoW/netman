@@ -45,6 +45,7 @@ import com.main.netman.utils.enable
 import com.main.netman.utils.handleApiError
 import com.main.netman.utils.handleErrorMessage
 import com.main.netman.utils.handleMessage
+import com.main.netman.utils.handleWarningMessage
 import com.main.netman.utils.hideKeyboard
 import com.main.netman.utils.navigation
 import com.main.netman.utils.startNewActivity
@@ -69,7 +70,7 @@ class UserProfileFragment : BaseFragment<PlayerViewModel, FragmentUserProfileBin
                 // binding.upUserIcon.setImageURI(uriContent)
             }
             result is CropImage.CancelledResult -> {
-                handleMessage("cropping image was cancelled by the user")
+                handleWarningMessage("Загрузка изображения была отменена")
             }
             else -> {
                 val exception = result.error
@@ -212,8 +213,6 @@ class UserProfileFragment : BaseFragment<PlayerViewModel, FragmentUserProfileBin
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-
     }
 
     private fun startCameraWithUri(includeCamera: Boolean, includeGallery: Boolean){
