@@ -1,0 +1,47 @@
+@import "../../../styles/variables.scss";
+@import "../../../styles/mixins.scss";
+
+.container {
+    @include flex-block(column, 32px);
+    align-items: center;
+    margin: 8px 128px;
+}
+
+.params {
+    @include flex-block(row);
+    gap: 32px;
+}
+
+.column {
+    @include flex-block();
+    gap: 16px;
+    width: 300px;
+}
+
+.inputDateTime {
+    height: 34px !important;
+}
+
+.rowItem {
+    @include flex-block(row, 64px);
+
+    background-color: purple;
+}
+
+.rowCell {
+    @include flex-block();
+    width: 148px;
+    padding: 8px;
+    border: 1px solid #ccc;
+
+    p {
+        padding: 0;
+        margin: 0;
+        
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        display: -webkit-box; 
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+}

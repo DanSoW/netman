@@ -1,0 +1,51 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  align-items: center;
+  margin: 8px 128px;
+}
+
+.params {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  gap: 32px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  gap: 16px;
+  width: 300px;
+}
+
+.inputDateTime {
+  height: 34px !important;
+}
+
+.rowItem {
+  display: flex;
+  flex-direction: row;
+  gap: 64px;
+  background-color: purple;
+}
+
+.rowCell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 148px;
+  padding: 8px;
+  border: 1px solid #ccc;
+}
+.rowCell p {
+  padding: 0;
+  margin: 0;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

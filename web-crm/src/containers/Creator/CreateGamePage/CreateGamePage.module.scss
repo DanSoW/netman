@@ -4,7 +4,7 @@
 .page {
     @include flex-block(column, 32px);
     align-items: center;
-    margin: 32px 128px;
+    margin: 8px 128px;
 }
 
 .button {

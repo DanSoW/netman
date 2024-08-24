@@ -35,11 +35,8 @@ const optionsCreator: DropdownOption[] = [
     },
     {
         id: 2,
-        label: "Архив игр"
-    },
-    {
-        id: 2,
-        label: "Созданные игры"
+        label: "Созданные игры",
+        path: CreatorRoute.GAME_LIST
     }
 ];
 
