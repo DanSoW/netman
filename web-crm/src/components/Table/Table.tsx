@@ -5,6 +5,7 @@ export interface ITableProps {
     columns: string[];
     data: any[];
     renderItem: (item: any) => JSX.Element;
+    onMouseLeaveHandler?: () => void
 };
 
 /**
@@ -12,6 +13,7 @@ export interface ITableProps {
  * @returns 
  */
 const Table: FC<ITableProps> = (props) => {
+    const { onMouseLeaveHandler } = props;
 
     return (
         <>
@@ -27,11 +29,14 @@ const Table: FC<ITableProps> = (props) => {
                         })
                     }
                 </div>
-                <div className={styles.body}>
+                <div 
+                className={styles.body}
+                onMouseLeave={onMouseLeaveHandler}
+                >
                     {
                         props.data.map((item, key) => {
                             return (
-                                <React.Fragment key={key}>
+                                <React.Fragment key={item.id || key}>
                                     {
                                         props.renderItem(item)
                                     }

@@ -9,12 +9,14 @@ export interface IButtonProps {
     width?: number;
     height?: number;
     disabled?: boolean;
+    title?: string;
 }
 
 const Button: FC<IButtonProps> = (props) => {
     const {
         customClass, label, clickHandler,
-        width, height, disabled
+        width, height, disabled,
+        title
     } = props;
 
     return (
@@ -30,6 +32,7 @@ const Button: FC<IButtonProps> = (props) => {
                     className={cn(styles.button, customClass)}
                     onClick={clickHandler}
                     disabled={disabled}
+                    title={title}
                 >
                     {label}
                 </button>

@@ -9,42 +9,71 @@
 .params {
   display: flex;
   flex-direction: row;
-  gap: 8px;
   gap: 32px;
 }
 
 .column {
   display: flex;
   flex-direction: column;
-  gap: 8px;
   gap: 16px;
   width: 300px;
+}
+
+.columnModal {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.columnModal p {
+  margin: 0;
+  padding: 0;
+  font-size: 18px;
 }
 
 .inputDateTime {
   height: 34px !important;
 }
 
-.rowItem {
+.rowItem, .rowItemSelect, .rowItemHover {
   display: flex;
   flex-direction: row;
-  gap: 64px;
-  background-color: purple;
+  gap: 32px;
+  height: 54px;
+}
+
+.rowItemHover {
+  background-color: rgb(122, 122, 192);
+}
+
+.rowItemSelect {
+  background-color: rgb(62, 62, 171);
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
 }
 
 .rowCell {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  width: 148px;
+  width: 140px;
   padding: 8px;
-  border: 1px solid #ccc;
+  justify-content: center;
 }
 .rowCell p {
+  width: -moz-max-content;
+  width: max-content;
+  max-width: 100%;
   padding: 0;
   margin: 0;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  word-wrap: break-word;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   overflow: hidden;

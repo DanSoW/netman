@@ -10,6 +10,7 @@ import FlagDto from '../../dtos/response/flag-dto.js';
 import tokenService from '../token/token-service.js';
 import securityService from '../security/security-service.js';
 import NameModules from '../../constants/values/name-modules.js';
+import { checkRole } from '../../utils/check-role.js';
 import fs from 'fs';
 
 /* Сервис системы безопасности */
@@ -94,64 +95,34 @@ class CreatorService {
      */
     async gamesCreated(data) {
         try {
-            const { users_id } = data;
-
-            const user = await db.Users.findOne({ where: { id: users_id } });
-
-            if (!user) {
-                throw ApiError.BadRequest("Пользователя с данным идентификатором не существует");
-            }
-
-            const modules = await db.UsersModules.findOne({ where: { users_id: users_id } });
-
-            if ((!modules) || (modules.creator === false)) {
+            const { users_id, context_user_data } = data;
+            
+            // Check maker
+            const check = await checkRole(db.UsersRoles, db.Roles, users_id, 1);
+            if(!check) {
                 throw ApiError.Forbidden("Нет доступа");
             }
 
-            // Получение информации обо всех играх, которые были созданы текущим пользователем
-            const games = await db.InfoGames.findAll({ where: { users_id: users_id } });
-
-            /*games.removeIf(function (item, idx) {
-                return ((new Date(item.dataValues.date_end)) < (new Date()));
-            });*/
-
-            const gamesCreated = [];
-            for (let i = 0; i < games.length; i++) {
-                // Получение информации об очереди игры на проверку
-                const index = await db.QueueGames.findOne({ where: { info_games_id: games[i].dataValues.id } });
-
-                // Получение всех квестов, которые связаны с данной игрой
-                const quests = await db.GamesQuests.findAll({ where: { info_games_id: games[i].dataValues.id } });
-
-                // Установка параметра "количество квестов"
-                games[i].dataValues.count_points = quests.length;
-
-                // Если игра ещё находится в очереди на проверку (т.е. не запущена)
-                if (index) {
-                    // То обнуляем данные о предупреждениях, банах и accepted устанавливаем в false
-                    games[i].dataValues.warnings = [];
-                    games[i].dataValues.bans = [];
-                    games[i].dataValues.accepted = false;
-                } else {
-                    // Иначе, игра уже запущена и нужно получить информацию о состоянии проверки
-                    // Получаем состояние проверки
-                    const checkedGame = await db.CheckedGames.findOne({ where: { info_games_id: games[i].dataValues.id } });
-
-                    // Если состояние проверки есть, то добавляем информации об игре предупреждения, баны и флаг accepted
-                    if (checkedGame) {
-                        const warnings = await Warnings.findAll({ where: { checked_games_id: checkedGame.id } });
-                        const bans = await Bans.findAll({ where: { checked_games_id: checkedGame.id } });
-                        games[i].dataValues.warnings = warnings;
-                        games[i].dataValues.bans = bans;
-                        games[i].dataValues.accepted = checkedGame.dataValues.accepted;
-
-                    }
+            // Get all the games that this creator has created
+            const games = await db.InfoGames.findAll({
+                where: {
+                    users_id: users_id
                 }
+            });
 
-                gamesCreated.push(games[i].dataValues);
+            for(let i = 0; i < games.length; i++) {
+                const item = games[i];
+
+                const quests = await db.GamesQuests.findAll({
+                    where: {
+                        info_games_id: item.dataValues.id
+                    }
+                });
+
+                games[i].dataValues.count_quests = quests.length;
             }
 
-            return gamesCreated;
+            return games;
         } catch (e) {
             throw ApiError.BadRequest(e.message);
         }

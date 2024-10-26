@@ -38,8 +38,33 @@ function createGame(data: ICreateGameModel, cb?: FunctionVOID) {
   };
 }
 
+function getCreatedGames(cb?: FunctionVOID) {
+  return async function (dispatch: any) {
+    dispatch(eCreatorSlice.actions.loadingStart());
+
+    try {
+      const response = await apiMainServer.get(
+        GameApi.CREATED_GAMES
+      );
+
+      if (response.status !== 200 && response.status !== 201) {
+        dispatch(messageQueueAction.addMessage(response, "error"));
+        return;
+      }
+
+      dispatch(eCreatorSlice.actions.setGames(response.data));
+      cb && cb();
+    } catch(e: any) {
+      dispatch(messageQueueAction.errorMessage(e));
+    } finally {
+      dispatch(eCreatorSlice.actions.loadingEnd());
+    }
+  };
+}
+
 const ECreatorAction = {
   createGame,
+  getCreatedGames
 };
 
 export default ECreatorAction;

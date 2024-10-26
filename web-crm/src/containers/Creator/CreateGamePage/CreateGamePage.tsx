@@ -134,6 +134,19 @@ const CreateGamePage: FC<any> = () => {
         }));
     };
 
+    const toolbarDownItems = [
+        {
+            action: addMarkHandler,
+            title: "Добавить игру",
+            label: "Добавить"
+        },
+        {
+            action: closeHandler,
+            title: "Закрыть",
+            label: "Закрыть"
+        }
+    ];
+
     return (
         <>
             <div className={styles.page}>
@@ -168,37 +181,36 @@ const CreateGamePage: FC<any> = () => {
                     closeHandler={closeHandler}
                     width={500}
                     height={400}
+                    toolbarDownItems={toolbarDownItems}
                 >
                     <div className={styles.modal_container}>
-                        <div className={styles.modal_holder}>
-                            <div className={styles.modal_add_mark}>
-                                <Input
-                                    name="location"
-                                    label="Местоположение"
-                                    defaultValue={''}
-                                    changeHandler={inputChangeHandler("location")}
-                                    width={"300px"}
-                                    required
-                                />
-                                <Input
-                                    type="number"
-                                    name="lat"
-                                    label="Координата lat"
-                                    defaultValue={''}
-                                    changeHandler={inputChangeHandler("lat")}
-                                    width={"300px"}
-                                    required
-                                />
-                                <Input
-                                    type="number"
-                                    name="lng"
-                                    label="Координата lng"
-                                    defaultValue={''}
-                                    changeHandler={inputChangeHandler("lng")}
-                                    width={"300px"}
-                                    required
-                                />
-                            </div>
+                        <div className={styles.modal_add_mark}>
+                            <Input
+                                name="location"
+                                label="Местоположение"
+                                defaultValue={''}
+                                changeHandler={inputChangeHandler("location")}
+                                width={"300px"}
+                                required
+                            />
+                            <Input
+                                type="number"
+                                name="lat"
+                                label="Координата lat"
+                                defaultValue={''}
+                                changeHandler={inputChangeHandler("lat")}
+                                width={"300px"}
+                                required
+                            />
+                            <Input
+                                type="number"
+                                name="lng"
+                                label="Координата lng"
+                                defaultValue={''}
+                                changeHandler={inputChangeHandler("lng")}
+                                width={"300px"}
+                                required
+                            />
                         </div>
                     </div>
                 </Modal>

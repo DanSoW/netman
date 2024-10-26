@@ -1,6 +1,11 @@
-import React, { FC } from "react";
+import React, { FC, useEffect, useState } from "react";
 import styles from "./GameListPage.module.scss";
 import Table from "src/components/Table";
+import IconRouter from "src/components/Icons/Routers/IconRouter";
+import Modal from "src/components/Modal";
+import { useAppDispatch, useAppSelector } from "src/hooks/redux.hook";
+import ECreatorAction from "src/store/actions/Creator/external/ECreatorAction";
+import { DateTime } from "luxon";
 
 export interface IGameItem {
     id: number;
@@ -16,10 +21,66 @@ export interface IGameItem {
  * @returns 
  */
 const GameListPage: FC<any> = () => {
+    const [select, setSelect] = useState<number | null>(null);
+    const [hover, setHover] = useState<number | null>(null);
+    const [deleteItem, setDeleteItem] = useState<IGameItem | null>(null);
+
+    const selectorGames = useAppSelector((s) => s.eCreatorReducer);
+    const dispatch = useAppDispatch();
+
+    const deleteItemConfirm = (item: IGameItem) => {
+        setDeleteItem(item);
+    };
+
+    const deleteItemHandler = () => {
+
+    };
+
+    const closeDeleteModal = () => {
+        setDeleteItem(null);
+    };
+
+    const onMouseEnterHandler = (item: IGameItem) => {
+        setHover(item.id);
+    };
+
+    const onMouseLeaveHandler = () => {
+        setHover(null);
+    };
 
     const renderGameItem = (item: IGameItem) => {
+        let defClass: string | null = null;
+        if (select === item.id) {
+            defClass = styles.rowItemSelect;
+        } else if (hover === item.id) {
+            defClass = styles.rowItemHover;
+        } else {
+            defClass = styles.rowItem;
+        }
+
+        const createdDate = DateTime
+            .fromISO(item.created_at)
+            .toFormat("dd.MM.yyyy HH:mm");
+
+        const updatedDate = DateTime
+            .fromISO(item.updated_at)
+            .toFormat("dd.MM.yyyy HH:mm");
+
         return (
-            <div className={styles.rowItem}>
+            <div
+                data-id={item.id}
+                className={defClass}
+                onMouseEnter={() => {
+                    onMouseEnterHandler(item);
+                }}
+                onClick={() => {
+                    if (item.id === select) {
+                        setSelect(null);
+                    } else {
+                        setSelect(item.id);
+                    }
+                }}
+            >
                 <div className={styles.rowCell}>
                     <p title={item.title}>{item.title}</p>
                 </div>
@@ -27,17 +88,48 @@ const GameListPage: FC<any> = () => {
                     <p title={item.location}>{item.location}</p>
                 </div>
                 <div className={styles.rowCell}>
-                    <p title={item.created_at}>{item.created_at}</p>
+                    <p title={item.created_at}>{createdDate}</p>
                 </div>
                 <div className={styles.rowCell}>
-                    <p title={item.updated_at}>{item.updated_at}</p>
+                    <p title={item.updated_at}>{createdDate}</p>
                 </div>
                 <div className={styles.rowCell}>
                     <p title={`${item.count_quests}`}>{item.count_quests}</p>
                 </div>
+                <div className={styles.row} style={{ width: "81px" }}>
+                    <IconRouter.PencilIcon width={32} height={32} color="#ffffff" />
+                    <IconRouter.DeleteIcon
+                        width={26}
+                        height={26}
+                        color="#ff0000"
+                        clickHandler={() => {
+                            deleteItemConfirm(item);
+                        }}
+                    />
+                </div>
             </div>
         );
     };
+
+
+    const toolbarDownItems = [
+        {
+            action: closeDeleteModal,
+            title: "Удалить игру",
+            label: "Да",
+            width: 64
+        },
+        {
+            action: closeDeleteModal,
+            title: "Не удалять игру",
+            label: "Нет",
+            width: 64
+        }
+    ];
+
+    useEffect(() => {
+        dispatch(ECreatorAction.getCreatedGames());
+    }, []);
 
     return (
         <>
@@ -45,91 +137,28 @@ const GameListPage: FC<any> = () => {
                 <h2>Список созданных игр</h2>
                 <Table
                     columns={["Название", "Локация", "Дата создания", "Дата изменения", "Кол-во квестов"]}
-                    data={[
-                        {
-                            id: 1,
-                            title: "Hello",
-                            location: "Иркутск Иркутск Иркутск Иркутск",
-                            created_at: "11.02.2001",
-                            updated_at: '22.02.2004',
-                            count_quests: 25
-                        },
-                        {
-                            id: 2,
-                            title: "Hello",
-                            location: "Иркутск",
-                            created_at: "11.02.2001",
-                            updated_at: '22.02.2004 Иркутск Иркутск Иркутск',
-                            count_quests: 25
-                        },
-                        {
-                            id: 3,
-                            title: "Hello",
-                            location: "Иркутск",
-                            created_at: "11.02.2001",
-                            updated_at: '22.02.2004',
-                            count_quests: 25
-                        },
-                        {
-                            id: 4,
-                            title: "Hello",
-                            location: "Иркутск",
-                            created_at: "11.02.2001",
-                            updated_at: '22.02.2004 22.02.200422.02.200422.02.200202.200422.02.200422.02.2.02.2004',
-                            count_quests: 25
-                        },
-                        {
-                            id: 5,
-                            title: "Hello",
-                            location: "Иркутск",
-                            created_at: "11.02.2001",
-                            updated_at: '22.02.2004',
-                            count_quests: 25
-                        },
-                        {
-                            id: 6,
-                            title: "Hello",
-                            location: "Иркутск",
-                            created_at: "11.02.2001",
-                            updated_at: '22.02.2004',
-                            count_quests: 25
-                        },
-                        {
-                            id: 7,
-                            title: "Hello",
-                            location: "Иркутск",
-                            created_at: "11.02.2001",
-                            updated_at: '22.02.2004',
-                            count_quests: 25
-                        },
-                        {
-                            id: 8,
-                            title: "Hello",
-                            location: "Иркутск",
-                            created_at: "11.02.2001",
-                            updated_at: '22.02.2004',
-                            count_quests: 25
-                        },
-                        {
-                            id: 9,
-                            title: "Hello",
-                            location: "Иркутск",
-                            created_at: "11.02.2001",
-                            updated_at: '22.02.2004',
-                            count_quests: 25
-                        },
-                        {
-                            id: 10,
-                            title: "Hello",
-                            location: "Иркутск Иркутск Иркутск Иркутск",
-                            created_at: "11.02.2001",
-                            updated_at: '22.02.2004',
-                            count_quests: 25
-                        },
-                    ]}
+                    data={selectorGames.games}
                     renderItem={renderGameItem}
+                    onMouseLeaveHandler={onMouseLeaveHandler}
                 />
             </div>
+
+            {
+                deleteItem && <Modal
+                    isOpen={true}
+                    title="Подтверждение удаления"
+                    actionHandler={deleteItemHandler}
+                    closeHandler={closeDeleteModal}
+                    width={500}
+                    height={200}
+                    toolbarDownItems={toolbarDownItems}
+                >
+                    <div className={styles.columnModal}>
+                        <p>Вы действительно хотите удалить игру "{deleteItem.title}"?</p>
+                        <p>Все данные об игре будут удалены.</p>
+                    </div>
+                </Modal>
+            }
         </>
     )
 };

@@ -1,12 +1,15 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { IInfoGameModel } from "src/models/ICreatorModel";
 
 export interface ICreatorSlice_e {
   isLoading: boolean;
+  games: IInfoGameModel[];
 }
 
 // Базовое состояние слайса
 const initialState: ICreatorSlice_e = {
   isLoading: false,
+  games: []
 };
 
 /**
@@ -27,6 +30,10 @@ export const eCreatorSlice = createSlice({
     clear(state) {
       state.isLoading = false;
     },
+
+    setGames(state, action: PayloadAction<IInfoGameModel[]>) {
+      state.games = action.payload;
+    }
   },
 });
 

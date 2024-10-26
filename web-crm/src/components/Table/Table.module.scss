@@ -6,14 +6,17 @@
 }
 
 .column {
-    @include flex-block(row, 64px);
+    @include flex-block(row, 32px);
 }
 
 .columnCell {
+    @include flex-block(column);
+    justify-content: center;
     padding: 8px;
     border: 1px solid #ccc;
 
-    width: 148px;
+    width: 140px;
+    height: 30px;
 
     p {
         font-weight: bold;
@@ -23,10 +26,9 @@
 
 .body {
     @include flex-block();
-    background: blue;
     padding-top: 4px;
     padding-bottom: 4px;
 
     overflow: auto;
-    max-height: 440px;
+    //max-height: 440px;
 }

@@ -1,8 +1,15 @@
-import React, { FC, useEffect } from "react";
+import React, { FC, Fragment, useEffect } from "react";
 import styles from './Modal.module.scss';
 import Button from "../UI/Button";
 import Portal from "../Portal";
 import IconRouter from "../Icons/Routers/IconRouter";
+
+export interface IToolbarItem {
+    action?: () => void;
+    title?: string;
+    label?: string;
+    width?: number;
+}
 
 export interface IModalProps {
     title?: string;
@@ -12,17 +19,23 @@ export interface IModalProps {
     children: React.ReactNode;
     width: number;
     height: number;
+    toolbarDownItems?: IToolbarItem[]
 }
 
+/**
+ * Main modal component
+ * @param props Props for modal component
+ * @returns 
+ */
 const Modal: FC<IModalProps> = (props) => {
     const {
         title, isOpen, closeHandler,
         children, width, height,
-        actionHandler
+        actionHandler, toolbarDownItems
     } = props;
 
     /**
-     * Обработка нажатия клавиши Escape
+     * Processing of pressing the A key Escape
      */
     useEffect(() => {
         const closeOnEscapeKey = e => e.key === "Escape" ? closeHandler() : null;
@@ -44,7 +57,6 @@ const Modal: FC<IModalProps> = (props) => {
                 className={styles.container}
             >
                 <div className={styles.holder}
-
                     style={{
                         width: `${width}px`,
                         height: `${height}px`
@@ -62,22 +74,33 @@ const Modal: FC<IModalProps> = (props) => {
                         />
                     </div>
 
-                    <div className={styles.content}>
+                    <div className={styles.content} style={{
+                        width: `${(width - 30)}px`,
+                        marginLeft: '15px',
+                        maxHeight: `${height - 100}px`
+                    }}>
                         {children}
                     </div>
 
-                    <div className={styles.down_controls}>
-                        <Button
-                            label="Закрыть"
-                            clickHandler={closeHandler}
-                            width={100}
-                        />
-                        <Button
-                            label="Добавить"
-                            clickHandler={actionHandler}
-                            width={100}
-                        />
-                    </div>
+                    {
+                        // Defining the bottom buttons
+                        toolbarDownItems && toolbarDownItems.length > 0 && <div className={styles.down_controls}>
+                            {
+                                toolbarDownItems.map((item, key) => {
+                                    return (
+                                        <Fragment>
+                                            <Button 
+                                                label={item.label}
+                                                title={item.title}
+                                                clickHandler={item.action}
+                                                width={item.width}
+                                            />
+                                        </Fragment>
+                                    );
+                                })
+                            }
+                        </div>
+                    }
                 </div>
             </div>
         </Portal>

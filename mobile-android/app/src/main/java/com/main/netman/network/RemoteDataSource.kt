@@ -108,6 +108,8 @@ class RemoteDataSource {
                     )
                 ).toRequestBody("application/json".toMediaTypeOrNull())
 
+                Log.w("HELLO", auth.refreshToken!!)
+
                 // Отправляем запрос на обновление токена доступа
                 val request: Request = Request.Builder()
                     .url(MainNetworkConstants.MAIN_API + AuthApiConstants.REFRESH_TOKEN)
