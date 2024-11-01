@@ -9,16 +9,17 @@ import creatorService from "../services/creator/creator-service.js";
 import GameDeleteDto from "../dtos/creator/game-delete-dto.js";
 import MarkAddInfoDto from "../dtos/creator/mark-add-info-dto.js";
 import MarkDeleteInfoDto from "../dtos/creator/mark-delete-info-dto.js";
+import GameIdDto from "../dtos/creator/game-id-dto.js";
 
 /* Контроллер менеджера контента (создателя) */
 class CreatorController {
-    async gameCreate(req, res, next){
-        try{
+    async gameCreate(req, res, next) {
+        try {
             // Валидация входных данных
             const errors = validationResult(req);
 
             // Обработка ошибок
-            if (!errors.isEmpty()){
+            if (!errors.isEmpty()) {
                 return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
             }
 
@@ -30,17 +31,17 @@ class CreatorController {
 
             // Возвращение ответа на запрос
             return res.status(201).json(data);
-        }catch(e){
+        } catch (e) {
             // Передача ошибки далее по цепочке HTTP-запроса, игнорируя при этом выполнение текущего запроса
             next(e);
         }
     }
 
-    async gamesCreated(req, res, next){
-        try{
+    async gamesCreated(req, res, next) {
+        try {
             const errors = validationResult(req);
 
-            if (!errors.isEmpty()){
+            if (!errors.isEmpty()) {
                 return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
             }
 
@@ -48,16 +49,16 @@ class CreatorController {
             const data = await creatorService.gamesCreated(body);
 
             return res.status(201).json(data);
-        }catch(e){
+        } catch (e) {
             next(e);
         }
     }
 
-    async gameDelete(req, res, next){
-        try{
+    async gameDelete(req, res, next) {
+        try {
             const errors = validationResult(req);
 
-            if (!errors.isEmpty()){
+            if (!errors.isEmpty()) {
                 return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
             }
 
@@ -65,16 +66,16 @@ class CreatorController {
             const data = await creatorService.gameDelete(body);
 
             return res.status(201).json(data);
-        }catch(e){
+        } catch (e) {
             next(e);
         }
     }
 
-    async markAddInfo(req, res, next){
-        try{
+    async markAddInfo(req, res, next) {
+        try {
             const errors = validationResult(req);
 
-            if (!errors.isEmpty()){
+            if (!errors.isEmpty()) {
                 return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
             }
 
@@ -82,16 +83,16 @@ class CreatorController {
             const data = await creatorService.markAddInfo(body);
 
             return res.status(201).json(data);
-        }catch(e){
+        } catch (e) {
             next(e);
         }
     }
 
-    async markAddImg(req, res, next){
-        try{
+    async markAddImg(req, res, next) {
+        try {
             const errors = validationResult(req);
 
-            if (!errors.isEmpty()){
+            if (!errors.isEmpty()) {
                 console.log(errors.array());
                 return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
             }
@@ -99,17 +100,38 @@ class CreatorController {
             const data = await creatorService.markAddImg(req.file, req.body);
 
             return res.status(201).json(data);
-        }catch(e){
+        } catch (e) {
             console.log(e);
             next(e);
         }
     }
 
-    async markDeleteInfo(req, res, next){
-        try{
+    async gameInfo(req, res, next) {
+        try {
             const errors = validationResult(req);
 
-            if (!errors.isEmpty()){
+            if (!errors.isEmpty()) {
+                return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
+            }
+
+            const body = new GameIdDto({
+                ...req.body,
+                ...req.query
+            });
+            
+            const data = await creatorService.gameInfo(body);
+
+            return res.status(201).json(data);
+        } catch (e) {
+            next(e);
+        }
+    }
+
+    async markDeleteInfo(req, res, next) {
+        try {
+            const errors = validationResult(req);
+
+            if (!errors.isEmpty()) {
                 return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
             }
 
@@ -117,16 +139,16 @@ class CreatorController {
             const data = await creatorService.markDeleteInfo(body);
 
             return res.status(201).json(data);
-        }catch(e){
+        } catch (e) {
             next(e);
         }
     }
 
-    async markDeleteImg(req, res, next){
-        try{
+    async markDeleteImg(req, res, next) {
+        try {
             const errors = validationResult(req);
 
-            if (!errors.isEmpty()){
+            if (!errors.isEmpty()) {
                 return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
             }
 
@@ -134,7 +156,7 @@ class CreatorController {
             const data = await creatorService.markDeleteImg(body);
 
             return res.status(201).json(data);
-        }catch(e){
+        } catch (e) {
             next(e);
         }
     }

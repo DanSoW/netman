@@ -5,10 +5,14 @@ export interface IPencilIconProps {
     width?: number;
     height?: number;
     color?: string;
+    clickHandler?: (e?: React.MouseEvent<SVGSVGElement, MouseEvent>) => void;
 }
 
 const PencilIcon: FC<IPencilIconProps> = (props) => {
-    const { width = 32, height = 32, color = "#000000" } = props;
+    const {
+        width = 32, height = 32, color = "#000000",
+        clickHandler
+    } = props;
 
     return (
         <>
@@ -19,6 +23,7 @@ const PencilIcon: FC<IPencilIconProps> = (props) => {
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
                 className={styles.icon}
+                onClick={clickHandler}
             >
                 <g id="Edit Pencil">
                     <path id="Vector"

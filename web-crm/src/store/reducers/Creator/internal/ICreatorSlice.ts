@@ -23,6 +23,10 @@ export const iCreatorSlice = createSlice({
       state.quests = [];
     },
 
+    setQuests(state, action: PayloadAction<IQuestData[]>) {
+      state.quests = action.payload;
+    },
+
     addQuest(state, action: PayloadAction<IQuestData>) {
       const clone = Object.assign(new Array<IQuestData>(), state.quests);
       clone.push(action.payload);

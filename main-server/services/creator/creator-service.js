@@ -12,6 +12,7 @@ import securityService from '../security/security-service.js';
 import NameModules from '../../constants/values/name-modules.js';
 import { checkRole } from '../../utils/check-role.js';
 import fs from 'fs';
+import GameIdDto from '../../dtos/creator/game-id-dto.js';
 
 /* Сервис системы безопасности */
 class CreatorService {
@@ -49,7 +50,7 @@ class CreatorService {
                 }
             });
 
-            if(exists) {
+            if (exists) {
                 throw ApiError.BadRequest("Игра с таким названием уже существует!");
             }
 
@@ -96,10 +97,10 @@ class CreatorService {
     async gamesCreated(data) {
         try {
             const { users_id, context_user_data } = data;
-            
-            // Check maker
+
+            // Проверка доступа
             const check = await checkRole(db.UsersRoles, db.Roles, users_id, 1);
-            if(!check) {
+            if (!check) {
                 throw ApiError.Forbidden("Нет доступа");
             }
 
@@ -110,7 +111,7 @@ class CreatorService {
                 }
             });
 
-            for(let i = 0; i < games.length; i++) {
+            for (let i = 0; i < games.length; i++) {
                 const item = games[i];
 
                 const quests = await db.GamesQuests.findAll({
@@ -138,114 +139,132 @@ class CreatorService {
 
         try {
 
-            const { users_id, info_games_id } = data;
-
-            const user = await db.Users.findOne({ where: { id: users_id } });
-
-            if (!user) {
-                throw ApiError.BadRequest("Попытка удаления заданий неавторизованным пользователем");
-            }
+            const { users_id, context_user_data, info_games_id } = data;
 
             // Проверка доступа
-            const modules = await db.UsersModules.findOne({ where: { users_id: users_id } });
-
-            if ((!modules) || (modules.creator === false)) {
+            const check = await checkRole(db.UsersRoles, db.Roles, users_id, 1);
+            if (!check) {
                 throw ApiError.Forbidden("Нет доступа");
             }
 
-            const infoGames = await db.InfoGames.findOne({
+            const targetGame = await db.InfoGames.findOne({
                 where: {
                     id: info_games_id,
                     users_id: users_id
                 }
             });
 
-            if (!infoGames) {
-                throw ApiError.NotFound("Данная игра не присутствует в базе данных");
+            if (!targetGame) {
+                throw ApiError.BadRequest("Удаляемой игры не обнаружено в базе данных");
             }
 
-            // Поиск непроверенной игры
-            const checkedGames = await db.CheckedGames.findOne({
-                where: {
-                    info_games_id: infoGames.id
-                }
-            });
-
-            if (checkedGames && checkedGames.accepted) {
-                throw ApiError.BadRequest("Нельзя удалить игры, которые были одобрены модератором");
-            }
-
-            const queueGames = await db.QueueGames.findOne({
+            const userForGameExist = await db.UsersGames.findOne({
                 where: {
                     info_games_id: info_games_id
                 }
             });
 
-            if (!queueGames) {
-                throw ApiError.NotFound("Информация об очереди игры не найдена");
-            }
-
-            // Удаление игры из очереди, если она находится в очереди
-            if (queueGames) {
-                await queueGames.destroy({ transaction: t });
-            }
-
-            // Удаление игры из очереди, если она проверена модератором но не одобрена
-            if (checkedGames && (!checkedGames.accepted)) {
-                // Удаление предупреждений
-                await db.Warnings.destroy({
-                    where: {
-                        checked_games_id: checkedGames.id
-                    }
-                }, { transaction: t });
-
-                // Удаление блокировок
-                await db.Bans.destroy({
-                    where: {
-                        checked_games_id: checkedGames.id
-                    }
-                }, { transaction: t });
-
-                // Удаление состояния проверки игры
-                await checkedGames.destroy({ transaction: t });
+            if (userForGameExist) {
+                throw ApiError.BadRequest("Данную игру удалить нельзя, поскольку в неё уже играют другие игроки.");
             }
 
             // Удаление информации обо всех квестах, привязанных к данной игре
             const questsGames = await db.GamesQuests.findAll({
                 where: {
-                    info_games_id: infoGames.id
+                    info_games_id: info_games_id
                 }
             });
 
             for (let i = 0; i < questsGames.length; i++) {
+                const dataQuest = questsGames[i];
                 const quest = await db.Quests.findOne({
                     where: {
-                        id: questsGames[i].quests_id
+                        id: dataQuest.quests_id
                     }
                 });
 
-                if (quest) {
-                    // Удаление соответствия квестов определённой игре
-                    await db.GamesQuests.destroy({
-                        where: {
-                            info_games_id: questsGames[i].info_games_id,
-                            quests_id: quest.id
-                        }
-                    }, { transaction: t });
+                // Удаление данных связки игра-квест
+                await dataQuest.destroy({ transaction: t });
 
-                    // Удаление информации об определённом квесте
+                if (quest) {
+                    // Удаление информации о квесте
                     await quest.destroy({ transaction: t });
                 }
             }
 
             // Удаление информации о определённой игре
-            await infoGames.destroy({ transaction: t });
-
+            await targetGame.destroy({ transaction: t });
             await t.commit();
 
-            return data;
+            return { info_games_id };
         } catch (e) {
             await t.rollback();
+            throw ApiError.BadRequest(e.message);
+        }
+    }
+
+    /**
+     * Получение информации об игре
+     * @param {GameIdDto} data Данные для получения информации об игре
+     * @returns 
+     */
+    async gameInfo(data) {
+        try {
+            const { users_id, context_user_data, info_games_id } = data;
+
+            // Проверка доступа
+            const check = await checkRole(db.UsersRoles, db.Roles, users_id, 1);
+            if (!check) {
+                throw ApiError.Forbidden("Нет доступа");
+            }
+
+            const targetGame = await db.InfoGames.findOne({
+                where: {
+                    id: info_games_id,
+                    users_id: users_id
+                }
+            });
+
+            if (!targetGame) {
+                throw ApiError.BadRequest(`Игры с идентификатором ${info_games_id} не найдено`);
+            }
+
+            const questsGames = await db.GamesQuests.findAll({
+                where: {
+                    info_games_id: info_games_id
+                }
+            });
+
+            const quests = [];
+            for (let i = 0; i < questsGames.length; i++) {
+                const questGame = questsGames[i];
+                const quest = await db.Quests.findOne({
+                    where: {
+                        id: questGame.quests_id
+                    }
+                });
+
+                if (quest) {
+                    const mark = await db.Marks.findOne({
+                        where: {
+                            id: quest.marks_id
+                        }
+                    });
+
+                    if(mark) {
+                        quests.push({
+                            ...quest.dataValues,
+                            mark: mark.dataValues
+                        });
+                    }
+                }
+            }
+
+            return {
+                ...targetGame.dataValues,
+                quests: quests
+            };
+        } catch (e) {
             throw ApiError.BadRequest(e.message);
         }
     }

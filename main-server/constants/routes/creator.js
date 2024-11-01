@@ -3,6 +3,7 @@ export const CreatorRouteBase = "/api/creator";
 const CreatorRoute = {
     gameCreate: '/game/create',
     gameDelete: '/game/delete',
+    gameInfo: '/game/info',
     games: '/games',
     gamesCreated: '/games/created',
     markAddInfo: '/mark/add/info',

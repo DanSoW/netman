@@ -4,12 +4,14 @@ import { IInfoGameModel } from "src/models/ICreatorModel";
 export interface ICreatorSlice_e {
   isLoading: boolean;
   games: IInfoGameModel[];
+  editGame?: IInfoGameModel | null;
 }
 
 // Базовое состояние слайса
 const initialState: ICreatorSlice_e = {
   isLoading: false,
-  games: []
+  games: [],
+  editGame: null,
 };
 
 /**
@@ -29,11 +31,17 @@ export const eCreatorSlice = createSlice({
 
     clear(state) {
       state.isLoading = false;
+      state.games = [];
+      state.editGame = null;
     },
 
     setGames(state, action: PayloadAction<IInfoGameModel[]>) {
       state.games = action.payload;
-    }
+    },
+
+    setEditGame(state, action: PayloadAction<IInfoGameModel>) {
+      state.editGame = action.payload;
+    },
   },
 });
 

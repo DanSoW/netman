@@ -240,6 +240,27 @@
         security: 
           - 
             JWT: []
+    /creator/game/info: 
+      get: 
+        parameters: []
+        description: "Получение информации о конкретной игре"
+        tags: 
+          - "Создатель (контент менеджер)"
+        responses: 
+          200: 
+            description: "Выходные данные"
+            schema: 
+              type: "array"
+              items: 
+                $ref: "#/definitions/GameIdDto"
+          default: 
+            description: "Ошибка запроса"
+            schema: 
+              $ref: "#/definitions/ApiError"
+        operationId: "creatorGameInfo"
+        security: 
+          - 
+            JWT: []
     /creator/game/delete: 
       post: 
         parameters: 

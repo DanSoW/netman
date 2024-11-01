@@ -12,6 +12,7 @@ import { v4 as uuid } from 'uuid';
 import multer from 'multer';
 import MarkDeleteInfoDto from '../dtos/creator/mark-delete-info-dto.js';
 import converterTypeMiddleware from '../middlewares/converter-type-middleware.js';
+import GameIdDto from '../dtos/creator/game-id-dto.js';
 
 // Конфигурирование файлового хранилища multer
 const storage = multer.diskStorage({
@@ -66,6 +67,25 @@ router.get(
         check('users_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 })
     ],
     creatorController.gamesCreated
+);
+
+/**
+ * Получение информации о конкретной игре
+ * @route GET /creator/game/info
+ * @group Создатель (контент менеджер) - Функции для наполнения контентом
+ * @operationId creatorGameInfo
+ * @returns {Array.<GameIdDto>} 200 - Выходные данные
+ * @returns {ApiError.model} default - Ошибка запроса
+ * @security JWT
+ */
+router.get(
+    CreatorRoute.gameInfo,
+    [
+        authMiddleware,
+        check('users_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 }),
+        check('info_games_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 }),
+    ],
+    creatorController.gameInfo
 );
 
 /**

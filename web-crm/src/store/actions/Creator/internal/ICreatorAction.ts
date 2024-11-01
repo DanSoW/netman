@@ -6,6 +6,13 @@ import { FunctionVOID } from "src/types/function";
 import { IQuestData } from "src/models/IQuestModel";
 import { isUndefinedOrNull } from "src/types/void_null";
 
+function setQuests(data: IQuestData[], cb?: FunctionVOID) {
+  return async function (dispatch: any) {
+    dispatch(iCreatorSlice.actions.setQuests(data));
+    cb && cb();
+  };
+}
+
 function addQuest(data: IQuestData, cb?: FunctionVOID) {
   return async function (dispatch: any) {
     dispatch(iCreatorSlice.actions.addQuest(data));
@@ -34,6 +41,7 @@ function clearAll() {
 }
 
 const ICreatorAction = {
+  setQuests,
   addQuest,
   updateQuest,
   removeQuest,

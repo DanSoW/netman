@@ -5,12 +5,15 @@ import { IGameModel } from "src/models/IGameModel";
 import { InputValueType } from "src/types/input";
 
 export interface IGameParamsProps {
+    title?: string;
     dataGame: IGameModel;
     setDataGame: React.Dispatch<React.SetStateAction<IGameModel>>;
 }
 
+const defaultTitle = "Создание новой игры";
+
 const GameParams: FC<IGameParamsProps> = (props) => {
-    const { dataGame, setDataGame } = props;
+    const { title = defaultTitle, dataGame, setDataGame } = props;
 
     const inputChangeHandler = (type: string) => {
         return (value: InputValueType) => {
@@ -24,7 +27,7 @@ const GameParams: FC<IGameParamsProps> = (props) => {
     return (
         <>
             <div className={styles.container}>
-                <h2>Настройка параметров игры</h2>
+                <h2>{title}</h2>
                 <div className={styles.params}>
                     <div className={styles.column}>
                         <Input

@@ -6,7 +6,7 @@ export interface IDeleteIconProps {
     height?: number;
     color?: string;
     title?: string;
-    clickHandler?: () => void;
+    clickHandler?: (e?: React.MouseEvent<SVGSVGElement, MouseEvent>) => void;
 }
 
 const DeleteIcon: FC<IDeleteIconProps> = (props) => {

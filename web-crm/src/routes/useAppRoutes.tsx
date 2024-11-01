@@ -17,22 +17,19 @@ import Loader from "src/components/UI/Loader";
 const useAppRoutes = () => {
     const authSelector = useAppSelector((s) => s.authReducer);
 
-    const createRoutes = useCallback((routes: IRouteModel[]) => {
-        return (
-            routes &&
-            routes.map((value) => (
-                <Route
-                    key={value.path}
-                    path={value.path}
-                    element={
-                        <Suspense fallback={<Loader />}>
-                            <value.element />
-                        </Suspense>
-                    }
-                />
-            ))
-        );
-    }, []);
+    const createRoutes = (routes: IRouteModel[]) => {
+        return routes.map((value, index) => (
+            <Route
+                key={index}
+                path={value.path}
+                element={
+                    <Suspense fallback={<Loader />}>
+                        <value.element />
+                    </Suspense>
+                }
+            />
+        ));
+    };
 
     return (
         <Routes>

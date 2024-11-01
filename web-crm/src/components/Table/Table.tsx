@@ -2,6 +2,8 @@ import React, { FC } from "react";
 import styles from './Table.module.scss';
 
 export interface ITableProps {
+    extRef?: React.RefObject<any>;
+    extBodyRef?: React.RefObject<any>;
     columns: string[];
     data: any[];
     renderItem: (item: any) => JSX.Element;
@@ -13,11 +15,14 @@ export interface ITableProps {
  * @returns 
  */
 const Table: FC<ITableProps> = (props) => {
-    const { onMouseLeaveHandler } = props;
+    const { onMouseLeaveHandler, extRef, extBodyRef } = props;
 
     return (
         <>
-            <div className={styles.container}>
+            <div
+                ref={extRef}
+                className={styles.container}
+            >
                 <div className={styles.column}>
                     {
                         props.columns.map((item, key) => {
@@ -29,9 +34,10 @@ const Table: FC<ITableProps> = (props) => {
                         })
                     }
                 </div>
-                <div 
-                className={styles.body}
-                onMouseLeave={onMouseLeaveHandler}
+                <div
+                    ref={extBodyRef}
+                    className={styles.body}
+                    onMouseLeave={onMouseLeaveHandler}
                 >
                     {
                         props.data.map((item, key) => {
