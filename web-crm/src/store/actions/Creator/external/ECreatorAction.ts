@@ -40,6 +40,36 @@ function createGame(data: ICreateGameModel, cb?: FunctionVOID) {
 }
 
 /**
+ * Изменение игры
+ * @param data Данные игры
+ * @param cb Функция обратного вызова
+ * @returns
+ */
+function updateGame(data: ICreateGameModel, cb?: FunctionVOID) {
+  return async function (dispatch: any) {
+    dispatch(eCreatorSlice.actions.loadingStart());
+
+    try {
+      const response = await apiMainServer.post(
+        GameApi.UPDATE_GAME,
+        JSON.stringify(data)
+      );
+
+      if (response.status !== 200 && response.status !== 201) {
+        dispatch(messageQueueAction.addMessage(response, "error"));
+        return;
+      }
+
+      cb && cb();
+    } catch (e: any) {
+      dispatch(messageQueueAction.errorMessage(e));
+    } finally {
+      dispatch(eCreatorSlice.actions.loadingEnd());
+    }
+  };
+}
+
+/**
  * Получение всех игр, которые были созданы пользователем
  * @param cb Функция обратного вызова
  * @returns
@@ -131,6 +161,7 @@ function gameInfo(id: IGameId, cb?: (value: IInfoGameModel) => void) {
 
 const ECreatorAction = {
   createGame,
+  updateGame,
   getCreatedGames,
   deleteGame,
   gameInfo,

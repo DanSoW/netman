@@ -52,6 +52,27 @@ router.post(
 );
 
 /**
+ * Обновление игры
+ * @route POST /creator/game/update
+ * @group Создатель (контент менеджер) - Функции для наполнения контентом
+ * @operationId creatorGameCreate
+ * @param {GameCreateDto.model} input.body.required Входные данные
+ * @returns {GameCreateDto.model} 200 - Выходные данные
+ * @returns {ApiError.model} default - Ошибка запроса
+ * @security JWT
+ */
+router.post(
+    CreatorRoute.gameUpdate,
+    [
+        authMiddleware,
+        check('users_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 }),
+        check('title', 'Наименование игры не может быть пустым').isLength({ min: 1 }),
+        check('quests', "Для создания игры необходимо добавить квесты").isArray({ min: 1 })
+    ],
+    creatorController.gameUpdate
+);
+
+/**
  * Просмотр списка созданных конкретным создателем игр
  * @route GET /creator/games/created
  * @group Создатель (контент менеджер) - Функции для наполнения контентом

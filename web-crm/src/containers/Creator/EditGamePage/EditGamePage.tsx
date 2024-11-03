@@ -15,7 +15,8 @@ import { ICreateGameModel, IGameModel } from "src/models/IGameModel";
 import { IQuestGameModel } from "src/models/IQuestModel";
 import ECreatorAction from "src/store/actions/Creator/external/ECreatorAction";
 import ICreatorAction from "src/store/actions/Creator/internal/ICreatorAction";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import CreatorRoute from "src/constants/routes/creator.route";
 
 /**
  * Функциональный компонент изменения игры
@@ -23,20 +24,23 @@ import { useParams } from "react-router-dom";
  */
 const EditGamePage: FC<any> = () => {
     const { id } = useParams();
-
+    const navigate = useNavigate();
+    
     const iCreatorSlice = useAppSelector((s) => s.iCreatorReducer);
     const eCreatorSlice = useAppSelector((s) => s.eCreatorReducer);
     const dispatch = useAppDispatch();
 
-    const load = useRef<boolean>(false);
-    useEffect(() => {
-        if (id && !Number.isNaN(Number(id)) && !load.current) {
-            load.current = true;
+    const [eventScroll, setEventScroll] = useState(0);
+    const [updateQuestId, setUpdateQuestId] = useState<number>(-1);
+    const [openAddMark, setOpenAddMark] = useState(false);
 
+    useEffect(() => {
+        if (id && !Number.isNaN(Number(id))) {
             dispatch(ECreatorAction.gameInfo({
                 info_games_id: Number(id)
             }, (value) => {
                 setDataGame({
+                    id: value.id,
                     title: value.title || "",
                     location: value.location || ""
                 });
@@ -48,9 +52,12 @@ const EditGamePage: FC<any> = () => {
         }
     }, [id]);
 
-    const [eventScroll, setEventScroll] = useState(0);
-    const [updateQuestId, setUpdateQuestId] = useState<number>(-1);
-    const [openAddMark, setOpenAddMark] = useState(false);
+    useEffect(() => {
+        return () => {
+            // Очистка внутреннего хранилища
+            dispatch(ICreatorAction.clearAll());
+        }
+    }, []);
 
     const [dataMark, setDataMark] = useState<IMark>({
         location: '',
@@ -71,7 +78,7 @@ const EditGamePage: FC<any> = () => {
         setOpenAddMark(false);
     };
 
-    const createGameHandler = () => {
+    const updateGameHandler = () => {
         if (dataGame.title.trim().length === 0) {
             dispatch(messageQueueAction.addMessage(null, "error", "Необходимо ввести наименование игры"));
             return;
@@ -84,6 +91,8 @@ const EditGamePage: FC<any> = () => {
 
         const data = {
             ...dataGame,
+            id: undefined,
+            info_games_id: dataGame.id,
             quests: iCreatorSlice.quests.map((value) => {
                 return {
                     hint: value.hint,
@@ -95,18 +104,14 @@ const EditGamePage: FC<any> = () => {
             })
         } as ICreateGameModel;
 
-        dispatch(ECreatorAction.createGame(data, () => {
-            dispatch(messageQueueAction.addMessage(null, "success", "Новая игра успешно создана!"));
+        dispatch(ECreatorAction.updateGame(data, () => {
+            dispatch(messageQueueAction.addMessage(null, "success", "Игра успешно изменена"));
             dispatch(ICreatorAction.clearAll());
-            dispatch(MarkAction.getFreeMarks());
-
-            // Очистка данных
-            setDataGame({
-                title: "",
-                location: ""
-            });
-
+            
             window.scrollTo(0, 0);
+
+            // Переход к списку созданных игр
+            navigate(CreatorRoute.GAME_LIST);
         }));
     };
 
@@ -199,9 +204,9 @@ const EditGamePage: FC<any> = () => {
                     setEventScroll={setEventScroll}
                 />
                 <Button
-                    label={"Создать новую игру"}
+                    label={"Изменить игру"}
                     width={300}
-                    clickHandler={createGameHandler}
+                    clickHandler={updateGameHandler}
                 />
                 <Modal
                     isOpen={openAddMark}

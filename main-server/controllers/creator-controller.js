@@ -10,6 +10,7 @@ import GameDeleteDto from "../dtos/creator/game-delete-dto.js";
 import MarkAddInfoDto from "../dtos/creator/mark-add-info-dto.js";
 import MarkDeleteInfoDto from "../dtos/creator/mark-delete-info-dto.js";
 import GameIdDto from "../dtos/creator/game-id-dto.js";
+import GameUpdateDto from "../dtos/creator/game-update-dto.js";
 
 /* Контроллер менеджера контента (создателя) */
 class CreatorController {
@@ -28,6 +29,30 @@ class CreatorController {
 
             // Вызов функции gameCreate из слоя Service
             const data = await creatorService.gameCreate(body);
+
+            // Возвращение ответа на запрос
+            return res.status(201).json(data);
+        } catch (e) {
+            // Передача ошибки далее по цепочке HTTP-запроса, игнорируя при этом выполнение текущего запроса
+            next(e);
+        }
+    }
+
+    async gameUpdate(req, res, next) {
+        try {
+            // Валидация входных данных
+            const errors = validationResult(req);
+
+            // Обработка ошибок
+            if (!errors.isEmpty()) {
+                return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
+            }
+
+            // Группировка данных в DTO
+            const body = new GameUpdateDto(req.body);
+
+            // Вызов функции gameCreate из слоя Service
+            const data = await creatorService.gameUpdate(body);
 
             // Возвращение ответа на запрос
             return res.status(201).json(data);

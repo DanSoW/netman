@@ -1,19 +1,32 @@
+import db from "../db/index.js";
 import { isUndefinedOrNull } from "./objector.js";
 
 /**
- * Check role of user
- * @param {*} usersRolesDB Instance of UsersRoles (Sequelize)
- * @param {*} roleDB Instance of Roles (Sequelize)
- * @param {*} users_id User id
- * @param {*} targetPriority Target priority for check
+ * Проверка роли пользователя
+ * @param {*} users_id Идентификатор пользователя
+ * @param {*} targetPriority Целевой приоритет роли, который должен быть у пользователя
  * @returns 
  */
-export async function checkRole(usersRolesDB, roleDB, users_id, targetPriority) {
-    if(!usersRolesDB || isUndefinedOrNull(users_id) || isUndefinedOrNull(targetPriority)) {
+export async function checkRole(users_id, targetPriority) {
+    if (isUndefinedOrNull(users_id) || isUndefinedOrNull(targetPriority) || !Number.isInteger(targetPriority)) {
         return false;
     }
 
-    const roles = await usersRolesDB.findAll({
+    const userRoles = await db.UsersRoles.findAll({
+        where: {
+            users_id: users_id
+        },
+        include: {
+            model: db.Roles,
+            where: {
+                priority: { [db.Sequelize.Op.gte]: targetPriority }
+            },
+        },
+    });
+
+    return (userRoles.length !== 0);
+
+    /*const roles = await usersRolesDB.findAll({
         where: {
             users_id: users_id
         }
@@ -37,5 +50,5 @@ export async function checkRole(usersRolesDB, roleDB, users_id, targetPriority) 
         }
     }
 
-    return flag;
+    return flag;*/
 }

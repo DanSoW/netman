@@ -12,6 +12,7 @@ import { IQuestDataModel } from "src/models/IQuestModel";
 import { v4 } from "uuid";
 import ICreatorAction from "src/store/actions/Creator/internal/ICreatorAction";
 import { FunctionVOID } from "src/types/function";
+import { isUndefinedOrNull } from "src/modules/ModuleObjector";
 
 export interface IQuestParamsProps {
     dataQuest: IQuestDataModel;
@@ -109,22 +110,26 @@ const QuestParams = forwardRef<QuestParamsHandle, IQuestParamsProps>((props, ref
 
                 <div className={styles.controls}>
                     <Button
-                        label="Очистить"
+                        label={(dataQuest.id) ? "Отмена" : "Очистить"}
                         clickHandler={() => {
                             clearSelectMark();
                             clearDataQuest();
 
-                            dispatch(messageQueueAction.addMessage(null, "dark", "Форма очищена"));
+                            if (dataQuest.id) {
+                                dispatch(messageQueueAction.addMessage(null, "dark", "Изменения отменены"));
+                            } else {
+                                dispatch(messageQueueAction.addMessage(null, "dark", "Форма очищена"));
+                            }
                         }}
                     />
                     <Button
-                        label={(dataQuest.id) ? "Изменить" : "Добавить"}
+                        label={(!isUndefinedOrNull(dataQuest.id)) ? "Изменить" : "Добавить"}
                         clickHandler={() => {
                             const index = iCreatorSelector.quests.findIndex((value) => {
-                                return value.id === selectMark.id
+                                return value.mark.id === selectMark.id;
                             });
 
-                            if (index >= 0 && !dataQuest.id) {
+                            if (index >= 0 && isUndefinedOrNull(dataQuest.id)) {
                                 dispatch(messageQueueAction.addMessage(null, "error", "Квест с данной меткой уже добавлен!"));
                                 return;
                             }
@@ -132,10 +137,10 @@ const QuestParams = forwardRef<QuestParamsHandle, IQuestParamsProps>((props, ref
                             const data = {
                                 ...dataQuest,
                                 mark: selectMark,
-                                id: selectMark.id
+                                id: isUndefinedOrNull(dataQuest.id) ? selectMark.id : dataQuest.id
                             };
 
-                            if (!data.id) {
+                            if (isUndefinedOrNull(data.id)) {
                                 dispatch(messageQueueAction.addMessage(null, "error", "Необходимо выбрать метку!"));
                                 return;
                             } else if (!data.hint.trim().length) {
@@ -148,7 +153,6 @@ const QuestParams = forwardRef<QuestParamsHandle, IQuestParamsProps>((props, ref
                                 dispatch(messageQueueAction.addMessage(null, "error", "Необходимо добавить действие!"));
                                 return;
                             }
-
 
                             if (dataQuest.id) {
                                 // Обновляем существующую запись

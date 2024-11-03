@@ -52,6 +52,8 @@ const QuestEditor: FC<IQuestEditorProps> = (props) => {
             radius: 1,
             hint: ""
         });
+
+        props.setUpdateQuestId(-1);
     };
 
     /**
@@ -167,7 +169,7 @@ const QuestEditor: FC<IQuestEditorProps> = (props) => {
     return (
         <>
             <div className={styles.container}>
-                <h2>Добавление квеста</h2>
+                <h2>{(!isUndefinedOrNull(dataQuest.id)) ? "Изменение" : "Добавление"} квеста</h2>
                 <div className={styles.quest}>
                     <div className={styles.map}>
                         <Map

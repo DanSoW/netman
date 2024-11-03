@@ -219,6 +219,32 @@
         security: 
           - 
             JWT: []
+    /creator/game/update: 
+      post: 
+        parameters: 
+          - 
+            name: "input"
+            in: "body"
+            description: "Входные данные"
+            required: true
+            schema: 
+              $ref: "#/definitions/GameCreateDto"
+        description: "Обновление игры"
+        tags: 
+          - "Создатель (контент менеджер)"
+        responses: 
+          200: 
+            description: "Выходные данные"
+            schema: 
+              $ref: "#/definitions/GameCreateDto"
+          default: 
+            description: "Ошибка запроса"
+            schema: 
+              $ref: "#/definitions/ApiError"
+        operationId: "creatorGameCreate"
+        security: 
+          - 
+            JWT: []
     /creator/games/created: 
       get: 
         parameters: []
@@ -1552,6 +1578,22 @@
         info_games_id: 
           type: "number"
           description: "Идентификатор игры"
+    GameUpdateDto: 
+      required: 
+        - "title"
+        - "location"
+        - "quests"
+      properties: 
+        title: 
+          type: "string"
+          description: ""
+        location: 
+          type: "string"
+          description: ""
+        quests: 
+          type: "array"
+          items: 
+            $ref: "#/definitions/QuestDto"
     GamesCreatedDto: 
       required: 
         - "id"

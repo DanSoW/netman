@@ -10,7 +10,7 @@ class GameIdDto extends ContextInfoDto {
     constructor(model) {
         super(model);
         
-        this.info_games_id = model.info_games_id;
+        this.info_games_id =  Number(model.info_games_id);
     }
 }
 

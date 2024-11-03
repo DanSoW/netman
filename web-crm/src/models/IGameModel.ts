@@ -5,6 +5,8 @@ export interface IGameId {
 }
 
 export interface IGameModel {
+  id?: number;
+  info_games_id?: number;
   title: string;
   location: string;
 }

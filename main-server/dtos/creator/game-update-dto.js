@@ -1,13 +1,13 @@
 import QuestDto from "./quest-dto.js";
-import ContextInfoDto from "../base/context-info-dto.js";
+import GameIdDto from "./game-id-dto.js";
 
 /**
- * @typedef GameCreateDto
+ * @typedef GameUpdateDto
  * @property {string} title.required
  * @property {string} location.required
  * @property {Array.<QuestDto>} quests.required
  */
-class GameCreateDto extends ContextInfoDto {
+class GameUpdateDto extends GameIdDto {
     title;
     location;
     quests;
@@ -21,4 +21,4 @@ class GameCreateDto extends ContextInfoDto {
     }
 }
 
-export default GameCreateDto;
+export default GameUpdateDto;

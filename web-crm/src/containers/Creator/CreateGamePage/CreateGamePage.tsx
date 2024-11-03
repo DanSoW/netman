@@ -1,4 +1,4 @@
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import styles from "./CreateGamePage.module.scss";
 import GameParams from "src/components/pages/CreateGamePage/GameParams";
 import Button from "src/components/UI/Button";
@@ -15,14 +15,25 @@ import { ICreateGameModel, IGameModel } from "src/models/IGameModel";
 import { IQuestGameModel } from "src/models/IQuestModel";
 import ECreatorAction from "src/store/actions/Creator/external/ECreatorAction";
 import ICreatorAction from "src/store/actions/Creator/internal/ICreatorAction";
+import { useNavigate } from "react-router-dom";
+import CreatorRoute from "src/constants/routes/creator.route";
 
 const CreateGamePage: FC<any> = () => {
+    const navigate = useNavigate();
+
     const iCreatorSlice = useAppSelector((s) => s.iCreatorReducer);
     const dispatch = useAppDispatch();
 
     const [eventScroll, setEventScroll] = useState(0);
     const [updateQuestId, setUpdateQuestId] = useState<number>(-1);
     const [openAddMark, setOpenAddMark] = useState(false);
+
+    useEffect(() => {
+        return () => {
+            // Очистка внутреннего хранилища
+            dispatch(ICreatorAction.clearAll());
+        }
+    }, []);
 
     const [dataMark, setDataMark] = useState<IMark>({
         location: '',
@@ -70,15 +81,11 @@ const CreateGamePage: FC<any> = () => {
         dispatch(ECreatorAction.createGame(data, () => {
             dispatch(messageQueueAction.addMessage(null, "success", "Новая игра успешно создана!"));
             dispatch(ICreatorAction.clearAll());
-            dispatch(MarkAction.getFreeMarks());
-
-            // Очистка данных
-            setDataGame({
-                title: "",
-                location: ""
-            });
 
             window.scrollTo(0, 0);
+            
+            // Переход к списку созданных игр
+            navigate(CreatorRoute.GAME_LIST);
         }));
     };
 

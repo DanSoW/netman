@@ -13,12 +13,15 @@ import NameModules from '../../constants/values/name-modules.js';
 import { checkRole } from '../../utils/check-role.js';
 import fs from 'fs';
 import GameIdDto from '../../dtos/creator/game-id-dto.js';
+import GameUpdateDto from '../../dtos/creator/game-update-dto.js';
+import GameCreateDto from '../../dtos/creator/game-create-dto.js';
+import { isUndefinedOrNull } from '../../utils/objector.js';
 
 /* Сервис системы безопасности */
 class CreatorService {
     /**
      * Создание новой игры
-     * @param {*} data Данные для создания новой игры
+     * @param {GameCreateDto} data Данные для создания новой игры
      * @returns Данные созданной игры
      */
     async gameCreate(data) {
@@ -27,20 +30,9 @@ class CreatorService {
         try {
             const { location, title, quests, users_id } = data;
 
-            // Поиск прав доступа для создания игры
-            const userRoles = await db.UsersRoles.findAll({
-                where: {
-                    users_id: users_id
-                },
-                include: {
-                    model: db.Roles,
-                    where: {
-                        priority: { [db.Sequelize.Op.gt]: 1 }
-                    },
-                },
-            });
-
-            if (userRoles.length === 0) {
+            // Проверка доступа
+            const check = await checkRole(users_id, 1);
+            if (!check) {
                 throw ApiError.Forbidden("Нет доступа");
             }
 
@@ -63,21 +55,172 @@ class CreatorService {
 
             // Добавление новых квестов
             for (let i = 0; i < quests.length; i++) {
+                const item = quests[i];
+
                 // Создание нового квеста
                 const quest = await db.Quests.create({
-                    task: quests[i].task,
-                    hint: quests[i].hint,
-                    radius: quests[i].radius,
-                    action: quests[i].action,
-                    marks_id: quests[i].marks_id,
+                    task: item.task,
+                    hint: item.hint,
+                    radius: item.radius,
+                    action: item.action,
+                    marks_id: item.marks_id,
                 }, { transaction: t });
 
-                // Создание связки игры с квестом
-                await db.GamesQuests.create({
-                    quests_id: quest.dataValues.id,
-                    info_games_id: infoGame.dataValues.id
-                }, { transaction: t });
+                if (quest) {
+                    // Создание связки "игра - квест"
+                    await db.GamesQuests.create({
+                        quests_id: quest.dataValues.id,
+                        info_games_id: infoGame.dataValues.id
+                    }, { transaction: t });
+                }
             }
+
+            await t.commit();
+
+            return data;
+        } catch (e) {
+            console.log(e);
+            await t.rollback();
+            throw ApiError.BadRequest(e.message);
+        }
+    }
+
+    /**
+     * Изменение игры
+     * @param {GameUpdateDto} data Данные для создания новой игры
+     * @returns Данные созданной игры
+     */
+    async gameUpdate(data) {
+        const t = await db.sequelize.transaction();
+
+        try {
+            const { location, title, quests, users_id, info_games_id } = data;
+
+            // Проверка доступа
+            const check = await checkRole(users_id, 1);
+            if (!check) {
+                throw ApiError.Forbidden("Нет доступа");
+            }
+
+            const infoGame = await db.InfoGames.findOne({
+                where: {
+                    id: info_games_id,
+                    users_id: users_id
+                }
+            });
+
+            if (!infoGame) {
+                throw ApiError.BadRequest("Нет прав на изменение данной игры");
+            }
+
+            const infoGameTitle = await db.InfoGames.findOne({
+                where: {
+                    title: title
+                }
+            });
+
+            if (infoGameTitle && (infoGameTitle.dataValues.id !== info_games_id)) {
+                throw ApiError.BadRequest("Игра с таким наименованием уже существует");
+            }
+
+            // Квесты, которые нужно удалить
+            let allConnectQuests = await db.GamesQuests.findAll({
+                where: {
+                    info_games_id: info_games_id
+                }
+            });
+
+            allConnectQuests = allConnectQuests.flatMap((item) => item.quests_id);
+
+            // Процедура удаления квестов
+            for (let i = 0; i < allConnectQuests.length; i++) {
+                const item = allConnectQuests[i];
+                const quest = quests.findIndex((value) => {
+                    return value.id == item;
+                });
+
+                if (quest < 0) {
+                    const gameQuest = await db.GamesQuests.findOne({
+                        where: {
+                            info_games_id: info_games_id,
+                            quests_id: item
+                        }
+                    });
+
+                    if (gameQuest) {
+                        // Удаление связки "игра - квест"
+                        await gameQuest.destroy({ transaction: t });
+                    }
+
+                    const questDb = await db.Quests.findOne({
+                        where: {
+                            id: item
+                        }
+                    });
+
+                    if (questDb) {
+                        // Удаление квеста
+                        await questDb.destroy({ transaction: t });
+                    }
+                }
+            }
+
+            // Квесты, которые нужно изменить
+            const updateQuests = quests.filter((item) => {
+                return !isUndefinedOrNull(item.id);
+            });
+
+            for (let i = 0; i < updateQuests.length; i++) {
+                const item = updateQuests[i];
+                const quest = await db.Quests.findOne({
+                    where: {
+                        id: item.id
+                    }
+                });
+
+                if (quest) {
+                    quest.task = item.task;
+                    quest.hint = item.hint;
+                    quest.radius = item.radius;
+                    quest.action = item.action;
+
+                    // Обновление данных квеста
+                    await quest.save({ transaction: t });
+                }
+            }
+
+            // Квесты, которые нужно добавить
+            const createQuests = quests.filter((item) => {
+                return isUndefinedOrNull(item.id);
+            });
+
+            // Процедура добавления новых квестов
+            for (let i = 0; i < createQuests.length; i++) {
+                const item = createQuests[i];
+
+                const quest = await db.Quests.create({
+                    task: item.task,
+                    hint: item.hint,
+                    radius: item.radius,
+                    action: item.action,
+                    marks_id: item.marks_id,
+                }, { transaction: t });
+
+                if (quest) {
+                    // Создание связки "игра - квест"
+                    await db.GamesQuests.create({
+                        quests_id: quest.dataValues.id,
+                        info_games_id: info_games_id
+                    }, { transaction: t });
+                }
+            }
+
+            infoGame.title = title;
+            infoGame.location = location;
+            infoGame.updated_at = new Date();
+
+            // Сохранение данных об игре в транзакции
+            await infoGame.save({ transaction: t });
 
             await t.commit();
 
@@ -99,13 +242,13 @@ class CreatorService {
             const { users_id, context_user_data } = data;
 
             // Проверка доступа
-            const check = await checkRole(db.UsersRoles, db.Roles, users_id, 1);
+            const check = await checkRole(users_id, 1);
             if (!check) {
                 throw ApiError.Forbidden("Нет доступа");
             }
 
-            // Get all the games that this creator has created
-            const games = await db.InfoGames.findAll({
+            // Получение всех игр, которые были созданы данным пользователем
+            let games = await db.InfoGames.findAll({
                 where: {
                     users_id: users_id
                 }
@@ -113,6 +256,8 @@ class CreatorService {
 
             for (let i = 0; i < games.length; i++) {
                 const item = games[i];
+                let dateUpdate = new Date(item.updated_at);
+                let dateStr = item.updated_at;
 
                 const quests = await db.GamesQuests.findAll({
                     where: {
@@ -120,8 +265,39 @@ class CreatorService {
                     }
                 });
 
+                for(let j = 0; j < quests.length; j++) {
+                    const subItem = quests[j];
+                    const questDb = await db.Quests.findOne({
+                        where: {
+                            id: subItem.quests_id
+                        }
+                    });
+
+                    if(questDb) {
+                        const subDateUpdate = new Date(questDb.updated_at);
+                        if(dateUpdate < subDateUpdate) {
+                            dateUpdate = subDateUpdate;
+                            dateStr = questDb.updated_at;
+                        }
+                    }
+                }
+
+                games[i].dataValues.updated_at = dateStr;
                 games[i].dataValues.count_quests = quests.length;
             }
+
+            games = games.sort((a, b) => {
+                const dateA = new Date(a.dataValues.updated_at);
+                const dateB = new Date(b.dataValues.updated_at);
+
+                if(dateA > dateB) {
+                    return -1;
+                } else if(dateA < dateB) {
+                    return 1;
+                }
+
+                return 0;
+            });
 
             return games;
         } catch (e) {
@@ -142,7 +318,7 @@ class CreatorService {
             const { users_id, context_user_data, info_games_id } = data;
 
             // Проверка доступа
-            const check = await checkRole(db.UsersRoles, db.Roles, users_id, 1);
+            const check = await checkRole(users_id, 1);
             if (!check) {
                 throw ApiError.Forbidden("Нет доступа");
             }
@@ -213,7 +389,7 @@ class CreatorService {
             const { users_id, context_user_data, info_games_id } = data;
 
             // Проверка доступа
-            const check = await checkRole(db.UsersRoles, db.Roles, users_id, 1);
+            const check = await checkRole(users_id, 1);
             if (!check) {
                 throw ApiError.Forbidden("Нет доступа");
             }
@@ -251,7 +427,7 @@ class CreatorService {
                         }
                     });
 
-                    if(mark) {
+                    if (mark) {
                         quests.push({
                             ...quest.dataValues,
                             mark: mark.dataValues
