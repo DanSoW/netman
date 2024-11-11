@@ -62,7 +62,7 @@
         android:layout_marginStart="24dp"
         android:layout_marginTop="32dp"
         android:layout_marginEnd="24dp"
-        android:text="Вы засняли видео для подтверждения прохождения квеста ?"
+        android:text="Вы готовы заснять фото для подтверждения прохождения квеста?"
         android:textAlignment="center"
         android:textColor="#FFFFFF"
         android:textSize="18sp"

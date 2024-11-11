@@ -20,6 +20,7 @@ import com.main.netman.R
 import com.main.netman.constants.game.ViewStatusConstants
 import com.main.netman.constants.socket.SocketHandlerConstants
 import com.main.netman.containers.game.GameActivity
+import com.main.netman.containers.media.quest.ImageQuestActivity
 import com.main.netman.containers.profile.ProfileActivity
 import com.main.netman.databinding.ActivityHomeBinding
 import com.main.netman.event.CurrentGameEvent
@@ -138,7 +139,7 @@ class HomeActivity : AppCompatActivity() {
                 return@observe
             }
 
-            // Обработка сообщения от отключении сокета
+            // Обработка сообщения об отключении сокета
             it.on(SocketHandlerConstants.DISCONNECT) {
                 CoroutineScope(Dispatchers.Main).launch {
                     binding.cardTask.visibility = View.GONE
@@ -258,12 +259,14 @@ class HomeActivity : AppCompatActivity() {
             // Создание диалогового окна
             val dialogBuilder = MaterialAlertDialogBuilder(this)
             val viewDialog = layoutInflater.inflate(R.layout.dialog_captured_video, null)
+
             // Добавление view диалоговому окну
             dialogBuilder.setView(viewDialog)
+
             // Открытие диалогового окна
             val dialog: androidx.appcompat.app.AlertDialog? = dialogBuilder.show()
 
-            // Обработка отмены создания команды
+            // Обработка отмены выполнения квеста
             viewDialog.findViewById<Button>(R.id.cancel_captured_video)
                 .setOnClickListener(View.OnClickListener {
                     dialog?.dismiss()
@@ -272,7 +275,9 @@ class HomeActivity : AppCompatActivity() {
             // Отправка результата на прохождение квеста
             viewDialog.findViewById<Button>(R.id.accept_captured_video)
                 .setOnClickListener(View.OnClickListener {
-                    val strQuest = runBlocking {
+                    startStdActivity(ImageQuestActivity::class.java)
+
+                    /*val strQuest = runBlocking {
                         currentQuestPreferences.data.first()
                     }
 
@@ -298,7 +303,7 @@ class HomeActivity : AppCompatActivity() {
                         Snackbar.LENGTH_LONG
                     )
 
-                    dialog?.dismiss()
+                    dialog?.dismiss()*/
                 })
         }
     }
@@ -408,6 +413,8 @@ class HomeActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
+        super.onBackPressed()
+
         startActivity(Intent(applicationContext, ExitAppActivity::class.java).also {
             it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         })

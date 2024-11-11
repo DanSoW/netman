@@ -12,7 +12,8 @@ const TableName = {
     GamesQuests: 'games_quests',
     Marks: 'marks',
     UsersGames: 'users_games',
-    ExecQuests: 'exec_quests'
+    ExecQuests: 'exec_quests',
+    QuestsResults: 'quests_results'
 };
 
 export default TableName;

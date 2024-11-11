@@ -1,4 +1,9 @@
 package com.main.netman.repositories
 
-class ImageQuestRepository {
+import com.main.netman.network.apis.PlayerApi
+
+class ImageQuestRepository(
+    private val api: PlayerApi
+) : BaseRepository() {
+
 }

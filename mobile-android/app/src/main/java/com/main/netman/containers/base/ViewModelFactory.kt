@@ -7,10 +7,12 @@ import com.main.netman.containers.creator.models.CreatorViewModel
 import com.main.netman.containers.game.models.GameTeamViewModel
 import com.main.netman.containers.game.models.GameViewModel
 import com.main.netman.containers.home.models.MapViewModel
+import com.main.netman.containers.media.quest.models.ImageQuestViewModel
 import com.main.netman.containers.profile.models.PlayerViewModel
 import com.main.netman.repositories.AuthRepository
 import com.main.netman.repositories.BaseRepository
 import com.main.netman.repositories.CreatorRepository
+import com.main.netman.repositories.ImageQuestRepository
 import com.main.netman.repositories.MapRepository
 import com.main.netman.repositories.PlayerRepository
 
@@ -30,6 +32,7 @@ class ViewModelFactory(
             modelClass.isAssignableFrom(PlayerViewModel::class.java) -> PlayerViewModel(repository as PlayerRepository) as T
             modelClass.isAssignableFrom(GameTeamViewModel::class.java) -> GameTeamViewModel(repository as PlayerRepository) as T
             modelClass.isAssignableFrom(GameViewModel::class.java) -> GameViewModel(repository as PlayerRepository) as T
+            modelClass.isAssignableFrom(ImageQuestViewModel::class.java) -> ImageQuestViewModel(repository as ImageQuestRepository) as T
             else -> throw IllegalArgumentException("ViewModelClass Not Found")
         }
     }

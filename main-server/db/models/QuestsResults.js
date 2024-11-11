@@ -10,38 +10,30 @@ import { genForeignKey } from "../../utils/db.js";
  * @param {*} DataTypes Типы данных
  * @returns Собранная модель для взаимодействия с таблицей ExecQuests
  */
-const ExecQuests = (sequelize, DataTypes) => {
-    const model = sequelize.define(TableName.ExecQuests, {
+const QuestsResults = (sequelize, DataTypes) => {
+    const model = sequelize.define(TableName.QuestsResults, {
         id: {
             type: DataTypes.INTEGER,
             primaryKey: true,
             allowNull: false,
             autoIncrement: true
         },
-        status: {
-            type: DataTypes.INTEGER,
-            defaultValue: GameStatus.ACTIVE,
+        filepath: {
+            type: DataTypes.TEXT,
             allowNull: false
         },
-        view: {
-            type: DataTypes.INTEGER,
-            defaultValue: ViewStatus.INVISIBLE,
+        type: {
+            type: DataTypes.TEXT,
             allowNull: false
         }
     });
 
     model.associate = (models) => {
         // Создание внешнего ключа из таблицы exec_quests, на таблицу users_games
-        model.belongsTo(models.UsersGames, genForeignKey('users_games_id'));
-
-        // Создание внешнего ключа из таблицы exec_quests, на таблицу quests
-        model.belongsTo(models.Quests, genForeignKey('quests_id'));
-
-        // Создание внешнего ключа из таблицы exec_quests, на таблицу quests
-        model.belongsTo(models.QuestsResults, genForeignKey(ForeignKeys.QuestsResults_to_ExecQuests));
+        model.belongsTo(models.ExecQuests, genForeignKey(ForeignKeys.QuestsResults_to_ExecQuests));
     };
 
     return model;
 };
 
-export default ExecQuests;
+export default QuestsResults;
