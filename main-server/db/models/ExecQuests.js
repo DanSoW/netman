@@ -38,7 +38,7 @@ const ExecQuests = (sequelize, DataTypes) => {
         model.belongsTo(models.Quests, genForeignKey('quests_id'));
 
         // Создание внешнего ключа из таблицы exec_quests, на таблицу quests
-        model.belongsTo(models.QuestsResults, genForeignKey(ForeignKeys.QuestsResults_to_ExecQuests));
+        model.hasMany(models.QuestsResults, genForeignKey(ForeignKeys.QuestsResults_to_ExecQuests));
     };
 
     return model;

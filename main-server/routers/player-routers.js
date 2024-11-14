@@ -25,9 +25,11 @@ import UrlDto from '../dtos/player/url-dto.js';
 import { v4 as uuid } from 'uuid';
 import multer from 'multer';
 import PlayerJoinGameDto from '../dtos/player/player-join-game-dto.js';
+import uploadResultMiddleware from '../middlewares/upload-result-middleware.js';
+import converterTypeMiddleware from '../middlewares/converter-type-middleware.js';
 
 // Конфигурирование файлового хранилища multer
-const storage = multer.diskStorage({
+const storageIcons = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, './public/icons/');
     },
@@ -38,7 +40,25 @@ const storage = multer.diskStorage({
         cb(null, `${uuid()}.${extFile}`);
     }
 });
-const upload = multer({ storage: storage });
+
+const uploadIcons = multer({ storage: storageIcons });
+
+// Конфигурирование файлового хранилища multer
+const storageResults = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const body = JSON.parse(JSON.stringify(req.body));
+        console.log("file: ", );
+        cb(null, './public/images/');
+    },
+    filename: function (req, file, cb) {
+        const ext = file.originalname.split('.');
+        const extFile = ext[ext.length - 1];
+
+        cb(null, `${uuid()}.${extFile}`);
+    }
+});
+
+const uploadResults = multer({ storage: storageImages });
 
 const router = new Router();
 
@@ -134,7 +154,7 @@ router.post(
     [
         authMiddleware,
         // activateMiddleware,
-        upload.single("file"),
+        uploadIcons.single("file"),
         authMiddleware,
         check('users_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 }),
     ],
@@ -591,6 +611,31 @@ router.post(
         check('session_id', 'Некорректный идентификатор игровой сессии').isUUID("4"),
     ],
     playerController.playerCompletedGame
+);
+
+/**
+ * Добавление результата игры
+ * @route POST /player/set/result/game
+ * @group Игрок - Функции для взаимодействия с игровой механикой
+ * @operationId creatorMarkAddImg
+ * @param {number} exec_quests_id Идентификатор процесса игровой сессии
+ * @param {string} type_result Тип результата (изображение / видео)
+ * @param {File} input.param.required Входные данные
+ * @returns {number} 201 - Выходные данные
+ * @returns {ApiError.model} default - Ошибка запроса
+ * @security JWT
+ */
+router.post(
+    PlayerRoute.setResultGame,
+    [
+        authMiddleware,
+        uploadResultMiddleware,
+        authMiddleware,
+        converterTypeMiddleware("exec_quests_id", "number"),
+        check('users_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 }),
+        check('exec_quests_id', 'Некорректный идентификатор метки').isInt({ min: 1 }),
+    ],
+    playerController.playerSetResultGame
 );
 
 export default router;

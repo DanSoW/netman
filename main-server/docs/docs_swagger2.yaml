@@ -1399,6 +1399,41 @@
         security: 
           - 
             JWT: []
+    /player/set/result/game: 
+      post: 
+        parameters: 
+          - 
+            name: "exec_quests_id"
+            in: "get"
+            description: "Идентификатор процесса игровой сессии"
+            required: false
+            type: "number"
+          - 
+            name: "type_result"
+            in: "get"
+            description: "Тип результата (изображение / видео)"
+            required: false
+            type: "string"
+          - 
+            name: "input"
+            in: "param"
+            description: "Входные данные"
+            required: true
+            type: "File"
+        description: "Добавление результата игры"
+        tags: 
+          - "Игрок"
+        responses: 
+          201: 
+            description: "Выходные данные"
+          default: 
+            description: "Ошибка запроса"
+            schema: 
+              $ref: "#/definitions/ApiError"
+        operationId: "creatorMarkAddImg"
+        security: 
+          - 
+            JWT: []
     /security/access: 
       post: 
         parameters: 
@@ -1557,6 +1592,17 @@
         refresh_token: 
           type: "string"
           description: ""
+    ContextInfoDto: 
+      properties: 
+        users_id: 
+          type: "number"
+          description: "Идентификатор пользователя"
+        type_auth: 
+          type: "number"
+          description: "Тип авторизации"
+        context_user_data: 
+          type: "string"
+          description: "Данные для контекста"
     GameCreateDto: 
       required: 
         - "title"
@@ -2318,6 +2364,17 @@
     QuestsIdDto: 
       properties: 
         quests_id: 
+          type: "number"
+          description: ""
+    SetResultGameDto: 
+      required: 
+        - "type_result"
+        - "exec_quests_id"
+      properties: 
+        type_result: 
+          type: "string"
+          description: ""
+        exec_quests_id: 
           type: "number"
           description: ""
     TagDto: 

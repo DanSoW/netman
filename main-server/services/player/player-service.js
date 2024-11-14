@@ -8,6 +8,9 @@ import fs from 'fs';
 import GameStatus from '../../constants/status/game-status.js';
 import { v4 } from 'uuid';
 import QuestStatus from '../../constants/status/quest-status.js';
+import SetResultGameDto from '../../dtos/player/set-result-game-dto.js';
+import ViewStatus from '../../constants/status/view-status.js';
+import logger from '../../logger/logger.js';
 
 
 /* Сервис управления картами */
@@ -533,6 +536,8 @@ class PlayerService {
 
             return result;
         } catch (e) {
+            console.log(e);
+
             await t.rollback();
             throw ApiError.BadRequest(e.message);
         }
@@ -621,6 +626,84 @@ class PlayerService {
                 completed: true
             };
         } catch (e) {
+            await t.rollback();
+            throw ApiError.BadRequest(e.message);
+        }
+    }
+
+    /**
+     * Добавление результата прохождения квеста
+     * @param {*} filedata Путь к загруженному файлу
+     * @param {SetResultGameDto} data Данные для добавления изображения к конкретной игре
+     * @returns Ссылка на загруженное изображение
+     */
+    async playerSetResultGame(filedata, data) {
+        const t = await db.sequelize.transaction();
+
+        try {
+            const { users_id, exec_quests_id, type_result } = data;
+            const execQuest = await db.ExecQuests.findOne({
+                where: {
+                    id: exec_quests_id
+                }
+            });
+
+            if (!execQuest) {
+                fs.unlinkSync(filedata.path);
+                throw ApiError.NotFound("Игры, на которую планируется отчёт, не существует");
+            }
+
+            const userGame = await db.UsersGames.findOne({
+                where: {
+                    users_id: users_id,
+                    status: GameStatus.ACTIVE,
+                },
+                include: {
+                    model: db.ExecQuests,
+                    where: {
+                        id: exec_quests_id,
+                        status: QuestStatus.ACTIVE,
+                        view: ViewStatus.VISIBLE,
+                        date_end: {
+                            [db.Sequelize.Op.gte]: new Date()
+                        }
+                    }
+                }
+            });
+
+            if(!userGame) {
+                fs.unlinkSync(filedata.path);
+                throw ApiError.NotFound("Игровая сессия, на которую планируется отчёт, не активна или не отображена на карте");
+            }
+
+            const questResult = await db.QuestsResults.findOne({
+                where: {
+                    exec_quests_id: exec_quests_id 
+                }
+            });
+
+            if(questResult) {
+                fs.unlinkSync(filedata.path);
+                throw ApiError.NotFound("Данная игровая сессия уже имеет прикреплённый результат");
+            }
+
+            if (mark.ref_img) {
+                // Удаление старого изображения
+                fs.unlinkSync(mark.ref_img);
+            }
+
+            await db.TestMarks.update({ ref_img: filedata.path }, { where: { id: test_marks_id }, transaction: t });
+
+            await t.commit();
+
+            return {
+                test_marks_id,
+                ref_img: `${config.get("url.api")}/${filedata.path}`
+            };
+        } catch (e) {
+            // Delete file
+            fs.unlinkSync(filedata.path);
+
             await t.rollback();
             throw ApiError.BadRequest(e.message);
         }

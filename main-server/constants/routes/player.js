@@ -34,6 +34,7 @@ const PlayerRoute = {
     joinGame: '/join/game',
     detachGame: '/detach/game',
     completedGame: '/completed/game',
+    setResultGame: '/set/result/game',
     games: '/games',
 };
 

@@ -16,6 +16,7 @@ import JudgeGetInfoDto from "../dtos/player/judge-get-info-dto.js";
 import JudgeSetScoreDto from "../dtos/player/judge-set-score-dto.js";
 import PlayerJoinGameDto from "../dtos/player/player-join-game-dto.js";
 import PlayerSessionGameDto from "../dtos/player/player-session-game-dto.js";
+import SetResultGameDto from "../dtos/player/set-result-game-dto.js";
 
 /* Контроллер игрока */
 class PlayerController {
@@ -489,6 +490,24 @@ class PlayerController {
 
             return res.status(201).json(data);
         }catch(e){
+            next(e);
+        }
+    }
+
+    async playerSetResultGame(req, res, next) {
+        try {
+            const errors = validationResult(req);
+
+            if (!errors.isEmpty()) {
+                return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
+            }
+
+            const body = new SetResultGameDto(req.body);
+            const data = await playerService.playerSetResultGame(req.file, body);
+
+            return res.status(201).json(data);
+        } catch (e) {
+            console.log(e);
             next(e);
         }
     }

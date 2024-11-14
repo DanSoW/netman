@@ -82,6 +82,10 @@ class ImageLoadFragment :
         binding.btnPickImage.setOnClickListener {
             openCameraWrapper()
         }
+
+        binding.btnRequest.setOnClickListener {
+
+        }
     }
 
     // Получение ViewModel текущего фрагмента
