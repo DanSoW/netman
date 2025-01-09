@@ -64,7 +64,11 @@ const authMiddleware = async function (req, res, next) {
         // Встраивание дополнительных полей в тело запроса
         req.body.users_id = userData.users_id;
         req.body.type_auth = userData.type_auth;
-        req.body.context_user_data = user.dataValues;
+
+        const contextData = { ...user.dataValues };
+        delete contextData.password;
+
+        req.body.context_user_data = contextData;
 
         next();
     } catch (e) {

@@ -11,6 +11,10 @@ import QuestStatus from '../../constants/status/quest-status.js';
 import SetResultGameDto from '../../dtos/player/set-result-game-dto.js';
 import ViewStatus from '../../constants/status/view-status.js';
 import logger from '../../logger/logger.js';
+import GameTypeResult from '../../constants/game-type-result.js';
+import path from 'path';
+import { syncDeleteFileByPath } from '../../utils/file-utils.js';
+import RemoveResultGameDto from '../../dtos/player/remove-result-game-dto.js';
 
 
 /* Сервис управления картами */
@@ -633,15 +637,20 @@ class PlayerService {
 
     /**
      * Добавление результата прохождения квеста
-     * @param {*} filedata Путь к загруженному файлу
+     * @param {*} file Путь к загруженному файлу
      * @param {SetResultGameDto} data Данные для добавления изображения к конкретной игре
      * @returns Ссылка на загруженное изображение
      */
-    async playerSetResultGame(filedata, data) {
+    async playerSetResultGame(file, data) {
+        if (!file || Object.keys(file).length == 0) {
+            throw ApiError.BadRequest("Результирующий файл не был загружен на сервер");
+        }
+
+        const filepath = `${process.cwd()}${path.sep}${file.path}`;
         const t = await db.sequelize.transaction();
 
         try {
-            const { users_id, exec_quests_id, type_result } = data;
+            const { users_id, exec_quests_id } = data;
             const execQuest = await db.ExecQuests.findOne({
                 where: {
                     id: exec_quests_id
@@ -649,10 +658,11 @@ class PlayerService {
             });
 
             if (!execQuest) {
-                fs.unlinkSync(filedata.path);
+                syncDeleteFileByPath(filepath);
                 throw ApiError.NotFound("Игры, на которую планируется отчёт, не существует");
             }
 
+            // Получение текущей игры пользователя, к которому будет прикреплён результат
             const userGame = await db.UsersGames.findOne({
                 where: {
                     users_id: users_id,
@@ -664,46 +674,126 @@ class PlayerService {
                         id: exec_quests_id,
                         status: QuestStatus.ACTIVE,
                         view: ViewStatus.VISIBLE,
-                        date_end: {
+                        /*date_end: {
                             [db.Sequelize.Op.gte]: new Date()
-                        }
+                        }*/
                     }
                 }
             });
 
-            if(!userGame) {
-                fs.unlinkSync(filedata.path);
+            if (!userGame) {
+                syncDeleteFileByPath(filepath);
                 throw ApiError.NotFound("Игровая сессия, на которую планируется отчёт, не активна или не отображена на карте");
+            }
+
+            if ((userGame?.dataValues?.exec_quests?.length || 0) < 1) {
+                syncDeleteFileByPath(filepath);
+                throw ApiError.InternalServerError("Игровая сессия завершена некорректно (нет активных и видимых квестов)");
             }
 
             const questResult = await db.QuestsResults.findOne({
                 where: {
-                    exec_quests_id: exec_quests_id 
+                    exec_quests_id: exec_quests_id
                 }
             });
 
-            if(questResult) {
-                fs.unlinkSync(filedata.path);
+            if (questResult) {
+                syncDeleteFileByPath(filepath);
                 throw ApiError.NotFound("Данная игровая сессия уже имеет прикреплённый результат");
             }
 
-            if (mark.ref_img) {
-                // Удаление старого изображения
-                fs.unlinkSync(mark.ref_img);
-            }
+            const createResult = await db.QuestsResults.create({
+                filepath: file.path,
+                type: GameTypeResult.IMAGE,
+                exec_quests_id: exec_quests_id
+            }, { transaction: t });
 
-            await db.TestMarks.update({ ref_img: filedata.path }, { where: { id: test_marks_id }, transaction: t });
+            await execQuest.update({
+                status: QuestStatus.FINISH
+            }, { transaction: t });
 
             await t.commit();
 
             return {
-                test_marks_id,
-                ref_img: `${config.get("url.api")}/${filedata.path}`
+                id: createResult.id
             };
         } catch (e) {
             // Delete file
-            fs.unlinkSync(filedata.path);
+            syncDeleteFileByPath(filepath);
 
+            await t.rollback();
+            throw ApiError.BadRequest(e.message);
+        }
+    }
+
+    /**
+     * Удаление информации о результате игры
+     * @param {RemoveResultGameDto} data Данные для удаления информации о результате
+     * @returns Идентификатор удалённой игры
+     */
+    async playerRemoveResultGame(data) {
+        const t = await db.sequelize.transaction();
+
+        try {
+            const { users_id, exec_quests_id, session_id } = data;
+
+            const currentGame = await db.UsersGames.findOne({
+                where: {
+                    users_id: users_id,
+                    session_id: session_id,
+                    status: GameStatus.ACTIVE
+                },
+                include: {
+                    model: db.ExecQuests,
+                    where: {
+                        id: exec_quests_id,
+                        status: QuestStatus.FINISH
+                    },
+                    include: {
+                        model: db.QuestsResults,
+                    }
+                }
+            });
+
+            if (!currentGame) {
+                throw ApiError.NotFound("Удаление результата прохождения квеста для данного квеста недоступно");
+            }
+
+            let filepath = "";
+            let deletedId = -1;
+            
+            if (Array.isArray(currentGame?.dataValues?.exec_quests) && currentGame?.dataValues?.exec_quests.length == 1) {
+                const execQuests = currentGame.dataValues.exec_quests;
+                if (Array.isArray(execQuests[0]?.quests_results) && execQuests[0]?.quests_results.length == 1) {
+                    const result = execQuests[0].quests_results[0].dataValues;
+
+                    const questResult = await db.QuestsResults.findOne({
+                        where: {
+                            id: result.id
+                        }
+                    });
+
+                    if (!questResult) {
+                        throw ApiError.BadRequest("Информации о прохождении текущего квеста нет в базе данных (1)");
+                    }
+
+                    // Определение абсолютного пути до файла в текущей ОС
+                    filepath = `${process.cwd()}${path.sep}${questResult.filepath}`;
+                    deletedId = result.id;
+
+                    await questResult.destroy({ transaction: t });
+                }
+            } else {
+                throw ApiError.BadRequest("Информации о прохождении текущего квеста нет в базе данных (2)");
+            }
+
+            await t.commit();
+            syncDeleteFileByPath(filepath);
+
+            return {
+                id: deletedId
+            };
+        } catch (e) {
             await t.rollback();
             throw ApiError.BadRequest(e.message);
         }

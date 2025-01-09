@@ -25,7 +25,6 @@ import UrlDto from '../dtos/player/url-dto.js';
 import { v4 as uuid } from 'uuid';
 import multer from 'multer';
 import PlayerJoinGameDto from '../dtos/player/player-join-game-dto.js';
-import uploadResultMiddleware from '../middlewares/upload-result-middleware.js';
 import converterTypeMiddleware from '../middlewares/converter-type-middleware.js';
 
 // Конфигурирование файлового хранилища multer
@@ -43,7 +42,7 @@ const storageIcons = multer.diskStorage({
 
 const uploadIcons = multer({ storage: storageIcons });
 
-// Конфигурирование файлового хранилища multer
+// Конфигурирование файлового хранилища multer (результаты игр)
 const storageResults = multer.diskStorage({
     destination: function (req, file, cb) {
         const body = JSON.parse(JSON.stringify(req.body));
@@ -58,7 +57,7 @@ const storageResults = multer.diskStorage({
     }
 });
 
-const uploadResults = multer({ storage: storageImages });
+const uploadResults = multer({ storage: storageResults });
 
 const router = new Router();
 
@@ -615,9 +614,9 @@ router.post(
 
 /**
  * Добавление результата игры
- * @route POST /player/set/result/game
+ * @route POST /player/set/result/game/image
  * @group Игрок - Функции для взаимодействия с игровой механикой
- * @operationId creatorMarkAddImg
+ * @operationId setResultGameImage
  * @param {number} exec_quests_id Идентификатор процесса игровой сессии
  * @param {string} type_result Тип результата (изображение / видео)
  * @param {File} input.param.required Входные данные
@@ -626,16 +625,16 @@ router.post(
  * @security JWT
  */
 router.post(
-    PlayerRoute.setResultGame,
+    PlayerRoute.setResultGameImage,
     [
         authMiddleware,
-        uploadResultMiddleware,
+        uploadResults.single("file"),
         authMiddleware,
         converterTypeMiddleware("exec_quests_id", "number"),
         check('users_id', 'Некорректный идентификатор пользователя').isInt({ min: 1 }),
         check('exec_quests_id', 'Некорректный идентификатор метки').isInt({ min: 1 }),
     ],
-    playerController.playerSetResultGame
+    playerController.playerSetResultGameImage
 );
 
 export default router;

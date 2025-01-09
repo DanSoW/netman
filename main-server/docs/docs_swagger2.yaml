@@ -1399,7 +1399,7 @@
         security: 
           - 
             JWT: []
-    /player/set/result/game: 
+    /player/set/result/game/image: 
       post: 
         parameters: 
           - 
@@ -1430,7 +1430,7 @@
             description: "Ошибка запроса"
             schema: 
               $ref: "#/definitions/ApiError"
-        operationId: "creatorMarkAddImg"
+        operationId: "setResultGameImage"
         security: 
           - 
             JWT: []
@@ -2366,14 +2366,17 @@
         quests_id: 
           type: "number"
           description: ""
-    SetResultGameDto: 
+    RemoveResultGameDto: 
       required: 
-        - "type_result"
         - "exec_quests_id"
       properties: 
-        type_result: 
-          type: "string"
+        exec_quests_id: 
+          type: "number"
           description: ""
+    SetResultGameDto: 
+      required: 
+        - "exec_quests_id"
+      properties: 
         exec_quests_id: 
           type: "number"
           description: ""

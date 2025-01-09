@@ -34,8 +34,10 @@ const PlayerRoute = {
     joinGame: '/join/game',
     detachGame: '/detach/game',
     completedGame: '/completed/game',
-    setResultGame: '/set/result/game',
     games: '/games',
+
+    setResultGameImage: '/set/result/game/image',
+    removeResultGameImage: '/remove/result/game/image',
 };
 
 export default PlayerRoute;

@@ -17,6 +17,7 @@ import JudgeSetScoreDto from "../dtos/player/judge-set-score-dto.js";
 import PlayerJoinGameDto from "../dtos/player/player-join-game-dto.js";
 import PlayerSessionGameDto from "../dtos/player/player-session-game-dto.js";
 import SetResultGameDto from "../dtos/player/set-result-game-dto.js";
+import RemoveResultGameDto from "../dtos/player/remove-result-game-dto.js";
 
 /* Контроллер игрока */
 class PlayerController {
@@ -494,16 +495,34 @@ class PlayerController {
         }
     }
 
-    async playerSetResultGame(req, res, next) {
+    async playerSetResultGameImage(req, res, next) {
         try {
             const errors = validationResult(req);
 
             if (!errors.isEmpty()) {
                 return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
             }
-
+            
             const body = new SetResultGameDto(req.body);
             const data = await playerService.playerSetResultGame(req.file, body);
+
+            return res.status(201).json(data);
+        } catch (e) {
+            console.log(e);
+            next(e);
+        }
+    }
+
+    async playerRemoveResultGame(req, res, next) {
+        try {
+            const errors = validationResult(req);
+
+            if (!errors.isEmpty()) {
+                return next(ApiError.BadRequest('Некорректные входные данные', errors.array()));
+            }
+            
+            const body = new RemoveResultGameDto(req.body);
+            const data = await playerService.playerRemoveResultGame(body);
 
             return res.status(201).json(data);
         } catch (e) {
