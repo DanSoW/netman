@@ -275,9 +275,9 @@ class HomeActivity : AppCompatActivity() {
             // Отправка результата на прохождение квеста
             viewDialog.findViewById<Button>(R.id.accept_captured_video)
                 .setOnClickListener(View.OnClickListener {
-                    startStdActivity(ImageQuestActivity::class.java)
+                    /*startStdActivity(ImageQuestActivity::class.java)*/
 
-                    /*val strQuest = runBlocking {
+                    val strQuest = runBlocking {
                         currentQuestPreferences.data.first()
                     }
 
@@ -303,8 +303,17 @@ class HomeActivity : AppCompatActivity() {
                         Snackbar.LENGTH_LONG
                     )
 
-                    dialog?.dismiss()*/
+                    dialog?.dismiss()
                 })
+        }
+
+        binding.icMoveIcon.setOnClickListener {
+            showMessage(
+                binding.root,
+                "Изменение управления",
+                "success",
+                Snackbar.LENGTH_LONG
+            )
         }
     }
 

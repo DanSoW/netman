@@ -18,8 +18,10 @@ import com.main.netman.databinding.FragmentMapBinding
 import com.main.netman.event.CurrentGameEvent
 import com.main.netman.event.CurrentQuestEvent
 import com.main.netman.event.RemoveMarkEvent
+import com.main.netman.event.UpdateMoveType
 import com.main.netman.event.UpdateSocketEvent
 import com.main.netman.event.ViewMarkEvent
+import com.main.netman.models.CountTestMarkModel
 import com.main.netman.models.PointD
 import com.main.netman.models.game.GameQuestModel
 import com.main.netman.models.game.QuestMarkModel
@@ -51,6 +53,7 @@ import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.mapbox.maps.plugin.gestures.OnMoveListener
 import com.mapbox.maps.plugin.gestures.gestures
+import com.mapbox.maps.plugin.gestures.getGesturesSettings
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorBearingChangedListener
 import com.mapbox.maps.plugin.locationcomponent.OnIndicatorPositionChangedListener
 import com.mapbox.maps.plugin.locationcomponent.location
@@ -94,6 +97,8 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
     // Задача на получение координат других игроков
     private var _coroutineGetCoordinates: Job? = null
     private var _coroutineIO: Job? = null
+
+    private var _coroutineTestCoords: Job? = null
 
     // Менеджер управления аннотациями
     private var pointAnnotationManager: PointAnnotationManager? = null
@@ -154,6 +159,7 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
 
     private var latitude: Double = 52.283865
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         point = PointD(52.290365, 104.287895)
@@ -418,7 +424,7 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
                                 it.emit(SocketHandlerConstants.COORDINATES_PLAYERS)
                                 delay(1000)
                             }
-                        } catch (e: CancellationException) {
+                        } catch (_: CancellationException) {
                         }
                     }
 
@@ -427,6 +433,25 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
                     _coroutineGetCoordinates?.cancel()
                 }
             }
+
+            /*if ((_coroutineTestCoords != null) && (_coroutineTestCoords?.isActive == true)) {
+                _coroutineIO!!.cancel()
+            } else {
+                _coroutineTestCoords = CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        var i: Int = 0
+                        var item: Double = 52.285909
+
+                        while(i++ < 100) {
+                            viewModel.setCoords(104.281385, item + 0.02)
+
+                            delay(1000)
+                        }
+
+
+                    } catch (_: CancellationException) { }
+                }
+            }*/
         }
     }
 
@@ -558,7 +583,13 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
             onIndicatorBearingChangedListener
         )
 
+        // Запрет на скролл внутри окна карты
+        binding.mapView.gestures.scrollEnabled = false
         binding.mapView.gestures.pitchEnabled = false
+
+        // Полный запрет за zoom в рамках карты
+        binding.mapView.gestures.quickZoomEnabled = false
+        binding.mapView.gestures.doubleTapToZoomInEnabled = false
         binding.mapView.gestures.pinchToZoomEnabled = false
     }
 
@@ -792,5 +823,13 @@ class MapFragment : BaseFragment<MapViewModel, FragmentMapBinding, MapRepository
 
             coordTasks.clear()
         }
+    }
+
+    /**
+     * Обработка события изменения типа управления
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onUpdateMoveType(event: UpdateMoveType) {
+        binding.mapView.gestures.scrollEnabled = !binding.mapView.gestures.scrollEnabled
     }
 }
